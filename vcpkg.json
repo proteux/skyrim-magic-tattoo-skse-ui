@@ -4,6 +4,7 @@
     "builtin-baseline": "4f973280dd95e3902b3410933fb2ce108bb29d1d",
     "dependencies": [
         "commonlibsse-ng",
+        "directxtex",
         "directxtk",
         "nlohmann-json"
     ]

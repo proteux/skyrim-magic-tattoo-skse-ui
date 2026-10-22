@@ -11,6 +11,8 @@ namespace mtfui::render {
         ID3D11ShaderResourceView* srv = nullptr;
         int width = 0;
         int height = 0;
+        // Bounding box of the visible ink in UV space; the full texture when nothing stands out.
+        float u0 = 0.0f, v0 = 0.0f, u1 = 1.0f, v1 = 1.0f;
     };
 
     // Loads DDS textures (loose or from BSAs) on a worker thread, keeping only the mips that

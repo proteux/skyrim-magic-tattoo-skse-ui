@@ -34,6 +34,7 @@ target_link_libraries(mtfui_core PUBLIC nlohmann_json::nlohmann_json)
 
 find_package(CommonLibSSE CONFIG REQUIRED)
 find_package(directxtk CONFIG REQUIRED)
+find_package(directxtex CONFIG REQUIRED)
 
 add_commonlibsse_plugin(${PROJECT_NAME}
     NAME "MagicTattoosUI"
@@ -57,7 +58,7 @@ add_commonlibsse_plugin(${PROJECT_NAME}
         src/ui/TargetBar.cpp
 )
 target_include_directories(${PROJECT_NAME} PRIVATE src include "${CMAKE_CURRENT_BINARY_DIR}/generated")
-target_link_libraries(${PROJECT_NAME} PRIVATE mtfui_core Microsoft::DirectXTK d3d11)
+target_link_libraries(${PROJECT_NAME} PRIVATE mtfui_core Microsoft::DirectXTK Microsoft::DirectXTex d3d11)
 target_precompile_headers(${PROJECT_NAME} PRIVATE src/pch.h)
 
 if(BUILD_TESTING)

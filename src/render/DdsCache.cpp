@@ -67,6 +67,74 @@ namespace mtfui::render {
             return std::nullopt;
         }
 
+        // Finds where the ink is on a small CPU-decoded mip. Overlay textures are mostly empty
+        // canvas (transparent, or a flat color), with the design somewhere inside it.
+        void FindContent(const std::vector<std::uint8_t>& dds, Texture& tex) {
+            DirectX::TexMetadata meta{};
+            DirectX::ScratchImage loaded;
+            if (FAILED(DirectX::LoadFromDDSMemory(dds.data(), dds.size(), DirectX::DDS_FLAGS_NONE, &meta, loaded))) {
+                return;
+            }
+            std::size_t mip = 0;
+            while (mip + 1 < meta.mipLevels && std::max(meta.width >> mip, meta.height >> mip) > 128) {
+                ++mip;
+            }
+            const DirectX::Image* src = loaded.GetImage(mip, 0, 0);
+            if (!src) {
+                return;
+            }
+            DirectX::ScratchImage rgba;
+            const HRESULT hr = DirectX::IsCompressed(src->format)
+                                   ? DirectX::Decompress(*src, DXGI_FORMAT_R8G8B8A8_UNORM, rgba)
+                                   : DirectX::Convert(*src, DXGI_FORMAT_R8G8B8A8_UNORM, DirectX::TEX_FILTER_DEFAULT, DirectX::TEX_THRESHOLD_DEFAULT, rgba);
+            const DirectX::Image* img = SUCCEEDED(hr) ? rgba.GetImage(0, 0, 0) : nullptr;
+            if (!img || img->width < 4 || img->height < 4) {
+                return;
+            }
+            const auto w = static_cast<int>(img->width), h = static_cast<int>(img->height);
+            auto px = [&](int x, int y) { return img->pixels + static_cast<std::size_t>(y) * img->rowPitch + static_cast<std::size_t>(x) * 4; };
+
+            int minA = 255, maxA = 0;
+            long border[3] = {};
+            int borderN = 0;
+            for (int y = 0; y < h; ++y) {
+                for (int x = 0; x < w; ++x) {
+                    const auto* p = px(x, y);
+                    minA = std::min<int>(minA, p[3]);
+                    maxA = std::max<int>(maxA, p[3]);
+                    if (x == 0 || y == 0 || x == w - 1 || y == h - 1) {
+                        border[0] += p[0], border[1] += p[1], border[2] += p[2];
+                        ++borderN;
+                    }
+                }
+            }
+            const bool useAlpha = maxA - minA > 32;
+            const int bg[3] = { static_cast<int>(border[0] / borderN), static_cast<int>(border[1] / borderN), static_cast<int>(border[2] / borderN) };
+            auto ink = [&](const std::uint8_t* p) {
+                if (useAlpha) {
+                    return p[3] > minA + 24;
+                }
+                return std::max({ std::abs(p[0] - bg[0]), std::abs(p[1] - bg[1]), std::abs(p[2] - bg[2]) }) > 40;
+            };
+
+            int x0 = w, y0 = h, x1 = -1, y1 = -1;
+            for (int y = 0; y < h; ++y) {
+                for (int x = 0; x < w; ++x) {
+                    if (ink(px(x, y))) {
+                        x0 = std::min(x0, x), y0 = std::min(y0, y);
+                        x1 = std::max(x1, x), y1 = std::max(y1, y);
+                    }
+                }
+            }
+            if (x1 < x0) {
+                return;
+            }
+            tex.u0 = static_cast<float>(x0) / w;
+            tex.v0 = static_cast<float>(y0) / h;
+            tex.u1 = static_cast<float>(x1 + 1) / w;
+            tex.v1 = static_cast<float>(y1 + 1) / h;
+        }
+
         std::size_t MipBytes(std::uint32_t w, std::uint32_t h, std::pair<int, bool> fmt) {
             if (fmt.second) {
                 return static_cast<std::size_t>(std::max(1u, (w + 3) / 4)) * std::max(1u, (h + 3) / 4) * fmt.first;
@@ -284,8 +352,11 @@ namespace mtfui::render {
                                     tex2d->GetDesc(&desc);
                                     tex2d->Release();
                                 }
-                                entry.tex = { srv, static_cast<int>(desc.Width), static_cast<int>(desc.Height) };
+                                entry.tex.srv = srv;
+                                entry.tex.width = static_cast<int>(desc.Width);
+                                entry.tex.height = static_cast<int>(desc.Height);
                                 entry.failed = false;
+                                FindContent(bytes, entry.tex);
                             } else {
                                 logger::warn("Could not decode {} (hr {:08X})", job.path, static_cast<std::uint32_t>(hr));
                             }

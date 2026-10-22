@@ -222,11 +222,13 @@ namespace mtfui::ui {
                 const auto vis = model::ResolveVisual(p, i);
                 if (!vis.none) {
                     if (const auto* e = app.cat.FindEntry(vis.packId, vis.entryId); e && !e->textures.empty()) {
-                        if (const auto* tex = render::DdsCache::Get().Request(e->textures.front(), 256)) {
+                        if (const auto* tex = render::RequestCropped(e->textures.front(), 256, thumb, 1024)) {
                             const ImVec2 a{ start.x + width - thumb - 4.0f, start.y + 4.0f };
+                            ImVec2 uv0, uv1;
+                            render::ContentUV(*tex, uv0, uv1);
                             ImDrawListManager::AddRectFilled(dl, a, ImVec2{ a.x + thumb, a.y + thumb }, render::ToImColor(0xC89F86, 1.0f), 3.0f, 0);
-                            ImDrawListManager::AddImage(dl, reinterpret_cast<ImTextureID>(tex->srv), a, ImVec2{ a.x + thumb, a.y + thumb }, ImVec2{ 0, 0 },
-                                ImVec2{ 1, 1 }, render::ToImColor(s.layers[0].tint, s.layers[0].alpha / 100.0f));
+                            ImDrawListManager::AddImage(dl, reinterpret_cast<ImTextureID>(tex->srv), a, ImVec2{ a.x + thumb, a.y + thumb }, uv0, uv1,
+                                render::ToImColor(s.layers[0].tint, s.layers[0].alpha / 100.0f));
                         }
                     }
                 }
@@ -333,8 +335,8 @@ namespace mtfui::ui {
             Spacing();
             TextWrapped("Pick a preset on the left, or click New.");
             Spacing();
-            TextWrapped("A preset is a ladder of tiers. MTF checks tiers from the top; the first one whose conditions match decides "
-                        "the tattoo's look and effects. When none match, Default is used.");
+            TextWrapped("A preset is a Default look plus a ladder of tiers that modify it. MTF checks tiers from the top; the first one "
+                        "whose conditions match decides the tattoo's look and effects. When none match, Default is used.");
             EndGroup();
             return;
         }
@@ -343,15 +345,17 @@ namespace mtfui::ui {
         const float middleWidth = GetContentRegionAvail().x - inspectorWidth - GetStyle()->ItemSpacing.x;
         if (BeginChild("##middle", ImVec2{ middleWidth, 0 })) {
             DrawPresetHeader(app);
+            const float rowWidth = GetContentRegionAvail().x;
+            SeparatorText("Base");
+            HelpMarker("Default sets the base look. Tiers that leave their tattoo as \"Same as Default\" build on it, "
+                       "and it is shown whenever no tier matches.");
+            DrawTierRow(app, 0, rowWidth);
             SeparatorText("Tiers (top wins)");
             HelpMarker("Drag tiers to change priority. Right-click a tier for more. The first tier whose conditions are true is shown; "
                        "Default applies when none are.");
-            const float rowWidth = GetContentRegionAvail().x;
             for (int i = 1; i < model::kSlotCount && i < static_cast<int>(app.Preset().slots.size()); ++i) {
                 DrawTierRow(app, i, rowWidth);
             }
-            Separator();
-            DrawTierRow(app, 0, rowWidth);
             SeparatorText("Checks");
             DrawIssues(app);
         }

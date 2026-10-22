@@ -375,22 +375,18 @@ namespace mtfui::ui {
             }
         }
 
-        bool MinutesEditor(const char* label, std::int64_t& minutes) {
+        bool MinutesEditor(const char* label, const char* help, std::int64_t& minutes) {
             int h = static_cast<int>(minutes / 60);
             int m = static_cast<int>(minutes % 60);
             bool changed = false;
             PushID(label);
-            SetNextItemWidth(110);
-            changed |= InputInt("##h", &h, 1, 6);
-            SameLine();
-            TextUnformatted("h");
-            SameLine();
-            SetNextItemWidth(110);
-            changed |= InputInt("##m", &m, 5, 15);
-            SameLine();
-            TextUnformatted("min");
-            SameLine();
             TextUnformatted(label);
+            HelpMarker(help);
+            SetNextItemWidth(160);
+            changed |= InputInt("hours", &h, 1, 6);
+            SameLine();
+            SetNextItemWidth(160);
+            changed |= InputInt("minutes", &m, 5, 15);
             PopID();
             if (changed) {
                 minutes = std::max(0, h) * 60 + std::clamp(m, 0, 59);
@@ -403,8 +399,9 @@ namespace mtfui::ui {
                 TextWrapped("Default has no activation, so it has no timing.");
                 return;
             }
-            MinutesEditor("Stay active for", s.persistMin);
-            HelpMarker("Once activated, the tier stays on for this long (in-game time) even after its conditions stop. 0 = only while they hold.");
+            MinutesEditor("Stay active for",
+                "Once activated, the tier stays on for this long (in-game time) even after its conditions stop. 0 = only while they hold.",
+                s.persistMin);
             bool allow = s.allowOverride != 0;
             BeginDisabled(s.persistMin <= 0);
             if (Checkbox("Higher tiers can interrupt it", &allow)) {
@@ -412,8 +409,8 @@ namespace mtfui::ui {
             }
             EndDisabled();
             HelpMarker("While this tier is lingering, let a higher tier whose conditions become true take over.");
-            MinutesEditor("Cooldown", s.coolMin);
-            HelpMarker("After the tier ends, it cannot activate again for this long. 0 = no cooldown.");
+            Spacing();
+            MinutesEditor("Cooldown", "After the tier ends, it cannot activate again for this long. 0 = no cooldown.", s.coolMin);
         }
     }
 

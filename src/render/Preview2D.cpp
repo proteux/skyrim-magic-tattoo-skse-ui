@@ -9,12 +9,52 @@ namespace mtfui::render {
         struct ViewState {
             float zoom = 1.0f;
             ImVec2 center{ 0.5f, 0.5f };
+            std::string fittedFor;  // texture set the view was last fitted to
+            float fitZoom = 1.0f;
+            ImVec2 fitCenter{ 0.5f, 0.5f };
         };
         std::unordered_map<std::string, ViewState> g_views;
 
         constexpr std::uint32_t kSkinTone = 0xC89F86;
+        constexpr float kPadding = 1.15f;
+        constexpr float kMaxZoom = 32.0f;
 
         ImTextureID Tex(const Texture* t) { return reinterpret_cast<ImTextureID>(t->srv); }
+
+        // Square around a UV box, padded and kept inside the texture.
+        void Square(float u0, float v0, float u1, float v1, ImVec2& center, float& side) {
+            side = std::clamp(std::max(u1 - u0, v1 - v0) * kPadding, 0.02f, 1.0f);
+            const float half = side * 0.5f;
+            center = { std::clamp((u0 + u1) * 0.5f, half, 1.0f - half), std::clamp((v0 + v1) * 0.5f, half, 1.0f - half) };
+        }
+    }
+
+    void ContentUV(const Texture& tex, ImVec2& uv0, ImVec2& uv1) {
+        ImVec2 c;
+        float side = 1.0f;
+        Square(tex.u0, tex.v0, tex.u1, tex.v1, c, side);
+        uv0 = { c.x - side * 0.5f, c.y - side * 0.5f };
+        uv1 = { c.x + side * 0.5f, c.y + side * 0.5f };
+    }
+
+    const Texture* RequestCropped(const std::string& path, int baseSize, float displayPx, int maxSize) {
+        const auto* base = DdsCache::Get().Request(path, baseSize);
+        if (!base) {
+            return nullptr;
+        }
+        ImVec2 c;
+        float side = 1.0f;
+        Square(base->u0, base->v0, base->u1, base->v1, c, side);
+        int want = baseSize;
+        while (want < maxSize && want * side < displayPx) {
+            want *= 2;
+        }
+        if (want > baseSize) {
+            if (const auto* sharp = DdsCache::Get().Request(path, want)) {
+                return sharp;
+            }
+        }
+        return base;
     }
 
     std::uint32_t ToImColor(std::uint32_t rgb, float alpha) {
@@ -31,11 +71,38 @@ namespace mtfui::render {
         const bool hovered = IsItemHovered();
         auto* io = GetIO();
 
+        // Open zoomed onto the ink once every layer has loaded; a new tattoo refits.
+        std::string setKey;
+        float u0 = 1.0f, v0 = 1.0f, u1 = 0.0f, v1 = 0.0f;
+        bool allLoaded = true;
+        for (std::size_t i = 0; i < in.textures.size() && i < in.layers.size(); ++i) {
+            setKey += in.textures[i] + "|";
+            if (const auto* t = DdsCache::Get().Request(in.textures[i], textureSize)) {
+                u0 = std::min(u0, t->u0), v0 = std::min(v0, t->v0);
+                u1 = std::max(u1, t->u1), v1 = std::max(v1, t->v1);
+            } else if (!DdsCache::Get().Failed(in.textures[i], textureSize)) {
+                allLoaded = false;
+            }
+        }
+        if (allLoaded && view.fittedFor != setKey) {
+            view.fittedFor = setKey;
+            if (u1 > u0 && v1 > v0) {
+                float side = 1.0f;
+                Square(u0, v0, u1, v1, view.fitCenter, side);
+                view.fitZoom = std::clamp(1.0f / side, 1.0f, kMaxZoom);
+            } else {
+                view.fitZoom = 1.0f;
+                view.fitCenter = { 0.5f, 0.5f };
+            }
+            view.zoom = view.fitZoom;
+            view.center = view.fitCenter;
+        }
+
         if (hovered && io->MouseWheel != 0.0f) {
             const ImVec2 m = GetMousePos();
             const float half = 0.5f / view.zoom;
             const ImVec2 uv{ view.center.x - half + (m.x - origin.x) / size / view.zoom, view.center.y - half + (m.y - origin.y) / size / view.zoom };
-            view.zoom = std::clamp(view.zoom * (io->MouseWheel > 0 ? 1.25f : 0.8f), 1.0f, 8.0f);
+            view.zoom = std::clamp(view.zoom * (io->MouseWheel > 0 ? 1.25f : 0.8f), 1.0f, kMaxZoom);
             const float h2 = 0.5f / view.zoom;
             view.center = { uv.x - (m.x - origin.x) / size / view.zoom + h2, uv.y - (m.y - origin.y) / size / view.zoom + h2 };
         }
@@ -44,7 +111,10 @@ namespace mtfui::render {
             view.center.y -= io->MouseDelta.y / size / view.zoom;
         }
         if (hovered && IsMouseDoubleClicked(0)) {
-            view = {};
+            const bool atFit = std::abs(view.zoom - view.fitZoom) < 0.01f && std::abs(view.center.x - view.fitCenter.x) < 0.001f &&
+                               std::abs(view.center.y - view.fitCenter.y) < 0.001f;
+            view.zoom = atFit ? 1.0f : view.fitZoom;
+            view.center = atFit ? ImVec2{ 0.5f, 0.5f } : view.fitCenter;
         }
         const float half = 0.5f / view.zoom;
         view.center.x = std::clamp(view.center.x, half, 1.0f - half);
@@ -66,9 +136,17 @@ namespace mtfui::render {
             pulseMult = model::PulseMultiplier(in.waveform ? *in.waveform : kCosine, in.pulse.rate, static_cast<double>(in.pulse.depth), in.pulse.pause, GetTime());
         }
 
+        // Zoomed in, the base copy is too coarse: fetch one whose visible part fills the preview.
+        int sharpSize = textureSize;
+        while (sharpSize < 4096 && sharpSize < size * view.zoom) {
+            sharpSize *= 2;
+        }
         bool loading = false;
         for (std::size_t i = 0; i < in.textures.size() && i < in.layers.size(); ++i) {
-            const auto* tex = DdsCache::Get().Request(in.textures[i], textureSize);
+            const auto* tex = sharpSize > textureSize ? DdsCache::Get().Request(in.textures[i], sharpSize) : nullptr;
+            if (!tex) {
+                tex = DdsCache::Get().Request(in.textures[i], textureSize);
+            }
             if (!tex) {
                 loading = loading || !DdsCache::Get().Failed(in.textures[i], textureSize);
                 continue;
@@ -94,7 +172,8 @@ namespace mtfui::render {
             ImDrawListManager::AddText(dl, ImVec2{ origin.x + 8, end.y - 22 }, IM_COL32(255, 255, 255, 200), buf);
         }
         if (hovered) {
-            SetTooltip("Scroll to zoom, drag to pan, double-click to reset.\nColors approximate the in-game look.");
+            SetTooltip("Scroll to zoom, drag to pan, double-click to switch between the tattoo and the whole texture.\n"
+                       "Colors approximate the in-game look.");
         }
     }
 
@@ -107,8 +186,10 @@ namespace mtfui::render {
         bool failed = false;
         const int texSize = size > 160.0f ? 512 : 256;
         for (const auto& t : textures) {
-            if (const auto* tex = DdsCache::Get().Request(t, texSize)) {
-                ImDrawListManager::AddImage(dl, Tex(tex), origin, end, ImVec2{ 0, 0 }, ImVec2{ 1, 1 }, ToImColor(tint, 1.0f));
+            if (const auto* tex = RequestCropped(t, texSize, size, 1024)) {
+                ImVec2 uv0, uv1;
+                ContentUV(*tex, uv0, uv1);
+                ImDrawListManager::AddImage(dl, Tex(tex), origin, end, uv0, uv1, ToImColor(tint, 1.0f));
                 any = true;
             } else {
                 failed = failed || DdsCache::Get().Failed(t, texSize);

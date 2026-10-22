@@ -240,12 +240,14 @@ namespace mtfui::ui {
                     if (IsItemHovered(ImGuiHoveredFlags_DelayNormal)) {
                         SetTooltip("%s\n%s", it.entry->label.c_str(), it.pack->label.c_str());
                     }
-                    ImDrawListManager::AddRectFilled(dl, pos, ImVec2{ pos.x + thumb, pos.y + thumb }, render::ToImColor(0x2A2522, 1.0f), 4.0f, 0);
+                    ImDrawListManager::AddRectFilled(dl, pos, ImVec2{ pos.x + thumb, pos.y + thumb }, render::ToImColor(0xC89F86, 1.0f), 4.0f, 0);
                     if (!it.entry->textures.empty()) {
-                        const int texSize = thumb > 128 ? 256 : 128;
-                        if (const auto* tex = render::DdsCache::Get().Request(it.entry->textures.front(), texSize)) {
-                            ImDrawListManager::AddImage(dl, reinterpret_cast<ImTextureID>(tex->srv), pos, ImVec2{ pos.x + thumb, pos.y + thumb }, ImVec2{ 0, 0 },
-                                ImVec2{ 1, 1 }, 0xFFFFFFFF);
+                        const int texSize = 256;
+                        if (const auto* tex = render::RequestCropped(it.entry->textures.front(), texSize, thumb, 1024)) {
+                            ImVec2 uv0, uv1;
+                            render::ContentUV(*tex, uv0, uv1);
+                            ImDrawListManager::AddImage(dl, reinterpret_cast<ImTextureID>(tex->srv), pos, ImVec2{ pos.x + thumb, pos.y + thumb }, uv0, uv1,
+                                0xFFFFFFFF);
                         } else if (render::DdsCache::Get().Failed(it.entry->textures.front(), texSize)) {
                             ImDrawListManager::AddText(dl, ImVec2{ pos.x + 6, pos.y + 6 }, GetColorU32(kError), "missing");
                         }

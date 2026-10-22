@@ -24,4 +24,12 @@ namespace mtfui::render {
     void DrawPulseGraph(const model::Pulse& pulse, const model::Waveform* wave, float width, float height);
 
     std::uint32_t ToImColor(std::uint32_t rgb, float alpha);
+
+    struct Texture;
+    // Square UV window around a texture's ink, so thumbnails show the design rather than empty canvas.
+    void ContentUV(const Texture& tex, ImGuiMCP::ImVec2& uv0, ImGuiMCP::ImVec2& uv1);
+
+    // Loads at baseSize to find the ink, then asks for a copy big enough that the cropped ink
+    // covers displayPx on screen (up to maxSize). Returns the sharpest copy available so far.
+    const Texture* RequestCropped(const std::string& path, int baseSize, float displayPx, int maxSize);
 }
