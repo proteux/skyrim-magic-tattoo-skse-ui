@@ -21,6 +21,12 @@ namespace mtfui::ui {
             return it == snap.pluginEnabled.end() || it->second;
         }
 
+        // Width taken by a SameLine'd SmallButton, including the spacing before it.
+        float SmallButtonReserve(const char* label) {
+            const auto* style = GetStyle();
+            return CalcTextSize(label).x + style->FramePadding.x * 2.0f + style->ItemSpacing.x;
+        }
+
         // Searchable, plugin-grouped picker for conditions or effects. Returns true when key changes.
         bool CatalogPicker(App& app, const char* id, std::string& key, bool conditions) {
             const model::PluginCatalog* owner = nullptr;
@@ -89,7 +95,7 @@ namespace mtfui::ui {
                 }
                 BeginGroup();
                 const float avail = GetContentRegionAvail().x;
-                PushItemWidth(avail - 30.0f);
+                PushItemWidth(avail - SmallButtonReserve("x"));
                 std::string key = c.pluginId;
                 if (CatalogPicker(app, "##cond", key, true)) {
                     c.pluginId = key;
@@ -326,7 +332,7 @@ namespace mtfui::ui {
                 auto& fx = s.effects[i];
                 PushID(static_cast<int>(i));
                 const float avail = GetContentRegionAvail().x;
-                PushItemWidth(avail - 64.0f);
+                PushItemWidth(avail - SmallButtonReserve("^") - SmallButtonReserve("x"));
                 std::string key = fx.key;
                 if (CatalogPicker(app, "##fx", key, false)) {
                     fx.key = key;
@@ -426,6 +432,18 @@ namespace mtfui::ui {
         if (slot > 0) {
             SameLine();
             TextDisabled("priority %d of %d", slot, model::kSlotCount - 1);
+        }
+        bool anyIssue = false;
+        for (const auto severity : { model::Severity::Error, model::Severity::Warning }) {
+            for (const auto& issue : app.issues) {
+                if (issue.slot == slot && issue.severity == severity) {
+                    SeverityText(issue.severity, issue.message);
+                    anyIssue = true;
+                }
+            }
+        }
+        if (anyIssue) {
+            Spacing();
         }
         if (BeginTabBar("##inspector_tabs")) {
             if (BeginTabItem("Condition")) {
