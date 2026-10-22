@@ -1,0 +1,87 @@
+[size=5][b]Magic Tattoos UI[/b][/size]
+A friendlier editor for Magic Tattoos Framework, with previews.
+
+[size=4][b]Description[/b][/size]
+[url=https://github.com/levchimik/magic-tattoos-framework]Magic Tattoos Framework[/url] (MTF) makes tattoos react to what is happening to the wearer: arousal, combat, magicka, the time of day, and anything else its plugins can detect. Setting it up through MTF's own menu means scrolling through long pages of sliders and remembering which tier is which.
+
+Magic Tattoos UI replaces those pages with one window in the [url=https://www.nexusmods.com/skyrimspecialedition/mods/120352]SKSE Menu Framework[/url] menu. You see a whole preset at once as a ladder of tiers, each described in a plain sentence. You pick tattoos from a thumbnail browser and watch the result on a 2D preview, or live on yourself or an NPC, before you save.
+
+It edits the same preset files MTF uses, so everything you make works with MTF's own menu, its mod events, and other mods that apply presets.
+
+[size=4][b]Requirements[/b][/size]
+[list]
+[*][url=https://skse.silverlock.org/]SKSE64[/url]
+[*][url=https://www.nexusmods.com/skyrimspecialedition/mods/32444]Address Library for SKSE Plugins[/url]
+[*][url=https://www.nexusmods.com/skyrimspecialedition/mods/120352]SKSE Menu Framework[/url]
+[*][url=https://github.com/levchimik/magic-tattoos-framework]Magic Tattoos Framework[/url] and its requirements (RaceMenu, PapyrusUtil SE)
+[/list]
+Built for Skyrim SE/AE 1.6.1170 with CommonLibSSE-NG, which also supports 1.5.97.
+
+[size=4][b]Installation[/b][/size]
+Install with Vortex: drag the archive onto the [b]Mods[/b] page, enable [b]Magic Tattoos UI[/b], and click [b]Deploy[/b].
+
+Manual install: extract the archive into [i]Skyrim Special Edition/Data[/i], so that [i]SKSE/Plugins/MagicTattoosUI.dll[/i] ends up inside [i]Data[/i].
+
+There is no plugin file, so it takes no load order slot.
+
+[size=4][b]Opening it[/b][/size]
+Open the SKSE Menu Framework menu (F1 by default) and choose [b]Magic Tattoos[/b]. Click [b]Open in its own window[/b] for a larger window you can move and resize. Esc closes it.
+
+[size=4][b]Main features[/b][/size]
+[b]Presets[/b]
+[list]
+[*][b]The whole preset on one screen.[/b] Tiers are listed in priority order, top wins, with Default at the bottom. Each one has a sentence summary like "When the wearer is at least 50% aroused: Dragon Coil, pulsing at 1.2/s, 2 effects", plus a thumbnail of its tattoo.
+[*][b]Drag tiers to reorder them.[/b] Right-click a tier to move it, clear it, or copy another tier's look.
+[*][b]An inspector for the selected tier[/b] with Condition, Look, Pulse, Effects, and Timing tabs. Every condition and effect comes from the installed plugin catalogs, with its own sliders and menus, and is described in plain words as you edit it.
+[*][b]Built-in checks[/b] for mistakes MTF won't tell you about: a tier that can never activate because a higher tier always wins first, a tier without a condition, missing or disabled plugins, tattoos or textures that aren't installed, layers that overflow your RaceMenu overlay slots, and a pulse with nothing to animate.
+[*][b]Undo and redo[/b] (Ctrl+Z, Ctrl+Y), [b]Save[/b] (Ctrl+S), and [b]Revert[/b]. Every save keeps a backup of the previous file.
+[/list]
+
+[b]Tattoos[/b]
+[list]
+[*][b]A thumbnail browser[/b] for every installed visual pack, with search, filters for area, subject, style, and placement, favorites, and a recently used list.
+[*]Each tattoo shows a large preview in the selected tier's colors, its details, and which of your presets already use it.
+[*]Double-click a tattoo, or use [b]Use for...[/b], to put it on a tier.
+[/list]
+
+[b]Previews[/b]
+[list]
+[*][b]2D preview[/b] on the Look tab. It shows the tattoo over the target's skin texture with each layer's tint, opacity, and glow, and animates the pulse with the chosen waveform. Scroll to zoom, drag to pan, and double-click to reset.
+[*][b]Live preview[/b] shows the tier you're editing on the selected target in the game while you edit it. Turn on [b]with effects[/b] to also run the tier's effects. The preview is removed when you close the menu, and also on the next load if the game exits first.
+[/list]
+
+[b]Targets[/b]
+[list]
+[*]Pick a target at the top of the window: yourself, the actor under your crosshair, the console selection, or anyone nearby.
+[*][b]Apply to target[/b] puts the open preset on them for real. The [b]Applied[/b] list shows what they're wearing and lets you open or remove each preset.
+[*]Saving a preset that the target is wearing refreshes it on them right away.
+[/list]
+
+[b]General and Plugins[/b]
+[list]
+[*]MTF's settings: on/off, debug messages, update interval, rescan visual packs, and the SkyrimNet option when SkyrimNet is installed.
+[*][b]An overlay slot map[/b] for body, face, hands, and feet, showing which RaceMenu overlay slots MTF uses compared with how many your skee64.ini provides.
+[*][b]Plugins:[/b] turn each MTF plugin on or off, see what conditions and effects it provides, and which of your presets use it.
+[/list]
+
+[size=4][b]Notes[/b][/size]
+[list]
+[*]Built-in presets that ship with MTF are read-only. Use [b]Duplicate[/b] to make your own copy.
+[*]Deleting a preset works like MTF's own delete: the file is kept but hidden. A backup also goes to [i]Data/SKSE/Plugins/MagicTattoosUI/backups[/i].
+[*]The UI never changes MTF's files except the presets you save or delete.
+[/list]
+
+[size=4][b]Troubleshooting[/b][/size]
+The log is at [i]Documents/My Games/Skyrim Special Edition/SKSE/MagicTattoosUI.log[/i]. Include it when reporting a problem.
+[list]
+[*][b]"Magic Tattoos Framework is not loaded."[/b] MagicTattoosFramework.esp isn't enabled. You can still edit preset files, but applying, previews, and settings need MTF.
+[*][b]"No free overlay slots" when applying.[/b] Lower MTF's overlay start on the General tab, or raise iNumOverlays in skee64.ini.
+[*][b]A tattoo stays glowing after its tier ended.[/b] Use [b]Clear stuck effects[/b] on the General tab, or in the [b]Applied[/b] list.
+[/list]
+
+[size=4][b]Credits[/b][/size]
+[list]
+[*]levchimik, for Magic Tattoos Framework
+[*]Thiago099, for SKSE Menu Framework
+[*]The CommonLibSSE-NG contributors
+[/list]

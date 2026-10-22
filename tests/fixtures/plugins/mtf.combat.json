@@ -1,0 +1,225 @@
+{
+  "schemaversion": 2,
+  "pluginid": "mtf.combat",
+  "pluginlabel": "Combat",
+  "conditions": [
+    {
+      "id": "combat.in",
+      "label": "In Combat",
+      "description": "Triggers while the actor is in combat (engaged in active fight)."
+    },
+    {
+      "id": "combat.alerted",
+      "label": "Enemies Alerted",
+      "description": "Triggers when hostile NPCs within {param1}m are alerted to the actor.",
+      "param": {
+        "label": "Scan radius (meters)",
+        "min": 1,
+        "max": 100,
+        "default": 40
+      }
+    },
+    {
+      "id": "combat.hostile",
+      "label": "Hostile Nearby",
+      "description": "Triggers when at least one hostile NPC is within {param1}m.",
+      "param": {
+        "label": "Scan radius (meters)",
+        "min": 1,
+        "max": 100,
+        "default": 25
+      }
+    },
+    {
+      "id": "combat.hit",
+      "label": "On Hit",
+      "description": "Triggers with a {param2}% chance per matching incoming hit of class {param1}.",
+      "param": {
+        "label": "Hit class",
+        "menu": [
+          {
+            "id": "any",
+            "label": "Any"
+          },
+          {
+            "id": "blunt",
+            "label": "Blunt"
+          },
+          {
+            "id": "bladed",
+            "label": "Bladed"
+          },
+          {
+            "id": "ranged",
+            "label": "Ranged"
+          },
+          {
+            "id": "fire",
+            "label": "Fire"
+          },
+          {
+            "id": "frost",
+            "label": "Frost"
+          },
+          {
+            "id": "shock",
+            "label": "Shock"
+          }
+        ],
+        "default": "any"
+      },
+      "param2": {
+        "label": "Chance % per hit",
+        "min": 1,
+        "max": 100,
+        "default": 25
+      }
+    },
+    {
+      "id": "state.weaponDrawn",
+      "label": "Weapon Drawn",
+      "description": "Triggers while the actor has a weapon or spell drawn."
+    },
+    {
+      "id": "worn.heavyArmor",
+      "label": "Wearing Heavy Armor",
+      "description": "Triggers when the actor is wearing a heavy-armor cuirass."
+    },
+    {
+      "id": "worn.lightArmor",
+      "label": "Wearing Light Armor",
+      "description": "Triggers when the actor is wearing a light-armor cuirass."
+    },
+    {
+      "id": "combat.casting",
+      "label": "While Casting Spell",
+      "description": "Triggers while the actor is charging or holding a spell mid-cast."
+    }
+  ],
+  "effects": [
+    {
+      "id": "modify.attackDamage",
+      "label": "Modify Attack Damage",
+      "description": "Shifts the actor's outgoing attack damage by {param1}%.",
+      "param1": {
+        "label": "Attack damage shift (% points; + buff, - drain)",
+        "min": -100,
+        "max": 100,
+        "default": 0
+      }
+    },
+    {
+      "id": "burst.stagger",
+      "label": "Stagger",
+      "description": "Burst — staggers the actor when the tier activates.",
+      "kind": "burst"
+    },
+    {
+      "id": "modify.weaponSpeed",
+      "label": "Modify Weapon Speed",
+      "description": "Shifts the actor's weapon-swing speed by {param1}%.",
+      "param1": {
+        "label": "Weapon speed shift (% points; + faster, - slower)",
+        "min": -100,
+        "max": 100,
+        "default": 0
+      }
+    },
+    {
+      "id": "modify.unarmedDamage",
+      "label": "Modify Unarmed Damage",
+      "description": "Shifts the actor's unarmed melee damage by {param1}.",
+      "param1": {
+        "label": "Unarmed damage shift (points; + buff, - drain)",
+        "min": -100,
+        "max": 100,
+        "default": 0
+      }
+    },
+    {
+      "id": "modify.criticalChance",
+      "label": "Modify Critical Chance",
+      "description": "Shifts the actor's critical-strike chance by {param1}%.",
+      "param1": {
+        "label": "Critical chance shift (points; + buff, - drain)",
+        "min": -100,
+        "max": 100,
+        "default": 0
+      }
+    },
+    {
+      "id": "modify.bowSpeed",
+      "label": "Modify Bow Speed",
+      "description": "Shifts the actor's bow draw and release speed by {param1}.",
+      "param1": {
+        "label": "Bow speed bonus shift (units; + faster draw, - slower)",
+        "min": -100,
+        "max": 100,
+        "default": 0
+      }
+    },
+    {
+      "id": "burst.ragdoll",
+      "label": "Ragdoll Burst",
+      "description": "Burst — knocks down every hostile within {param1}ft with force {param2} when the tier activates. Physical CC, no magic-resist check.",
+      "kind": "burst",
+      "param1": {
+        "label": "Knockdown radius (feet)",
+        "min": 3,
+        "max": 300,
+        "default": 25,
+        "step": 5
+      },
+      "param2": {
+        "label": "Knockback force",
+        "min": 1,
+        "max": 100,
+        "default": 10
+      }
+    },
+    {
+      "id": "ragdoll.onhit",
+      "label": "Ragdoll on Hit",
+      "description": "Knocks the attacker down (force {param1}) whenever the actor is struck. Player-only.",
+      "param1": {
+        "label": "Knockback force",
+        "min": 1,
+        "max": 100,
+        "default": 15
+      }
+    },
+    {
+      "id": "damage.fireOnHit",
+      "label": "Fire Damage on Hit",
+      "description": "Deals {param1} fire damage back to the attacker whenever the actor is struck. Player-only.",
+      "param1": {
+        "label": "Fire damage to attacker",
+        "min": 0,
+        "max": 200,
+        "default": 15
+      }
+    },
+    {
+      "id": "damage.frostOnHit",
+      "label": "Frost Damage on Hit",
+      "description": "Deals {param1} frost damage back to the attacker whenever the actor is struck. Player-only.",
+      "param1": {
+        "label": "Frost damage to attacker",
+        "min": 0,
+        "max": 200,
+        "default": 15
+      }
+    },
+    {
+      "id": "damage.shockOnHit",
+      "label": "Shock Damage on Hit",
+      "description": "Deals {param1} shock damage back to the attacker whenever the actor is struck. Player-only.",
+      "param1": {
+        "label": "Shock damage to attacker",
+        "min": 0,
+        "max": 200,
+        "default": 15
+      }
+    }
+  ]
+}

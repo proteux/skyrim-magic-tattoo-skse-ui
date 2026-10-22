@@ -1,0 +1,111 @@
+#include "game/MtfBridge.h"
+#include "ui/App.h"
+#include "ui/Tabs.h"
+#include "ui/Widgets.h"
+
+namespace mtfui::ui {
+    using namespace ImGuiMCP;
+
+    namespace {
+        std::string g_search;
+
+        void EntryList(const char* title, const std::vector<model::CatalogEntry>& list) {
+            if (list.empty()) {
+                return;
+            }
+            if (TreeNode(title, "%s (%d)", title, static_cast<int>(list.size()))) {
+                for (const auto& e : list) {
+                    BulletText("%s", e.label.c_str());
+                    if (IsItemHovered(ImGuiHoveredFlags_DelayShort) && !e.description.empty()) {
+                        SetTooltip("%s", e.description.c_str());
+                    }
+                }
+                TreePop();
+            }
+        }
+    }
+
+    void DrawPluginsTab(App& app) {
+        auto& bridge = game::MtfBridge::Get();
+        const auto& snap = bridge.Snapshot();
+        TextWrapped("Plugins add the conditions and effects you pick in presets. Turning one off stops MTF from evaluating "
+                    "its conditions and running its effects; presets that use it keep their settings.");
+        SearchBox("##plugsearch", g_search, 280.0f, "Search plugins, conditions, effects");
+        if (!bridge.Installed()) {
+            SameLine();
+            TextColored(kWarn, "MTF not loaded: toggles unavailable");
+        }
+        Spacing();
+
+        if (!BeginTable("##plugins", 4, ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingStretchProp)) {
+            return;
+        }
+        TableSetupScrollFreeze(0, 1);
+        TableSetupColumn("On", ImGuiTableColumnFlags_WidthFixed, 40.0f);
+        TableSetupColumn("Plugin", ImGuiTableColumnFlags_WidthStretch, 2.0f);
+        TableSetupColumn("Provides", ImGuiTableColumnFlags_WidthStretch, 2.0f);
+        TableSetupColumn("Used by", ImGuiTableColumnFlags_WidthStretch, 1.5f);
+        TableHeadersRow();
+
+        for (const auto& plugin : app.cat.plugins) {
+            std::string hay = plugin.label + " " + plugin.pluginId;
+            for (const auto& e : plugin.conditions) {
+                hay += " " + e.label;
+            }
+            for (const auto& e : plugin.effects) {
+                hay += " " + e.label;
+            }
+            if (!MatchesSearch(hay, g_search)) {
+                continue;
+            }
+            const auto lower = io::ToLower(plugin.pluginId);
+            const auto known = snap.pluginEnabled.find(lower);
+            const bool registered = std::find(snap.registeredPlugins.begin(), snap.registeredPlugins.end(), lower) != snap.registeredPlugins.end();
+            PushID(plugin.pluginId.c_str());
+            TableNextRow();
+
+            TableNextColumn();
+            bool on = known == snap.pluginEnabled.end() || known->second;
+            BeginDisabled(!bridge.Installed() || !snap.fresh);
+            if (Checkbox("##on", &on)) {
+                bridge.SetPluginEnabled(plugin.pluginId, on);
+            }
+            EndDisabled();
+
+            TableNextColumn();
+            TextUnformatted(plugin.label.c_str());
+            TextDisabled("%s", plugin.pluginId.c_str());
+            if (snap.fresh && !snap.registeredPlugins.empty() && !registered) {
+                TextColored(kWarn, "Catalog only: no script registered");
+                if (IsItemHovered()) {
+                    SetTooltip("MTF has a catalog file for this plugin but its script did not register.\n"
+                               "The plugin's .esp may be missing or disabled.");
+                }
+            }
+
+            TableNextColumn();
+            EntryList("Conditions", plugin.conditions);
+            EntryList("Effects", plugin.effects);
+
+            TableNextColumn();
+            if (const auto* users = app.usage.Plugin(plugin.pluginId)) {
+                if (TreeNode("##users", "%d preset(s)", static_cast<int>(users->size()))) {
+                    for (const auto& u : *users) {
+                        BulletText("%s", u.c_str());
+                    }
+                    TreePop();
+                }
+                if (!on) {
+                    TextColored(kWarn, "Disabled but in use");
+                }
+            } else {
+                TextDisabled("unused");
+            }
+            PopID();
+        }
+        EndTable();
+        if (app.cat.plugins.empty()) {
+            TextDisabled("No plugin catalogs found in MagicTattoosFramework/plugins.");
+        }
+    }
+}

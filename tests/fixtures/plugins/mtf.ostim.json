@@ -1,0 +1,171 @@
+{
+  "schemaversion": 2,
+  "pluginid": "mtf.ostim",
+  "pluginlabel": "OStim Standalone",
+  "conditions": [
+    {
+      "id": "scene.composition",
+      "label": "Scene Composition",
+      "description": "is in a sexual encounter with a certain mix of partners ({param1})",
+      "param": {
+        "label": "Composition",
+        "default": "any",
+        "menu": [
+          {
+            "label": "Any (in scene)",
+            "id": "any"
+          },
+          {
+            "label": "Solo",
+            "id": "solo"
+          },
+          {
+            "label": "1 Male + 1 Female",
+            "id": "1m1f"
+          },
+          {
+            "label": "2 Females",
+            "id": "2f"
+          },
+          {
+            "label": "2 Males",
+            "id": "2m"
+          },
+          {
+            "label": "2 Males + 1 Female",
+            "id": "mmf"
+          },
+          {
+            "label": "1 Male + 2 Females",
+            "id": "mff"
+          },
+          {
+            "label": "Foursome+ (4 or more actors)",
+            "id": "4p"
+          }
+        ]
+      }
+    },
+    {
+      "id": "excitement",
+      "label": "Excitement",
+      "description": "is at least {param1}% aroused during a sexual encounter",
+      "param": {
+        "label": "Min excitement",
+        "min": 0,
+        "max": 100,
+        "default": 50
+      }
+    },
+    {
+      "id": "times.climaxed",
+      "label": "Times Climaxed",
+      "description": "has climaxed at least {param1} time(s) in the current encounter",
+      "param": {
+        "label": "Min climax count",
+        "min": 0,
+        "max": 30,
+        "default": 1
+      }
+    },
+    {
+      "id": "climax.stalled",
+      "label": "Climax Stalled",
+      "description": "climax is being held back ({param1})",
+      "param": {
+        "label": "Stall state",
+        "default": "stalled",
+        "menu": [
+          {
+            "label": "Not stalled",
+            "id": "not_stalled"
+          },
+          {
+            "label": "Stalled",
+            "id": "stalled"
+          }
+        ]
+      }
+    },
+    {
+      "id": "scene.action",
+      "label": "Scene Action (act type)",
+      "description": "is giving or receiving a {param1} act during a sexual encounter",
+      "param": {
+        "label": "Action type",
+        "text": true,
+        "default": ""
+      }
+    },
+    {
+      "id": "scene.partner",
+      "label": "Scene Partner (by name)",
+      "description": "is in a sexual encounter with one of these partners: {param1}",
+      "param": {
+        "label": "Partner name(s)",
+        "text": true,
+        "default": ""
+      }
+    }
+  ],
+  "effects": [
+    {
+      "id": "trigger.climax",
+      "label": "Trigger Climax",
+      "description": "The moment this mark activates, brings the actor to climax at once, overriding any hold.",
+      "kind": "burst",
+      "param1": {
+        "label": "Bypass stall (0/1)",
+        "min": 0,
+        "max": 1,
+        "default": 0
+      }
+    },
+    {
+      "id": "excitement.modify",
+      "label": "Modify Excitement",
+      "description": "The moment this mark activates, shifts the actor's arousal by {param1} (a negative value lowers it).",
+      "kind": "burst",
+      "param2": {
+        "label": "Respect multiplier (0/1)",
+        "min": 0,
+        "max": 1,
+        "default": 1
+      },
+      "param1": {
+        "label": "Excitement delta",
+        "min": -100,
+        "max": 100,
+        "default": 20
+      }
+    },
+    {
+      "id": "excitement.set",
+      "label": "Set Excitement",
+      "description": "The moment this mark activates, sets the actor's arousal to {param1}.",
+      "kind": "burst",
+      "param1": {
+        "label": "Target excitement",
+        "min": 0,
+        "max": 100,
+        "default": 80
+      }
+    },
+    {
+      "id": "climax.stall",
+      "label": "Stall Climax",
+      "description": "Holds the actor back from climaxing while active, releasing them when the mark fades."
+    },
+    {
+      "id": "excitement.mult.set",
+      "label": "Set Excitement Multiplier",
+      "description": "Makes the actor's arousal build {param1} times faster while active.",
+      "param1": {
+        "label": "Multiplier (×1.0)",
+        "min": 0,
+        "max": 10,
+        "default": 3
+      }
+    }
+  ]
+}

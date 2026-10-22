@@ -1,0 +1,206 @@
+{
+  "schemaversion": 2,
+  "pluginid": "mtf.magic",
+  "pluginlabel": "Magic",
+  "conditions": [
+    {
+      "id": "magiceffect.kw.fire",
+      "label": "Burning (fire MGEF)",
+      "description": "Triggers while a fire-keyword magic effect is active on the actor (burning)."
+    },
+    {
+      "id": "magiceffect.kw.frost",
+      "label": "Frozen (frost MGEF)",
+      "description": "Triggers while a frost-keyword magic effect is active on the actor (frozen)."
+    },
+    {
+      "id": "magiceffect.kw.shock",
+      "label": "Shocked (shock MGEF)",
+      "description": "Triggers while a shock-keyword magic effect is active on the actor (shocked)."
+    },
+    {
+      "id": "magiceffect.kw.invisibility",
+      "label": "Invisible",
+      "description": "Triggers while the actor is invisible."
+    }
+  ],
+  "effects": [
+    {
+      "id": "scale.magickaCost",
+      "label": "Scale Magicka Cost",
+      "description": "Spells cost {param1}% of their original across all schools.",
+      "param1": {
+        "label": "Spell cost (% of original)",
+        "min": 0,
+        "max": 400,
+        "default": 100,
+        "step": 5
+      }
+    },
+    {
+      "id": "modify.resist",
+      "label": "Modify Resist",
+      "description": "Shifts the actor's {param1} resistance by {param2} points.",
+      "param1": {
+        "label": "Resist type",
+        "menu": [
+          {
+            "id": "fire",
+            "label": "Fire"
+          },
+          {
+            "id": "frost",
+            "label": "Frost"
+          },
+          {
+            "id": "shock",
+            "label": "Shock"
+          },
+          {
+            "id": "magic",
+            "label": "Magic"
+          },
+          {
+            "id": "disease",
+            "label": "Disease"
+          },
+          {
+            "id": "poison",
+            "label": "Poison"
+          }
+        ],
+        "default": "fire"
+      },
+      "param2": {
+        "label": "Resist shift (points; + resist, - weakness)",
+        "min": -100,
+        "max": 100,
+        "default": 0
+      }
+    },
+    {
+      "id": "toggle.muffle",
+      "label": "Muffle",
+      "description": "Toggles silenced footsteps on the actor while active."
+    },
+    {
+      "id": "toggle.waterbreathing",
+      "label": "Waterbreathing",
+      "description": "Toggles waterbreathing on the actor while active."
+    },
+    {
+      "id": "toggle.waterWalking",
+      "label": "Water Walking",
+      "description": "Toggles water-walking on the actor while active."
+    },
+    {
+      "id": "spell.modifyArmor",
+      "label": "Modify Armor",
+      "description": "Toggles a flat armor-rating bonus of {param1} while active.",
+      "param1": {
+        "label": "Armor rating points",
+        "min": 0,
+        "max": 500,
+        "default": 100,
+        "step": 10
+      }
+    },
+    {
+      "id": "spell.detectLife",
+      "label": "Detect Life",
+      "description": "Toggles a Detect Life aura that highlights living NPCs within {param1}ft while active.",
+      "param1": {
+        "label": "Detect radius (feet)",
+        "min": 5,
+        "max": 500,
+        "default": 100,
+        "step": 10
+      }
+    },
+    {
+      "id": "spell.slowTime",
+      "label": "Slow Time",
+      "description": "Toggles a slow-time effect that drags everything around the actor to {param1}% of normal speed while active.",
+      "param1": {
+        "label": "Time speed % (lower = slower; 100 = normal)",
+        "min": 5,
+        "max": 100,
+        "default": 50,
+        "step": 5
+      }
+    },
+    {
+      "id": "spell.flameCloak",
+      "label": "Flame Cloak",
+      "description": "Toggles a flame cloak that burns enemies within {param2}ft for {param1} damage/s while active.",
+      "param1": {
+        "label": "Damage per second",
+        "min": 1,
+        "max": 200,
+        "default": 8
+      },
+      "param2": {
+        "label": "Radius (feet)",
+        "min": 3,
+        "max": 500,
+        "default": 5
+      }
+    },
+    {
+      "id": "spell.frostCloak",
+      "label": "Frost Cloak",
+      "description": "Toggles a frost cloak that chills enemies within {param2}ft for {param1} damage/s while active.",
+      "param1": {
+        "label": "Damage per second",
+        "min": 1,
+        "max": 200,
+        "default": 8
+      },
+      "param2": {
+        "label": "Radius (feet)",
+        "min": 3,
+        "max": 500,
+        "default": 5
+      }
+    },
+    {
+      "id": "spell.lightningCloak",
+      "label": "Lightning Cloak",
+      "description": "Toggles a lightning cloak that shocks enemies within {param2}ft for {param1} damage/s while active.",
+      "param1": {
+        "label": "Damage per second",
+        "min": 1,
+        "max": 200,
+        "default": 8
+      },
+      "param2": {
+        "label": "Radius (feet)",
+        "min": 3,
+        "max": 500,
+        "default": 5
+      }
+    },
+    {
+      "id": "modify.absorbChance",
+      "label": "Modify Spell Absorb",
+      "description": "Shifts the actor's chance to absorb incoming spells by {param1}%.",
+      "param1": {
+        "label": "Spell absorb chance shift (points; + absorb, - vulnerable)",
+        "min": -100,
+        "max": 100,
+        "default": 0
+      }
+    },
+    {
+      "id": "modify.reflectDamage",
+      "label": "Modify Reflect Damage",
+      "description": "Shifts the actor's chance to reflect incoming melee damage by {param1}%.",
+      "param1": {
+        "label": "Reflect damage chance shift (points; + reflect, - vulnerable)",
+        "min": -100,
+        "max": 100,
+        "default": 0
+      }
+    }
+  ]
+}

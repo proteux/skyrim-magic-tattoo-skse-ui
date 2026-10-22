@@ -1,0 +1,123 @@
+{
+  "schemaversion": 2,
+  "pluginid": "mtf.sla",
+  "pluginlabel": "SLA (SexLab Aroused)",
+  "conditions": [
+    {
+      "id": "arousal",
+      "label": "Arousal",
+      "description": "is at least {param1}% aroused",
+      "param": {
+        "label": "Arousal threshold",
+        "min": 0,
+        "max": 100,
+        "default": 80
+      }
+    },
+    {
+      "id": "days.since.orgasm",
+      "label": "Days Since Orgasm",
+      "description": "has gone at least {param1} day(s) without an orgasm",
+      "param": {
+        "label": "Min days since orgasm",
+        "min": 0,
+        "max": 30,
+        "default": 3
+      }
+    },
+    {
+      "id": "exposure.rate",
+      "label": "Exposure Rate",
+      "description": "arousal is rising quickly (by at least {param1} per hour)",
+      "param": {
+        "label": "Min exposure rate",
+        "min": 0,
+        "max": 100,
+        "default": 25
+      }
+    },
+    {
+      "id": "arousal.lock",
+      "label": "Arousal Locked",
+      "description": "arousal is locked in place"
+    }
+  ],
+  "effects": [
+    {
+      "id": "arousal.rate",
+      "label": "Arousal Rate",
+      "description": "Slowly raises the actor's own arousal by {param1}% each hour while active.",
+      "param1": {
+        "label": "Exposure delta on self per game-hour",
+        "min": 0,
+        "max": 100,
+        "default": 5
+      }
+    },
+    {
+      "id": "arousal.rate.npc",
+      "label": "NPC Arousal Rate",
+      "description": "Gives off an alluring aura that slowly raises the arousal of those nearby by {param1}% each hour while active.",
+      "param2": {
+        "label": "Aura radius (m)",
+        "min": 5,
+        "max": 100,
+        "default": 22,
+        "format": "{0}m"
+      },
+      "param1": {
+        "label": "Exposure delta on nearby NPCs per game-hour",
+        "min": 0,
+        "max": 100,
+        "default": 5
+      },
+      "param3": {
+        "label": "Affects",
+        "default": "both",
+        "menu": [
+          {
+            "label": "Both",
+            "id": "both"
+          },
+          {
+            "label": "Females only",
+            "id": "female"
+          },
+          {
+            "label": "Males only",
+            "id": "male"
+          }
+        ]
+      }
+    },
+    {
+      "id": "modify.arousal",
+      "label": "Modify Arousal",
+      "description": "The moment this mark activates, sends a one-time rush of arousal through the actor, adding {param1}%.",
+      "kind": "burst",
+      "param1": {
+        "label": "Burst exposure added to self on switch",
+        "min": 0,
+        "max": 100,
+        "default": 25
+      }
+    },
+    {
+      "id": "set.exposure.rate",
+      "label": "Set Exposure Rate",
+      "description": "Sets how fast the actor's arousal builds to {param1} while active, restoring the old pace afterward.",
+      "param1": {
+        "label": "Exposure rate while active",
+        "min": 0,
+        "max": 200,
+        "default": 50
+      }
+    },
+    {
+      "id": "trigger.orgasm",
+      "label": "Trigger Orgasm",
+      "description": "Gives the actor a release, resetting the time since their last orgasm to zero.",
+      "kind": "burst"
+    }
+  ]
+}

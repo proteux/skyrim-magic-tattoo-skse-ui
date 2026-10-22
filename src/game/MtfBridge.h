@@ -1,0 +1,74 @@
+#pragma once
+
+namespace mtfui::game {
+    inline constexpr const char* kMtfPlugin = "MagicTattoosFramework.esp";
+    inline constexpr RE::FormID kMainQuestLocalId = 0x803;
+    inline constexpr const char* kMainQuestScript = "MTF_MainQuest";
+    inline constexpr const char* kMcmScript = "MTF_MCMQuest";
+
+    // Overlay areas in the order MTF names them for SetOverlaySlot.
+    inline constexpr std::array<const char*, 4> kAreas{ "Body", "Face", "Hands", "Feet" };
+
+    struct MtfSnapshot {
+        bool loaded = false;  // quest found and script bound
+        bool fresh = false;  // at least one refresh completed
+        bool modActive = false;
+        bool debugMode = false;
+        float updateInterval = 0.1f;
+        std::array<int, 4> overlayStart{ 2, 0, 0, 0 };
+        int visualPackCount = 0;
+        bool rescanOnLoad = true;
+        bool skyrimNet = false;
+        bool snPersist = false;
+        int pluginCount = 0;
+        std::map<std::string, bool> pluginEnabled;  // lowercase plugin id
+        std::vector<std::string> registeredPlugins;  // lowercase plugin ids
+        std::string mcmEditing;  // preset the MCM has loaded for editing
+    };
+
+    // Everything the UI asks of MTF's Papyrus side. Calls are queued to the game thread;
+    // results are handed back through PostToUi so UI state is only touched while rendering.
+    class MtfBridge {
+    public:
+        static MtfBridge& Get();
+
+        void OnDataLoaded();
+        bool Installed() const { return quest_ != nullptr; }
+        RE::TESQuest* Quest() const { return quest_; }
+
+        const MtfSnapshot& Snapshot() const { return snap_; }  // UI thread only
+        void Refresh();
+        void RefreshPlugins(const std::vector<std::string>& pluginIds);
+
+        void SetModActive(bool on);
+        void SetDebugMode(bool on);
+        void SetUpdateInterval(float seconds);
+        void SetOverlaySlot(int area, int start);
+        void ReloadVisualPacks();
+        void SetRescanOnLoad(bool on);
+        void SetPluginEnabled(const std::string& pluginId, bool on);
+        void SetSkyrimNetPersist(bool on);
+        void StopShadersOn(RE::FormID actor);
+
+        // After a preset file changes on disk: drop PapyrusUtil's cached copy and MTF's parsed
+        // copy so actors wearing it pick up the edit, and refresh MTF's own editor if it has it loaded.
+        void PresetChanged(const std::string& name, bool builtin, std::function<void()> done = {});
+
+        void Apply(RE::FormID actor, const std::string& name, std::function<void(int)> done);
+        void Remove(RE::FormID actor, const std::string& name, std::function<void()> done);
+        void ListApplied(RE::FormID actor, std::function<void(std::vector<std::string>)> done);
+
+        // Thread hand-off.
+        static void RunOnGame(std::function<void()> fn);
+        static void PostToUi(std::function<void()> fn);
+        static void DrainUi();
+
+    private:
+        RE::TESQuest* quest_ = nullptr;
+        RE::TESQuest* mcmQuest_ = nullptr;
+        MtfSnapshot snap_;
+    };
+
+    // Formats an AddAppliedPreset return code for the user.
+    std::string ApplyResultText(int rc);
+}

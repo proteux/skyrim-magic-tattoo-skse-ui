@@ -1,0 +1,64 @@
+{
+  "_comment": "Colour-name palette for the SkyrimNet bio/change-event colour words. Names + hexes are the standard HTML/CSS named colours (htmlcolorcodes.com/color-names). A layer's tint/emissive is described by the NEAREST anchor (squared RGB distance). Dense through the pink/purple/red range where MTF tattoos concentrate. Add or retune rows freely — no array cap; JsonUtil reads this live (cached in memory), only on tier-change renders.",
+  "colors": [
+    { "name": "black",             "hex": "#000000" },
+    { "name": "dark grey",         "hex": "#404040" },
+    { "name": "grey",              "hex": "#808080" },
+    { "name": "light grey",        "hex": "#C0C0C0" },
+    { "name": "white",             "hex": "#FFFFFF" },
+
+    { "name": "red",               "hex": "#FF0000" },
+    { "name": "crimson",           "hex": "#DC143C" },
+    { "name": "firebrick",         "hex": "#B22222" },
+    { "name": "dark red",          "hex": "#8B0000" },
+
+    { "name": "orange red",        "hex": "#FF4500" },
+    { "name": "coral",             "hex": "#FF7F50" },
+    { "name": "orange",            "hex": "#FFA500" },
+
+    { "name": "salmon",            "hex": "#FA8072" },
+    { "name": "light salmon",      "hex": "#FFA07A" },
+    { "name": "light pink",        "hex": "#FFB6C1" },
+    { "name": "pink",              "hex": "#FFC0CB" },
+    { "name": "hot pink",          "hex": "#FF69B4" },
+    { "name": "deep pink",         "hex": "#FF1493" },
+    { "name": "pale violet red",   "hex": "#DB7093" },
+    { "name": "medium violet red", "hex": "#C71585" },
+
+    { "name": "lavender",          "hex": "#E6E6FA" },
+    { "name": "thistle",           "hex": "#D8BFD8" },
+    { "name": "plum",              "hex": "#DDA0DD" },
+    { "name": "violet",            "hex": "#EE82EE" },
+    { "name": "orchid",            "hex": "#DA70D6" },
+    { "name": "magenta",           "hex": "#FF00FF" },
+    { "name": "medium orchid",     "hex": "#BA55D3" },
+    { "name": "medium purple",     "hex": "#9370DB" },
+    { "name": "blue violet",       "hex": "#8A2BE2" },
+    { "name": "dark violet",       "hex": "#9400D3" },
+    { "name": "dark magenta",      "hex": "#8B008B" },
+    { "name": "purple",            "hex": "#800080" },
+    { "name": "indigo",            "hex": "#4B0082" },
+
+    { "name": "gold",              "hex": "#FFD700" },
+    { "name": "yellow",            "hex": "#FFFF00" },
+    { "name": "khaki",             "hex": "#F0E68C" },
+    { "name": "tan",               "hex": "#D2B48C" },
+    { "name": "chocolate",         "hex": "#D2691E" },
+    { "name": "brown",             "hex": "#A52A2A" },
+    { "name": "saddle brown",      "hex": "#8B4513" },
+
+    { "name": "lime",              "hex": "#00FF00" },
+    { "name": "green",             "hex": "#008000" },
+    { "name": "forest green",      "hex": "#228B22" },
+    { "name": "olive",             "hex": "#808000" },
+    { "name": "teal",              "hex": "#008080" },
+
+    { "name": "cyan",              "hex": "#00FFFF" },
+    { "name": "turquoise",         "hex": "#40E0D0" },
+    { "name": "sky blue",          "hex": "#87CEEB" },
+    { "name": "dodger blue",       "hex": "#1E90FF" },
+    { "name": "royal blue",        "hex": "#4169E1" },
+    { "name": "blue",              "hex": "#0000FF" },
+    { "name": "navy",              "hex": "#000080" }
+  ]
+}

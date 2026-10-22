@@ -1,0 +1,390 @@
+{
+	"displayname" : "Bright and Horny 4",
+	"fadeondeath" : 
+	{
+		"durationms" : 2000,
+		"enabled" : 0,
+		"mode" : 0
+	},
+	"hidden" : 0,
+	"schemaversion" : 9,
+	"slot" : 
+	[
+		{
+			"cond" : 
+			{
+				"entryid" : "LyruRileyReidBack",
+				"packid" : "mtf.lyru-1"
+			},
+			"cool" : 
+			{
+				"min" : 0
+			},
+			"layer" : 
+			[
+				{
+					"alpha" : 100,
+					"emissive" : "#FFFFFF",
+					"emissivemult" : 1.0,
+					"tint" : "#000000"
+				},
+				{
+					"alpha" : 80,
+					"emissive" : "#AD0073",
+					"emissivemult" : 0.0,
+					"tint" : "#FFFFFF"
+				},
+				{
+					"alpha" : 100,
+					"emissive" : "#FFFFFF",
+					"emissivemult" : 0.0,
+					"tint" : "#FFFFFF"
+				},
+				{
+					"alpha" : 100,
+					"emissive" : "#FFFFFF",
+					"emissivemult" : 0.0,
+					"tint" : "#FFFFFF"
+				}
+			],
+			"persist" : 
+			{
+				"allowOverride" : 1,
+				"min" : 0
+			}
+		},
+		{
+			"cond" : 
+			{
+				"entryid" : "",
+				"items" : 
+				[
+					{
+						"param" : 50,
+						"param2" : 0,
+						"param3" : 0,
+						"pluginid" : "mtf.ostim:Excitement"
+					}
+				],
+				"op" : 0,
+				"packid" : ""
+			},
+			"cool" : 
+			{
+				"min" : 0
+			},
+			"layer" : 
+			[
+				{
+					"alpha" : 90,
+					"emissive" : "#CC0033",
+					"emissivemult" : 6.0,
+					"tint" : "#999999"
+				},
+				{
+					"alpha" : 80,
+					"emissive" : "#AD0073",
+					"emissivemult" : 2.5,
+					"tint" : "#FFFFFF"
+				},
+				{
+					"alpha" : 100,
+					"emissive" : "#FFFFFF",
+					"emissivemult" : 0.0,
+					"tint" : "#FFFFFF"
+				},
+				{
+					"alpha" : 100,
+					"emissive" : "#FFFFFF",
+					"emissivemult" : 0.0,
+					"tint" : "#FFFFFF"
+				}
+			],
+			"name" : "Warming",
+			"persist" : 
+			{
+				"allowOverride" : 1,
+				"min" : 0
+			},
+			"pulse" : 
+			{
+				"depth" : 70,
+				"pause" : 0.20000000298023224,
+				"rate" : 0.60000002384185791
+			}
+		},
+		{
+			"cond" : 
+			{
+				"entryid" : "",
+				"items" : 
+				[
+					{
+						"param" : 80,
+						"param2" : 0,
+						"param3" : 0,
+						"pluginid" : "mtf.ostim:Excitement"
+					}
+				],
+				"op" : 0,
+				"packid" : ""
+			},
+			"cool" : 
+			{
+				"min" : 0
+			},
+			"layer" : 
+			[
+				{
+					"alpha" : 100,
+					"emissive" : "#FFFFFF",
+					"emissivemult" : 0.0,
+					"tint" : "#FFFFFF"
+				},
+				{
+					"alpha" : 80,
+					"emissive" : "#AD0073",
+					"emissivemult" : 2.5,
+					"tint" : "#FFFFFF"
+				},
+				{
+					"alpha" : 100,
+					"emissive" : "#FFFFFF",
+					"emissivemult" : 0.0,
+					"tint" : "#FFFFFF"
+				},
+				{
+					"alpha" : 100,
+					"emissive" : "#FFFFFF",
+					"emissivemult" : 0.0,
+					"tint" : "#FFFFFF"
+				}
+			],
+			"name" : "Hot",
+			"persist" : 
+			{
+				"allowOverride" : 1,
+				"min" : 0
+			}
+		},
+		{
+			"cond" : 
+			{
+				"entryid" : "",
+				"packid" : ""
+			},
+			"cool" : 
+			{
+				"min" : 0
+			},
+			"layer" : 
+			[
+				{
+					"alpha" : 100,
+					"emissive" : "#FFFFFF",
+					"emissivemult" : 0.0,
+					"tint" : "#FFFFFF"
+				},
+				{
+					"alpha" : 80,
+					"emissive" : "#AD0073",
+					"emissivemult" : 2.5,
+					"tint" : "#FFFFFF"
+				},
+				{
+					"alpha" : 100,
+					"emissive" : "#FFFFFF",
+					"emissivemult" : 0.0,
+					"tint" : "#FFFFFF"
+				},
+				{
+					"alpha" : 100,
+					"emissive" : "#FFFFFF",
+					"emissivemult" : 0.0,
+					"tint" : "#FFFFFF"
+				}
+			],
+			"persist" : 
+			{
+				"allowOverride" : 1,
+				"min" : 0
+			}
+		},
+		{
+			"cond" : 
+			{
+				"entryid" : "",
+				"packid" : ""
+			},
+			"cool" : 
+			{
+				"min" : 0
+			},
+			"layer" : 
+			[
+				{
+					"alpha" : 100,
+					"emissive" : "#FFFFFF",
+					"emissivemult" : 0.0,
+					"tint" : "#FFFFFF"
+				},
+				{
+					"alpha" : 80,
+					"emissive" : "#AD0073",
+					"emissivemult" : 2.5,
+					"tint" : "#FFFFFF"
+				},
+				{
+					"alpha" : 100,
+					"emissive" : "#FFFFFF",
+					"emissivemult" : 0.0,
+					"tint" : "#FFFFFF"
+				},
+				{
+					"alpha" : 100,
+					"emissive" : "#FFFFFF",
+					"emissivemult" : 0.0,
+					"tint" : "#FFFFFF"
+				}
+			],
+			"persist" : 
+			{
+				"allowOverride" : 1,
+				"min" : 0
+			}
+		},
+		{
+			"cond" : 
+			{
+				"entryid" : "",
+				"packid" : ""
+			},
+			"cool" : 
+			{
+				"min" : 0
+			},
+			"layer" : 
+			[
+				{
+					"alpha" : 100,
+					"emissive" : "#FFFFFF",
+					"emissivemult" : 0.0,
+					"tint" : "#FFFFFF"
+				},
+				{
+					"alpha" : 80,
+					"emissive" : "#AD0073",
+					"emissivemult" : 2.5,
+					"tint" : "#FFFFFF"
+				},
+				{
+					"alpha" : 100,
+					"emissive" : "#FFFFFF",
+					"emissivemult" : 0.0,
+					"tint" : "#FFFFFF"
+				},
+				{
+					"alpha" : 100,
+					"emissive" : "#FFFFFF",
+					"emissivemult" : 0.0,
+					"tint" : "#FFFFFF"
+				}
+			],
+			"persist" : 
+			{
+				"allowOverride" : 1,
+				"min" : 0
+			}
+		},
+		{
+			"cond" : 
+			{
+				"entryid" : "",
+				"packid" : ""
+			},
+			"cool" : 
+			{
+				"min" : 0
+			},
+			"layer" : 
+			[
+				{
+					"alpha" : 100,
+					"emissive" : "#FFFFFF",
+					"emissivemult" : 0.0,
+					"tint" : "#FFFFFF"
+				},
+				{
+					"alpha" : 80,
+					"emissive" : "#AD0073",
+					"emissivemult" : 2.5,
+					"tint" : "#FFFFFF"
+				},
+				{
+					"alpha" : 100,
+					"emissive" : "#FFFFFF",
+					"emissivemult" : 0.0,
+					"tint" : "#FFFFFF"
+				},
+				{
+					"alpha" : 100,
+					"emissive" : "#FFFFFF",
+					"emissivemult" : 0.0,
+					"tint" : "#FFFFFF"
+				}
+			],
+			"persist" : 
+			{
+				"allowOverride" : 1,
+				"min" : 0
+			}
+		},
+		{
+			"cond" : 
+			{
+				"entryid" : "",
+				"packid" : ""
+			},
+			"cool" : 
+			{
+				"min" : 0
+			},
+			"layer" : 
+			[
+				{
+					"alpha" : 100,
+					"emissive" : "#FFFFFF",
+					"emissivemult" : 0.0,
+					"tint" : "#FFFFFF"
+				},
+				{
+					"alpha" : 80,
+					"emissive" : "#AD0073",
+					"emissivemult" : 2.5,
+					"tint" : "#FFFFFF"
+				},
+				{
+					"alpha" : 100,
+					"emissive" : "#FFFFFF",
+					"emissivemult" : 0.0,
+					"tint" : "#FFFFFF"
+				},
+				{
+					"alpha" : 100,
+					"emissive" : "#FFFFFF",
+					"emissivemult" : 0.0,
+					"tint" : "#FFFFFF"
+				}
+			],
+			"persist" : 
+			{
+				"allowOverride" : 1,
+				"min" : 0
+			}
+		}
+	],
+	"transition" : 
+	{
+		"duration" : 0.5
+	}
+}

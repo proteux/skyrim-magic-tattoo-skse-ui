@@ -1,0 +1,321 @@
+{
+  "schemaversion": 2,
+  "pluginid": "mtf.attributes",
+  "pluginlabel": "Attributes & Skills",
+  "conditions": [
+    {
+      "id": "magicka",
+      "label": "Above Magicka %",
+      "description": "Triggers when the actor's magicka is at or above {param1}%.",
+      "param": {
+        "label": "Health/Magicka/Stamina % threshold",
+        "min": 0,
+        "max": 100,
+        "default": 50
+      }
+    },
+    {
+      "id": "magicka.below",
+      "label": "Below Magicka %",
+      "description": "Triggers when the actor's magicka drops below {param1}%.",
+      "param": {
+        "label": "Health/Magicka/Stamina % threshold",
+        "min": 0,
+        "max": 100,
+        "default": 30
+      }
+    },
+    {
+      "id": "stamina",
+      "label": "Above Stamina %",
+      "description": "Triggers when the actor's stamina is at or above {param1}%.",
+      "param": {
+        "label": "Health/Magicka/Stamina % threshold",
+        "min": 0,
+        "max": 100,
+        "default": 50
+      }
+    },
+    {
+      "id": "stamina.below",
+      "label": "Below Stamina %",
+      "description": "Triggers when the actor's stamina drops below {param1}%.",
+      "param": {
+        "label": "Health/Magicka/Stamina % threshold",
+        "min": 0,
+        "max": 100,
+        "default": 30
+      }
+    },
+    {
+      "id": "health",
+      "label": "Above Health %",
+      "description": "Triggers when the actor's health is at or above {param1}%.",
+      "param": {
+        "label": "Health/Magicka/Stamina % threshold",
+        "min": 0,
+        "max": 100,
+        "default": 50
+      }
+    },
+    {
+      "id": "health.below",
+      "label": "Below Health %",
+      "description": "Triggers when the actor's health drops below {param1}%.",
+      "param": {
+        "label": "Health/Magicka/Stamina % threshold",
+        "min": 0,
+        "max": 100,
+        "default": 30
+      }
+    }
+  ],
+  "effects": [
+    {
+      "id": "modify.magickaRegen",
+      "label": "Modify Magicka Regen",
+      "description": "Shifts the actor's magicka regeneration rate by {param1}%.",
+      "param1": {
+        "label": "Magicka regen rate shift (mult points; + faster, - slower)",
+        "min": -100,
+        "max": 100,
+        "default": 0
+      }
+    },
+    {
+      "id": "modify.carryWeight",
+      "label": "Modify Carry Weight",
+      "description": "Shifts the actor's carry-weight cap by {param1}.",
+      "param1": {
+        "label": "Carry weight shift (points; + buff, - drain)",
+        "min": -100,
+        "max": 100,
+        "default": 0
+      }
+    },
+    {
+      "id": "damage.magicka",
+      "label": "Damage Magicka",
+      "description": "Burst — damages or restores {param1}% of the actor's base magicka when the tier activates.",
+      "kind": "burst",
+      "param1": {
+        "label": "Burst % of base Magicka (+ restore, - damage)",
+        "min": -100,
+        "max": 100,
+        "default": 0
+      }
+    },
+    {
+      "id": "damage.stamina",
+      "label": "Damage Stamina",
+      "description": "Burst — damages or restores {param1}% of the actor's base stamina when the tier activates.",
+      "kind": "burst",
+      "param1": {
+        "label": "Burst % of base Stamina (+ restore, - damage)",
+        "min": -100,
+        "max": 100,
+        "default": 0
+      }
+    },
+    {
+      "id": "modify.movementSpeed",
+      "label": "Modify Movement Speed",
+      "description": "Shifts the actor's movement-speed multiplier by {param1}%.",
+      "param1": {
+        "label": "Movement speed shift (mult points; + faster, - slower)",
+        "min": -100,
+        "max": 100,
+        "default": 0
+      }
+    },
+    {
+      "id": "modify.staminaRegen",
+      "label": "Modify Stamina Regen",
+      "description": "Shifts the actor's stamina regeneration rate by {param1}%.",
+      "param1": {
+        "label": "Stamina regen rate shift (mult points; + faster, - slower)",
+        "min": -100,
+        "max": 100,
+        "default": 0
+      }
+    },
+    {
+      "id": "modify.healthRegen",
+      "label": "Modify Health Regen",
+      "description": "Shifts the actor's health regeneration rate by {param1}%.",
+      "param1": {
+        "label": "Health regen rate shift (mult points; + faster, - slower)",
+        "min": -100,
+        "max": 100,
+        "default": 0
+      }
+    },
+    {
+      "id": "modify.maxMagicka",
+      "label": "Modify Max Magicka",
+      "description": "Shifts the actor's maximum magicka by {param1}.",
+      "param1": {
+        "label": "Max magicka shift (points; + buff, - drain)",
+        "min": -100,
+        "max": 100,
+        "default": 0
+      }
+    },
+    {
+      "id": "modify.maxStamina",
+      "label": "Modify Max Stamina",
+      "description": "Shifts the actor's maximum stamina by {param1}.",
+      "param1": {
+        "label": "Max stamina shift (points; + buff, - drain)",
+        "min": -100,
+        "max": 100,
+        "default": 0
+      }
+    },
+    {
+      "id": "damage.health",
+      "label": "Damage Health",
+      "description": "Burst — damages or restores {param1}% of the actor's base health when the tier activates.",
+      "kind": "burst",
+      "param1": {
+        "label": "Burst % of base Health (+ restore, - damage)",
+        "min": -100,
+        "max": 100,
+        "default": 0
+      }
+    },
+    {
+      "id": "modify.skill",
+      "label": "Modify Skill",
+      "description": "Shifts the actor's {param1} skill by {param2} points.",
+      "param1": {
+        "label": "Skill",
+        "menu": [
+          {
+            "id": "one_handed",
+            "label": "One-Handed"
+          },
+          {
+            "id": "two_handed",
+            "label": "Two-Handed"
+          },
+          {
+            "id": "archery",
+            "label": "Archery"
+          },
+          {
+            "id": "block",
+            "label": "Block"
+          },
+          {
+            "id": "heavy_armor",
+            "label": "Heavy Armor"
+          },
+          {
+            "id": "light_armor",
+            "label": "Light Armor"
+          },
+          {
+            "id": "smithing",
+            "label": "Smithing"
+          },
+          {
+            "id": "enchanting",
+            "label": "Enchanting"
+          },
+          {
+            "id": "alchemy",
+            "label": "Alchemy"
+          },
+          {
+            "id": "destruction",
+            "label": "Destruction"
+          },
+          {
+            "id": "restoration",
+            "label": "Restoration"
+          },
+          {
+            "id": "alteration",
+            "label": "Alteration"
+          },
+          {
+            "id": "illusion",
+            "label": "Illusion"
+          },
+          {
+            "id": "conjuration",
+            "label": "Conjuration"
+          },
+          {
+            "id": "speech",
+            "label": "Speech"
+          },
+          {
+            "id": "lockpicking",
+            "label": "Lockpicking"
+          },
+          {
+            "id": "pickpocket",
+            "label": "Pickpocket"
+          },
+          {
+            "id": "sneak",
+            "label": "Sneak"
+          }
+        ],
+        "default": "one_handed"
+      },
+      "param2": {
+        "label": "Skill shift (points; + buff, - drain)",
+        "min": -100,
+        "max": 100,
+        "default": 0
+      }
+    },
+    {
+      "id": "modify.jumpHeight",
+      "label": "Modify Jump Height",
+      "description": "Shifts the actor's jump height by {param1} points (JumpingBonus actor value).",
+      "param1": {
+        "label": "Jump height shift (points; + higher, - lower)",
+        "min": -100,
+        "max": 300,
+        "default": 0
+      }
+    },
+    {
+      "id": "drain.health",
+      "label": "Drain Health",
+      "description": "Continuously drains {param1} health per second while the tier is active (separate from regen — drains current value).",
+      "param1": {
+        "label": "Health drain per second",
+        "min": 0,
+        "max": 100,
+        "default": 5
+      }
+    },
+    {
+      "id": "drain.magicka",
+      "label": "Drain Magicka",
+      "description": "Continuously drains {param1} magicka per second while the tier is active (separate from regen — drains current value).",
+      "param1": {
+        "label": "Magicka drain per second",
+        "min": 0,
+        "max": 100,
+        "default": 5
+      }
+    },
+    {
+      "id": "drain.stamina",
+      "label": "Drain Stamina",
+      "description": "Continuously drains {param1} stamina per second while the tier is active (separate from regen — drains current value).",
+      "param1": {
+        "label": "Stamina drain per second",
+        "min": 0,
+        "max": 100,
+        "default": 5
+      }
+    }
+  ]
+}

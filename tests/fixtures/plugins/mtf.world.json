@@ -1,0 +1,225 @@
+{
+  "schemaversion": 2,
+  "pluginid": "mtf.world",
+  "pluginlabel": "World & Exploration",
+  "conditions": [
+    {
+      "id": "location.kw",
+      "label": "Location",
+      "description": "Triggers when the actor is inside a {param1}-flagged location.",
+      "param": {
+        "label": "Location type",
+        "menu": [
+          {
+            "id": "player_home",
+            "label": "Player Home"
+          },
+          {
+            "id": "dungeon",
+            "label": "Dungeon"
+          },
+          {
+            "id": "city",
+            "label": "City"
+          },
+          {
+            "id": "town",
+            "label": "Town"
+          },
+          {
+            "id": "inn",
+            "label": "Inn"
+          },
+          {
+            "id": "jail",
+            "label": "Jail"
+          },
+          {
+            "id": "indoors",
+            "label": "Indoors"
+          },
+          {
+            "id": "outdoors",
+            "label": "Outdoors"
+          }
+        ],
+        "default": "player_home"
+      }
+    },
+    {
+      "id": "weather",
+      "label": "Weather",
+      "description": "Triggers when the current weather class is {param1}.",
+      "param": {
+        "label": "Weather class",
+        "menu": [
+          {
+            "id": "pleasant",
+            "label": "Pleasant"
+          },
+          {
+            "id": "cloudy",
+            "label": "Cloudy"
+          },
+          {
+            "id": "rainy",
+            "label": "Rainy"
+          },
+          {
+            "id": "snowy",
+            "label": "Snowy"
+          }
+        ],
+        "default": "pleasant"
+      }
+    },
+    {
+      "id": "state.sprinting",
+      "label": "Sprinting",
+      "description": "Triggers while the actor is sprinting."
+    },
+    {
+      "id": "state.running",
+      "label": "Running",
+      "description": "Triggers while the actor is running (not walking, not sprinting)."
+    },
+    {
+      "id": "state.loversEmbrace",
+      "label": "Lover's Embrace",
+      "description": "Triggers while the actor has the Lover's Embrace rested bonus active."
+    },
+    {
+      "id": "state.sneaking",
+      "label": "Sneaking",
+      "description": "Triggers while the actor is sneaking."
+    },
+    {
+      "id": "state.swimming",
+      "label": "Swimming",
+      "description": "Triggers while the actor is swimming."
+    },
+    {
+      "id": "state.mounted",
+      "label": "Mounted",
+      "description": "Triggers while the actor is mounted on a horse or other steed."
+    },
+    {
+      "id": "state.bleedingOut",
+      "label": "Bleeding Out",
+      "description": "Triggers while the actor is downed and bleeding out."
+    },
+    {
+      "id": "time.range",
+      "label": "Time of Day Range",
+      "description": "Triggers between in-game hours {param1} and {param2} (wraps midnight if end is earlier than start).",
+      "param": {
+        "label": "From (hour)",
+        "min": 0,
+        "max": 24,
+        "default": 6
+      },
+      "param2": {
+        "label": "Till (hour, wrap if < From)",
+        "min": 0,
+        "max": 24,
+        "default": 20
+      }
+    },
+    {
+      "id": "faction.playerFollower",
+      "label": "Is Player's Follower",
+      "description": "Triggers when the actor is one of the player's current followers."
+    },
+    {
+      "id": "followers.any",
+      "label": "Has Active Follower",
+      "description": "Triggers when at least one follower NPC is within {param1}m.",
+      "param": {
+        "label": "Scan radius (meters)",
+        "min": 1,
+        "max": 100,
+        "default": 80
+      }
+    },
+    {
+      "id": "gold.aboveThousand",
+      "label": "Gold >= N x 1000",
+      "description": "Triggers when the actor's gold is at or above {param1},000.",
+      "param": {
+        "label": "Gold threshold (x 1000)",
+        "min": 0,
+        "max": 1000,
+        "default": 5
+      }
+    },
+    {
+      "id": "npc.faction.near",
+      "label": "Faction Member Nearby",
+      "description": "Triggers when a {param3} is nearby (within {param2} m).",
+      "param": {
+        "label": "Faction EditorID (e.g. PotentialFollowerFaction)",
+        "text": true,
+        "default": ""
+      },
+      "param2": {
+        "label": "Radius (m)",
+        "min": 1,
+        "max": 100,
+        "default": 40,
+        "step": 5,
+        "format": "{0} m"
+      },
+      "param3": {
+        "label": "Display name (e.g. Potential follower)",
+        "text": true,
+        "default": ""
+      }
+    },
+    {
+      "id": "npc.ref.near",
+      "label": "Named Actor Nearby",
+      "description": "Triggers when an actor whose display name is one of {param1} is within {param2} m.",
+      "param": {
+        "label": "Actor display name(s), comma-separated",
+        "text": true,
+        "default": ""
+      },
+      "param2": {
+        "label": "Radius (m)",
+        "min": 1,
+        "max": 100,
+        "default": 40,
+        "step": 5,
+        "format": "{0} m"
+      }
+    }
+  ],
+  "effects": [
+    {
+      "id": "burst.blowCover",
+      "label": "Blow Cover",
+      "description": "Burst — alerts every hostile NPC within {param1}ft to the actor's presence (blows stealth).",
+      "kind": "burst",
+      "param1": {
+        "label": "Alert radius (feet)",
+        "min": 5,
+        "max": 300,
+        "default": 80,
+        "step": 5
+      }
+    },
+    {
+      "id": "burst.bounty",
+      "label": "Add Bounty",
+      "description": "Burst — adjusts the actor's bounty in their current hold by {param1} gold (positive adds, negative pays off).",
+      "kind": "burst",
+      "param1": {
+        "label": "Bounty change (gold; + add, - remove)",
+        "min": -10000,
+        "max": 10000,
+        "default": 0,
+        "step": 50
+      }
+    }
+  ]
+}

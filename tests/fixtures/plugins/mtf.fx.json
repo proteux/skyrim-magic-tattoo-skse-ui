@@ -1,0 +1,385 @@
+{
+  "schemaversion": 2,
+  "pluginid": "mtf.fx",
+  "pluginlabel": "Visual & Sound",
+  "conditions": [],
+  "effects": [
+    {
+      "id": "flash.onhit",
+      "label": "Flash",
+      "description": "Flashes the tattoo's emissive layer to {param2}% brightness on the chosen trigger event ({param1}).",
+      "param1": {
+        "label": "Trigger event",
+        "menu": [
+          {
+            "id": "disabled",
+            "label": "Disabled"
+          },
+          {
+            "id": "blunt_only",
+            "label": "Blunt only"
+          },
+          {
+            "id": "bladed_only",
+            "label": "Bladed only"
+          },
+          {
+            "id": "ranged_only",
+            "label": "Ranged only"
+          },
+          {
+            "id": "fire_only",
+            "label": "Fire only"
+          },
+          {
+            "id": "frost_only",
+            "label": "Frost only"
+          },
+          {
+            "id": "shock_only",
+            "label": "Shock only"
+          },
+          {
+            "id": "melee_blunt_bladed",
+            "label": "Melee (Blunt + Bladed)"
+          },
+          {
+            "id": "physical_blunt_bladed_ranged",
+            "label": "Physical (Blunt + Bladed + Ranged)"
+          },
+          {
+            "id": "magic_fire_frost_shock",
+            "label": "Magic (Fire + Frost + Shock)"
+          },
+          {
+            "id": "all_combat_classes",
+            "label": "All combat classes"
+          },
+          {
+            "id": "on_spell_cast",
+            "label": "On spell cast"
+          }
+        ],
+        "default": "disabled"
+      },
+      "param2": {
+        "label": "Peak emissive (additive, % of 1.0)",
+        "min": 0,
+        "max": 1000,
+        "default": 300,
+        "step": 10
+      },
+      "param3": {
+        "label": "Ramp up (ms)",
+        "min": 1,
+        "max": 2000,
+        "default": 150,
+        "step": 10
+      },
+      "param4": {
+        "label": "Decay (ms)",
+        "min": 1,
+        "max": 5000,
+        "default": 500,
+        "step": 10
+      },
+      "param5": {
+        "label": "Sustain window (ms)",
+        "min": 0,
+        "max": 2000,
+        "default": 800,
+        "step": 10
+      }
+    },
+    {
+      "id": "shader.play",
+      "label": "Vanilla Shader",
+      "description": "Plays the {param1} effect shader on the actor while active (duration {param2}s; 0 = until removed).",
+      "param1": {
+        "label": "Shader",
+        "menu": [
+          {
+            "id": "fire_cloak",
+            "label": "Fire Cloak"
+          },
+          {
+            "id": "fire_burst",
+            "label": "Fire Burst"
+          },
+          {
+            "id": "frost",
+            "label": "Frost"
+          },
+          {
+            "id": "frost_chillrend",
+            "label": "Frost Chillrend"
+          },
+          {
+            "id": "shock",
+            "label": "Shock"
+          },
+          {
+            "id": "shock_storm",
+            "label": "Shock Storm"
+          },
+          {
+            "id": "stoneflesh",
+            "label": "Stoneflesh"
+          },
+          {
+            "id": "ebonyflesh",
+            "label": "Ebonyflesh"
+          },
+          {
+            "id": "dragonhide",
+            "label": "Dragonhide"
+          },
+          {
+            "id": "soul_trap",
+            "label": "Soul Trap"
+          },
+          {
+            "id": "ghost_ethereal",
+            "label": "Ghost (Ethereal)"
+          },
+          {
+            "id": "ghost_red",
+            "label": "Ghost Red"
+          },
+          {
+            "id": "invisibility",
+            "label": "Invisibility"
+          },
+          {
+            "id": "muffle",
+            "label": "Muffle"
+          },
+          {
+            "id": "ward_shield",
+            "label": "Ward Shield"
+          },
+          {
+            "id": "reanimate",
+            "label": "Reanimate"
+          },
+          {
+            "id": "turn_undead_flames",
+            "label": "Turn Undead Flames"
+          },
+          {
+            "id": "heal",
+            "label": "Heal"
+          },
+          {
+            "id": "absorb_health",
+            "label": "Absorb Health"
+          },
+          {
+            "id": "vampire_change",
+            "label": "Vampire Change"
+          },
+          {
+            "id": "werewolf_transform",
+            "label": "Werewolf Transform"
+          },
+          {
+            "id": "detect_life",
+            "label": "Detect Life"
+          }
+        ],
+        "default": "fire_cloak"
+      },
+      "param2": {
+        "label": "Duration (s, 0 = until removed)",
+        "min": 0,
+        "max": 60,
+        "default": 0
+      }
+    },
+    {
+      "id": "sound.play",
+      "label": "Vanilla Sound",
+      "description": "Plays the {param1} looping sound on the actor while active (duration {param2}s; 0 = until removed).",
+      "param1": {
+        "label": "Sound",
+        "menu": [
+          {
+            "id": "fire_ready_loop",
+            "label": "Fire — ready loop"
+          },
+          {
+            "id": "fire_secondary_ready",
+            "label": "Fire — secondary ready"
+          },
+          {
+            "id": "fire_body_on_fire",
+            "label": "Fire — body on fire"
+          },
+          {
+            "id": "fire_medium_crackle",
+            "label": "Fire — medium crackle"
+          },
+          {
+            "id": "frost_ready_loop",
+            "label": "Frost — ready loop"
+          },
+          {
+            "id": "frost_concentration",
+            "label": "Frost — concentration"
+          },
+          {
+            "id": "frost_wall_hum",
+            "label": "Frost — wall hum"
+          },
+          {
+            "id": "shock_concentration",
+            "label": "Shock — concentration"
+          },
+          {
+            "id": "shock_projectile_arc",
+            "label": "Shock — projectile arc"
+          },
+          {
+            "id": "shock_wall_hum",
+            "label": "Shock — wall hum"
+          },
+          {
+            "id": "soul_trap_active_hum",
+            "label": "Soul Trap — active hum"
+          },
+          {
+            "id": "ward_shimmer_stereo",
+            "label": "Ward — shimmer (stereo)"
+          },
+          {
+            "id": "ward_shimmer_mono",
+            "label": "Ward — shimmer (mono)"
+          },
+          {
+            "id": "restoration_heal_beam",
+            "label": "Restoration — heal beam"
+          },
+          {
+            "id": "restoration_circle_hum",
+            "label": "Restoration — circle hum"
+          },
+          {
+            "id": "detect_life_pulse",
+            "label": "Detect Life — pulse"
+          },
+          {
+            "id": "alteration_ready_hum",
+            "label": "Alteration — ready hum"
+          },
+          {
+            "id": "illusion_ready_hum",
+            "label": "Illusion — ready hum"
+          },
+          {
+            "id": "ui_level_up",
+            "label": "UI — Level up"
+          },
+          {
+            "id": "ui_skill_up",
+            "label": "UI — Skill up"
+          },
+          {
+            "id": "ui_new_quest",
+            "label": "UI — New quest"
+          },
+          {
+            "id": "ui_quest_update",
+            "label": "UI — Quest update"
+          },
+          {
+            "id": "ui_quest_complete",
+            "label": "UI — Quest complete"
+          },
+          {
+            "id": "ui_shout_learned",
+            "label": "UI — Shout learned"
+          },
+          {
+            "id": "ui_shout_pop_big",
+            "label": "UI — Shout pop (big)"
+          },
+          {
+            "id": "ui_perk_select",
+            "label": "UI — Perk select"
+          },
+          {
+            "id": "ui_journal_open",
+            "label": "UI — Journal open"
+          },
+          {
+            "id": "dragon_flight_roar",
+            "label": "Dragon — flight roar"
+          },
+          {
+            "id": "dragon_kill_roar",
+            "label": "Dragon — kill roar"
+          },
+          {
+            "id": "hagraven_shriek",
+            "label": "Hagraven shriek"
+          },
+          {
+            "id": "conjure_portal_open",
+            "label": "Conjure — portal open"
+          },
+          {
+            "id": "conjure_portal_close",
+            "label": "Conjure — portal close"
+          },
+          {
+            "id": "conjure_bound_weapon",
+            "label": "Conjure — bound weapon"
+          },
+          {
+            "id": "conjure_impact",
+            "label": "Conjure — impact"
+          }
+        ],
+        "default": "fire_ready_loop"
+      },
+      "param2": {
+        "label": "Duration (s, 0 = until removed)",
+        "min": 0,
+        "max": 60,
+        "default": 0
+      },
+      "param3": {
+        "label": "Volume (%)",
+        "min": 0,
+        "max": 100,
+        "default": 100,
+        "step": 5
+      }
+    },
+    {
+      "id": "toggle.ambientLight",
+      "label": "Ambient Light",
+      "description": "Emits light around the actor (radius {param1}, brightness {param2}%, colour {param3}) while active. No visible source.",
+      "param1": {
+        "label": "Light radius",
+        "min": 64,
+        "max": 1024,
+        "default": 350,
+        "step": 16
+      },
+      "param2": {
+        "label": "Brightness (%)",
+        "min": 10,
+        "max": 200,
+        "default": 100,
+        "step": 5,
+        "format": "{0}%"
+      },
+      "param3": {
+        "label": "Light colour",
+        "color": 1,
+        "default": 16777215
+      }
+    }
+  ]
+}

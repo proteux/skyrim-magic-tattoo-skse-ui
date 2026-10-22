@@ -1,0 +1,968 @@
+{
+  "schemaVersion": 3,
+  "packId": "mtf.lyru-1",
+  "label": "Lyru's Tattoo Pack Collection 1",
+  "area": "Body",
+  "entries": [
+    {
+      "id": "LyruAkaliBack",
+      "label": "Akali Back",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\DragonTattooAkaliSingleColor.dds"
+        }
+      ],
+      "tags": {
+        "subject": "calligraphic serpentine ribbon, swirling cloud flourishes, hidden figure",
+        "style": "ink brush calligraphy with curling negative-space details",
+        "placement": "across the upper back between the shoulder blades, sweeping toward one shoulder"
+      },
+      "description": "A long horizontal black brush-stroke that twists like a serpent or ribbon through stylized cloud curls and spiraling tendrils. The strokes thicken into a small central knot suggesting a coiled figure, with thin whisker-like lines trailing off the ends. The composition is fluid and asymmetric, evoking East Asian ink calligraphy more than rigid tribal work."
+    },
+    {
+      "id": "LyruAsdethBack",
+      "label": "Asdeth Back",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\Asdeth.dds"
+        }
+      ],
+      "tags": {
+        "subject": "vertical line of arcane script, single sigil cap",
+        "style": "minimal scribed text glyph",
+        "placement": "running down the spine from the nape between the shoulder blades"
+      },
+      "description": "A narrow vertical column of small angular letters or runes, capped by a tiny crowned sigil at the top. The mark is restrained and band-like, reading more as an incantation inscribed along the spine than as a pictorial design. Its silhouette stays slim and disciplined, framing the centerline rather than spreading outward."
+    },
+    {
+      "id": "LyruSuccubusChest",
+      "label": "Succubus Chest",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\SuccubusTattooChest.dds"
+        }
+      ],
+      "tags": {
+        "subject": "spread bat wings, twin horns, central body crest",
+        "style": "filled silhouette, bilateral symmetry",
+        "placement": "across the upper chest just below the collarbones"
+      },
+      "description": "A solid black bat-wing crest with broad membranous wings spreading symmetrically to either side, each scalloped along the trailing edge with pointed finger-bones. A small horned head with curved arcs sits at the center, framed by two folded inner wing flaps below. The design reads as a heraldic demon emblem stretched horizontally across the chest."
+    },
+    {
+      "id": "LyruEsdeathChest",
+      "label": "Esdeath Chest",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\EsdeathTattoo.dds"
+        }
+      ],
+      "tags": {
+        "subject": "horned trident sigil, V-shaped twin arcs, central spike",
+        "style": "filled silhouette, sharp angular geometry",
+        "placement": "centered on the upper chest just below the collarbones"
+      },
+      "description": "An angular pictogram resembling a downward-pointing horned helm or trident. Two thick curved arcs sweep up and out from a central vertical spike like horns or shoulder guards, with two smaller tapered blades flanking the base. The silhouette is heavy, symmetric, and reads almost like a stylized brand or military insignia."
+    },
+    {
+      "id": "LyruKatarinaBelly",
+      "label": "Katarina Belly",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\KatarinaTattooBelly.dds"
+        }
+      ],
+      "tags": {
+        "subject": "tribal flame ribbon, curling barbs, tapered point",
+        "style": "stylized tribal linework, asymmetric flow",
+        "placement": "low on the abdomen just below the navel toward one side"
+      },
+      "description": "A vertical tribal flourish of curling flame-like blades, with feathery tapered points fanning outward from a coiled central spine. The composition flows top-to-bottom, narrowing at both ends, with hook and spiral details suggesting motion. The whole figure reads as a stylized blade-and-flame motif rather than any literal creature."
+    },
+    {
+      "id": "LyruRaphtaliaChest",
+      "label": "Raphtalia Chest",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\RaphtaliaTattoo.dds"
+        }
+      ],
+      "tags": {
+        "subject": "ringed sigil, three interlocking ovals, radial spikes",
+        "style": "occult emblem with engraved script border",
+        "placement": "centered on the upper chest above the breasts"
+      },
+      "description": "A circular occult medallion ringed by a band of tiny inscribed script, with three interlinked vesica-shaped ovals at its heart forming a triquetra-like knot. Short black spikes radiate outward from the rim like sunrays, and a small downward chevron tags the underside. The overall feel is that of a summoning seal or arcane crest."
+    },
+    {
+      "id": "LyruThalmorChest",
+      "label": "Thalmor Chest",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\ThalmorTattoo.dds"
+        }
+      ],
+      "tags": {
+        "subject": "ascendant winged figure, raised arms, fan-shaped feathers",
+        "style": "filled silhouette with subtle vertical striations",
+        "placement": "centered on the upper chest just below the collarbones"
+      },
+      "description": "A solid black emblem of an upright figure with arms uplifted, framed by sweeping fan-shaped feathered wings that flare outward like a peacock display. The body is compressed into a slim central column, with the feathers striated by fine vertical lines that catch light against the silhouette. The composition is rigidly symmetric and reads as a heraldic ascension crest."
+    },
+    {
+      "id": "LyruAsdethMarkBoob",
+      "label": "Asdeth Mark Boob",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\AsdethMark.dds"
+        }
+      ],
+      "tags": {
+        "subject": "blacksmith anvil, balanced hammer, blocky silhouette",
+        "style": "chunky pixel-like filled silhouette",
+        "placement": "on the inner upper breast near the cleavage line"
+      },
+      "description": "A heavy black silhouette of an anvil with a long-shafted hammer resting across its top. The forms are blocky and pixel-edged rather than smoothly rendered, giving the mark a stamped, brand-like quality. The hammer head, haft, and anvil base read as a tradesman's heraldic emblem."
+    },
+    {
+      "id": "Lyrugenshinleg",
+      "label": "genshinleg",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\genshinleg.dds"
+        }
+      ],
+      "tags": {
+        "subject": "stacked flame crest, droplet pendant, pointed teardrops",
+        "style": "filled silhouette with crisp negative-space cutouts",
+        "placement": "down the outer side of one thigh"
+      },
+      "description": "A vertical two-part emblem: an upper flame-shaped crest with a teardrop carved into its core, suspended above a lower bell-like ornament that drops a single pendant bead beneath. The two halves mirror each other across a thin connecting line. The motif feels like an elemental sigil or alchemy badge."
+    },
+    {
+      "id": "Lyrugenshinleg2",
+      "label": "genshinleg 2",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\genshinleg2.dds"
+        }
+      ],
+      "tags": {
+        "subject": "stacked diamond ornament, leafed terminals, slim waist",
+        "style": "filled silhouette with mirror symmetry",
+        "placement": "down the outer side of one thigh near the hip"
+      },
+      "description": "A slender vertical ornament built from a central diamond with a small inner cutout, capped above and below by trefoil leaf shapes and tipped at both ends by small finials. The silhouette mirrors top-to-bottom, reading as a stylized buckle or arcane device. The narrow waist and pointed terminals give it a tapered, almost calligraphic stance."
+    },
+    {
+      "id": "LyruMoonAspectBack",
+      "label": "Moon Aspect Back",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\MoonAspect.dds"
+        }
+      ],
+      "tags": {
+        "subject": "crescent moon crown, triangle alchemical sigil, ringed pendant",
+        "style": "stacked occult symbol set, thin geometric strokes",
+        "placement": "down the spine between the shoulder blades"
+      },
+      "description": "A vertical stack of esoteric symbols joined by a thin axial line: a horned crescent moon at the top, a triangle bisected by a horizontal bar in the middle, and a ringed circle pendant at the base. The strokes are thin and geometric, giving the design a celestial-alchemy chart feel. Each glyph is centered and balanced like beads on a single thread."
+    },
+    {
+      "id": "LyruCrownelChest",
+      "label": "Crownel Chest",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\Crownel.dds"
+        }
+      ],
+      "tags": {
+        "subject": "raven in flight, spread wings, fanned tail",
+        "style": "solid silhouette with feathered edges",
+        "placement": "centered high on the chest below the collarbones"
+      },
+      "description": "A heraldic raven viewed head-on with wings fully spread and a broad fanned tail beneath. The silhouette is filled solid black, with the wingtips feathered into wispy strokes that fade outward. The bird's small pointed head sits at the top center, giving the figure a cross-like cruciform balance."
+    },
+    {
+      "id": "LyruAkaliKDABack",
+      "label": "Akali KDABack",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\AkaliKDABack.dds"
+        }
+      ],
+      "tags": {
+        "subject": "feline mask, framing mane of curling fronds, downward fangs",
+        "style": "filled silhouette with sharp tribal flames",
+        "placement": "high on the upper back between the shoulder blades"
+      },
+      "description": "A bold mask-like crest with a central feline face flanked by sweeping tribal locks that curl outward like a stylized mane. Two downward fangs or hooks protrude beneath the mask, and the outer fronds taper into sharp blade points. The mirror-symmetric composition reads as a predator emblem framed by black flame."
+    },
+    {
+      "id": "LyruRileyReidBack",
+      "label": "Riley Reid Back",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\RileyReidBack.dds"
+        }
+      ],
+      "tags": {
+        "subject": "vertical column of stylized characters, decorative script",
+        "style": "ornamental Sinographic-style brushwork",
+        "placement": "running down the spine from the nape"
+      },
+      "description": "A vertical strip of densely brushed characters stacked one above the other along the spine. Each glyph is ornate with curling internal flourishes, suggesting a decorative pseudo-Sinographic script rather than literal text. The column is narrow and disciplined, reading like a tattooed prayer or motto."
+    },
+    {
+      "id": "LyruNorsebBack",
+      "label": "Norseb Back",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\VikingTattooBack.dds"
+        }
+      ],
+      "tags": {
+        "subject": "world tree, twin coiled serpents, runic compass disc",
+        "style": "Nordic engraved linework, intricate detail",
+        "placement": "down the spine from the upper back toward the lower back"
+      },
+      "description": "An ornate vertical Norse composition: a stylized world-tree above, its roots flowing down into two mirrored serpents that twine around a large runic compass disc at the base. The disc is inscribed with concentric circles of futhark-like runes and an eight-spoked vegvisir at its center. Every element is finely detailed in tight black linework."
+    },
+    {
+      "id": "LyruFalmerBack",
+      "label": "Falmer Back",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\FalmerBack.dds"
+        }
+      ],
+      "tags": {
+        "subject": "vertical alphabet of stylized letterforms, vine-like glyphs",
+        "style": "blackletter-meets-organic script",
+        "placement": "running down the spine from the nape"
+      },
+      "description": "A tall stacked column of decorative letterforms, each one rendered like a curling vine glyph with thick spine and sprouting accents. The characters read as a fantasy alphabet rather than any specific script. The strip is narrow and orderly, giving the impression of a chiseled inscription set along the backbone."
+    },
+    {
+      "id": "LyruOrcishSignArm",
+      "label": "Orcish Sign Arm",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\OrcishSignArm.dds"
+        }
+      ],
+      "tags": {
+        "subject": "blacksmith anvil, large hammer, broad base",
+        "style": "filled silhouette, blocky and heavy",
+        "placement": "wrapping the outer forearm"
+      },
+      "description": "A solid black anvil with a long-handled sledge hammer lying across its top, its shaft extending past the anvil's horn. The base flares wide and trapezoidal beneath a narrow neck, suggesting weight and stability. The motif reads as a smith's guild badge or clan brand."
+    },
+    {
+      "id": "LyruFalmerBelly",
+      "label": "Falmer Belly",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\FalmerBellySide.dds"
+        }
+      ],
+      "tags": {
+        "subject": "vertical row of carved glyphs, ornate runic letters",
+        "style": "engraved fantasy script",
+        "placement": "low on the side of the abdomen below the ribs"
+      },
+      "description": "A short vertical strip of five or six ornate glyphs stacked atop one another, each character built from sharp serifs and curling internal accents. The script reads as a fantasy alphabet rather than any earthly language. The column is narrow and disciplined, sitting like a quiet inscribed seal on the flank."
+    },
+    {
+      "id": "LyruRoseThighR",
+      "label": "Rose Thigh R",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\RosesThigh.dds"
+        }
+      ],
+      "tags": {
+        "subject": "bouquet of climbing roses, curling vines, scattered leaves",
+        "style": "filled silhouette with delicate vine accents",
+        "placement": "down the outer side of the thigh"
+      },
+      "description": "A flowing cluster of full-bloom roses arranged along a curving stem, with twisting vines and pointed leaves spilling outward to fill the negative space. The blooms are solid black silhouettes, while thin trailing tendrils curl into spirals around their edges. The composition tapers naturally to fit a long thigh canvas."
+    },
+    {
+      "id": "LyruRoseThighL",
+      "label": "Rose Thigh L",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\RosesThigh2.dds"
+        }
+      ],
+      "tags": {
+        "subject": "climbing rose cluster, swirling vines, broad leaves",
+        "style": "filled silhouette with curling tendril flourishes",
+        "placement": "down the outer side of the thigh, mirroring its partner"
+      },
+      "description": "A vertical bouquet of three large rose blooms growing from a sinuous central stem, surrounded by trailing vines that spiral into small curlicues at their tips. Broad pointed leaves fan outward between the flowers, breaking up the silhouette with crisp negative space. The piece is shaped to be a mirror counterpart to the opposing thigh design."
+    },
+    {
+      "id": "LyruCNlettersArm",
+      "label": "CNletters Arm",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\SettleWithTheFlow.dds"
+        }
+      ],
+      "tags": {
+        "subject": "four large Chinese characters in a horizontal row",
+        "style": "clean sans-serif Sinographic typography",
+        "placement": "across the outer side of the forearm"
+      },
+      "description": "Four bold Chinese characters set side by side in a clean modern typeface, each rendered as a solid black glyph with even stroke weight. There is no decorative framing or embellishment, only the typography itself. The arrangement reads like a motto banded across the forearm."
+    },
+    {
+      "id": "LyruFlowersUnderBreast",
+      "label": "Flowers Under Breast",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\FlowersUnderBreast.dds"
+        }
+      ],
+      "tags": {
+        "subject": "wide horizontal floral garland, mixed blooms and leaves",
+        "style": "dense filled silhouette",
+        "placement": "across the lower ribs and upper abdomen below the bust"
+      },
+      "description": "A long horizontal swag of layered flowers and foliage, dense in the center and tapering at the edges. Mixed full-bloom roses, smaller buds, and pointed leaves are packed together into one continuous black mass with sharp outer contours. The shape suggests a corset or sternum garland sweeping under the bust."
+    },
+    {
+      "id": "LyruThalmorBack",
+      "label": "Thalmor Back",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\ThalmorBack.dds"
+        }
+      ],
+      "tags": {
+        "subject": "vertical inscription, capping crowned sigil, tiny ringed bullets",
+        "style": "engraved arcane script, slim column",
+        "placement": "down the spine from the nape between the shoulder blades"
+      },
+      "description": "A slender vertical column of ornate letterforms threaded between small ringed bullets, topped by a crowned helmet-like sigil. The strokes are thin and disciplined, giving the impression of a chiseled prayer or oath. The whole strip stays narrow, hugging the spine."
+    },
+    {
+      "id": "LyruEldenRingWomb",
+      "label": "Elden Ring Womb",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\EldenRingWomb.dds"
+        }
+      ],
+      "tags": {
+        "subject": "fragmented broken ring, four cardinal break-points",
+        "style": "scattered stippled segments forming a circle",
+        "placement": "low on the abdomen above the pubic mound"
+      },
+      "description": "A large circular outline rendered in broken, fragmented strokes, as if a complete ring had been shattered and only its arcs remain. Four roughly cardinal points show sharper concentrations and small triangular tags, marking break-sites along the rim. The negative-space center is left clean, putting all visual weight on the broken perimeter."
+    },
+    {
+      "id": "LyruApocryphaBack",
+      "label": "Apocrypha Back",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\BlackBookBack.dds"
+        }
+      ],
+      "tags": {
+        "subject": "vertical spinal totem, eye-topped, gnarled rune body, leaf base",
+        "style": "engraved occult linework with textured fill",
+        "placement": "down the spine between the shoulder blades"
+      },
+      "description": "A tall vertical totem: at the top, a small eye perched on a circular crown over a sun-like cog; below, a textured body of stacked illegible runes that ripple like rough bark; at the base, an ornate leaf-and-curl finial with a small central rosette. The piece reads as a chained occult inscription anchored along the spine."
+    },
+    {
+      "id": "LyruRoseInnerThigh",
+      "label": "Rose Inner Thigh",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\RoseInnerThigh.dds"
+        }
+      ],
+      "tags": {
+        "subject": "torn solid patch, ragged jagged edges",
+        "style": "filled silhouette with frayed contour",
+        "placement": "on the inner thigh"
+      },
+      "description": "A large solid black blot with violently ragged outer edges, as though a square of skin had been torn or scorched. The interior is uniformly filled with no internal detail, putting all expression in the jagged silhouette. The shape feels abstract and abrasive rather than ornamental."
+    },
+    {
+      "id": "LyruVampireBack",
+      "label": "Vampire Back",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\FifthProgenitorBack.dds"
+        }
+      ],
+      "tags": {
+        "subject": "spiked crown, ornamental vertical chain, hanging pendant",
+        "style": "ornate gothic linework",
+        "placement": "down the spine between the shoulder blades"
+      },
+      "description": "A vertical regalia-like motif: a pointed gothic crown at the top, beneath it a long beaded chain of decorative bands, terminating in a pear-shaped solid pendant at the lower end. Each chain link is a small ornamented cell with internal flourishes. The composition reads as hung jewelry traced down the spine."
+    },
+    {
+      "id": "LyruDragonThighSide",
+      "label": "Dragon Thigh Side",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\DragonThighSide.dds"
+        }
+      ],
+      "tags": {
+        "subject": "coiled Eastern dragon, serpentine body, small spiral medallion",
+        "style": "fine traditional ink linework",
+        "placement": "down the outer side of the thigh"
+      },
+      "description": "A slender Eastern-style dragon coils vertically with a serpentine body, fine claws and whiskers, and a tail flicking outward at the base. A small spiral medallion floats above the design as a sun or pearl accent. The linework is delicate and traditional rather than tribal."
+    },
+    {
+      "id": "LyruWWPawButt",
+      "label": "WWPaw Butt",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\WerewolfPawButt.dds"
+        }
+      ],
+      "tags": {
+        "subject": "wolf paw print, large central pad, four pointed toes",
+        "style": "solid filled silhouette",
+        "placement": "on the upper-outer buttock"
+      },
+      "description": "A bold black paw print with a wide rounded central pad and four elongated, claw-tipped toe pads arrayed above it. The shapes are solidly filled with no internal detail, reading clean and stamp-like. The proportions favor a lupine paw rather than a domestic canine."
+    },
+    {
+      "id": "LyruDBHandButtL",
+      "label": "DBHand Butt L",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\DBHandButt.dds"
+        }
+      ],
+      "tags": {
+        "subject": "ink handprint, splayed fingers, ragged smudged edges",
+        "style": "wet paint impression",
+        "placement": "on one buttock, fingers pointing upward"
+      },
+      "description": "A black handprint pressed onto the skin with fingers splayed wide, palm and digits rendered as if dipped in dark paint. The contours are frayed and uneven, with paint specks scattered around the perimeter. The print reads as a fresh, deliberate mark of allegiance."
+    },
+    {
+      "id": "LyruDBHandButtR",
+      "label": "DBHand Butt R",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\DBHandButt2.dds"
+        }
+      ],
+      "tags": {
+        "subject": "ink handprint, opposing hand, rough painted edges",
+        "style": "wet paint impression, mirrored",
+        "placement": "on the opposite buttock, mirroring its partner"
+      },
+      "description": "A black handprint mirroring the partner mark, with splayed fingers and a wide thumb angled to one side. The edges are ragged with smeared splatter, suggesting a hand freshly slapped against the skin. Together with its pair the pieces form a matched set."
+    },
+    {
+      "id": "LyruBloodborneNeck",
+      "label": "Bloodborne Neck",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\BloodborneNeck.dds"
+        }
+      ],
+      "tags": {
+        "subject": "angular humanoid rune, raised arms, long descending stem",
+        "style": "rough brushed runic strokes",
+        "placement": "on the upper chest near the collarbone"
+      },
+      "description": "A tall stick-figure rune with a small head, arms thrown upward at sharp angles, and a long vertical stem descending the length of the figure to terminate in a forked tail. The strokes are rough and uneven, as though carved hastily with a blade. The whole reads as an arcane summoning glyph rather than a literal figure."
+    },
+    {
+      "id": "LyruBloodborneShoulder",
+      "label": "Bloodborne Shoulder",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\BloodborneNeckV2.dds"
+        }
+      ],
+      "tags": {
+        "subject": "angular humanoid rune, raised arms, long stem",
+        "style": "rough brushed runic strokes",
+        "placement": "on the upper chest just below the collarbone"
+      },
+      "description": "A vertical rune shaped like a small humanoid with bent arms raised in a Y, atop a long downward stem ending in a splayed foot. The strokes are rough and brushy with chipped edges, suggesting a carved hunter's mark. Identical in spirit to its neck companion, but placed closer to the collarbone."
+    },
+    {
+      "id": "LyruAllSeeingEyeBack",
+      "label": "All Seeing Eye Back",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\AllSeeingEyeBack.dds"
+        }
+      ],
+      "tags": {
+        "subject": "central eye, radiating fan of rays, sunburst halo",
+        "style": "filled silhouette with linear ray bands",
+        "placement": "high on the upper back between the shoulder blades"
+      },
+      "description": "A large staring eye at the base anchors a broad upward fan of long parallel rays that splay like a sunburst above it. The eye itself is rendered as a heavy lidded oval with a stippled lower lash, and the rays widen gently as they rise. The composition reads as a watchful eye throwing light skyward."
+    },
+    {
+      "id": "LyruButterflySideBelly",
+      "label": "Butterfly Side Belly",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\ButterflySide.dds"
+        }
+      ],
+      "tags": {
+        "subject": "side-profile butterfly, layered wings, slender antennae",
+        "style": "filled silhouette with soft edges",
+        "placement": "low on the side of the abdomen"
+      },
+      "description": "A butterfly viewed from the side with layered upper and lower wings overlapping into a single rounded silhouette. Two slender curled antennae trail from the head, and the trailing wing edge softens into wispy strokes. The entire mark is solid black with no internal detail, reading as a quiet flank ornament."
+    },
+    {
+      "id": "LyruSoulchainWomb",
+      "label": "Soulchain Womb",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\SoulchainWomb.dds"
+        }
+      ],
+      "tags": {
+        "subject": "twin angel-feathered wings, descending heart drop, curling top horns",
+        "style": "ornate symmetrical filled silhouette",
+        "placement": "low on the abdomen above the pubic mound"
+      },
+      "description": "A pair of broad feathered wings spread wide and angled downward, framing a small inverted heart that drops between them. Above each wing's shoulder a curling horn-like flourish twists upward and inward, mirroring its partner. The whole composition is densely rendered with feather striations and reads as a fallen-angel crest."
+    },
+    {
+      "id": "LyruSuccubusWomb1",
+      "label": "Succubus Womb 1",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\SuccubusWomb1.dds"
+        }
+      ],
+      "tags": {
+        "subject": "central tribal heart, twin bat wings, paired horned figurines",
+        "style": "tribal filled silhouette, bilateral symmetry",
+        "placement": "low on the abdomen above the pubic mound"
+      },
+      "description": "A wide tribal lower-back style emblem: a heart-like central crest flanked by short bat wings, with two small horned figures perched at the upper corners like guardians. Curling scroll flourishes sweep symmetrically outward at the ends. The design is dense, mirror-balanced, and reads as a demoness banner."
+    },
+    {
+      "id": "LyruSuccubusWomb2",
+      "label": "Succubus Womb 2",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\SuccubusWomb2.dds"
+        }
+      ],
+      "tags": {
+        "subject": "tribal heart, piercing arrow, twin horn-tipped flourishes",
+        "style": "tribal filled silhouette",
+        "placement": "low on the abdomen above the pubic mound"
+      },
+      "description": "A solid black tribal heart at the center is impaled diagonally by an arrow whose feathered fletching juts out one side and arrowhead the other. Two horn-tipped scroll flourishes flare outward from the heart's base, and small inner spurs frame the wound. The piece reads as a dramatic stylized love-wound crest."
+    },
+    {
+      "id": "LyruSuccubusWomb3",
+      "label": "Succubus Womb 3",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\SuccubusWomb3.dds"
+        }
+      ],
+      "tags": {
+        "subject": "tribal heart, twin curling tendril wings, pendant drop",
+        "style": "tribal filled silhouette, bilateral symmetry",
+        "placement": "low on the abdomen above the pubic mound"
+      },
+      "description": "A heart-shaped central body is flanked by two large curling tendril wings that arc up and outward, each terminating in a sharp hooked tip. A small pendant teardrop hangs from the bottom point. The interior of the heart carries a smaller inset heart, giving the emblem a nested core."
+    },
+    {
+      "id": "LyruSuccubusWomb4",
+      "label": "Succubus Womb 4",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\SuccubusWomb4.dds"
+        }
+      ],
+      "tags": {
+        "subject": "inverted teardrop heart, twin horns, flame-tipped wings",
+        "style": "sharp tribal filled silhouette",
+        "placement": "low on the abdomen above the pubic mound"
+      },
+      "description": "A pointed teardrop-shaped heart sits at the center, framed by sharp upward horns and a pair of jagged flame-tipped wings to either side. The strokes are heavy and angular, giving the design an aggressive predatory feel. Symmetry runs strict down the central axis."
+    },
+    {
+      "id": "LyruSuccubusWomb5",
+      "label": "Succubus Womb 5",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\SuccubusWomb5.dds"
+        }
+      ],
+      "tags": {
+        "subject": "ornate demonic crest, halo cross, tiny heart, flanking horned beasts",
+        "style": "ornate tribal filled silhouette",
+        "placement": "low on the abdomen above the pubic mound"
+      },
+      "description": "A wide horizontal demonic crest with a haloed cross at the top center, beneath which a small inset heart is held by curling scrollwork. Two horned, draconic creatures flank the central column, their bodies dissolving into flame-like fronds at the edges. The composition is intricately filled and strictly mirrored."
+    },
+    {
+      "id": "LyruSuccubusWomb6",
+      "label": "Succubus Womb 6",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\SuccubusWomb6.dds"
+        }
+      ],
+      "tags": {
+        "subject": "broad outlined heart, twin horn flourishes, dripping under-curls",
+        "style": "tribal outline with filled scrollwork",
+        "placement": "low on the abdomen above the pubic mound"
+      },
+      "description": "A wide heart traced in heavy outline dominates the center, capped by twin horn-like curls at the top corners and trailing into knotted scroll flourishes beneath. Smaller curling teardrops drip from the heart's base. The whole reads as a lower-back tribal banner shaped to span the hips."
+    },
+    {
+      "id": "LyruSuccubusWomb7",
+      "label": "Succubus Womb 7",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\SuccubusWomb7.dds"
+        }
+      ],
+      "tags": {
+        "subject": "ornate heart, crown of small hearts, flanking curls and drips",
+        "style": "tribal filled silhouette, bilateral symmetry",
+        "placement": "low on the abdomen above the pubic mound"
+      },
+      "description": "A central heart with elaborate internal scrollwork is crowned by a row of tiny hearts arrayed across its top. Symmetric curling fronds and small pendant drops trail outward from each side, with horn-like accents flanking the upper edge. The mark reads as a romantic tribal lower-back ornament."
+    },
+    {
+      "id": "LyruSuccubusWomb8",
+      "label": "Succubus Womb 8",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\SuccubusWomb8.dds"
+        }
+      ],
+      "tags": {
+        "subject": "central rose, framing antler-like branches, hanging pendant",
+        "style": "filled silhouette with arching branchwork",
+        "placement": "low on the abdomen above the pubic mound"
+      },
+      "description": "A single rose-and-bud cluster sits at the top center, framed by two long antler-like branches that sweep outward and curl back inward. Below, a small floating disc and a teardrop-shaped pendant hang as a vertical accent. The piece feels gothic and organic, like a garden gate ornament."
+    },
+    {
+      "id": "LyruSuccubusWomb9",
+      "label": "Succubus Womb 9",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\SuccubusWomb9.dds"
+        }
+      ],
+      "tags": {
+        "subject": "broad tribal heart, sweeping wing-curls, dripping fronds",
+        "style": "tribal filled silhouette, bilateral symmetry",
+        "placement": "low on the abdomen above the pubic mound"
+      },
+      "description": "A wide central heart anchors two large sweeping curls that arc outward like stylized wings, tipped by sharp barbs. Beneath the heart, dripping fronds and pointed teardrops cascade downward in a symmetric fringe. The composition spans wide and low, hugging the hipline."
+    },
+    {
+      "id": "LyruSuccubusWomb10",
+      "label": "Succubus Womb 10",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\SuccubusWomb10.dds"
+        }
+      ],
+      "tags": {
+        "subject": "ornate heart, curling pendant top, flanking scroll flourishes",
+        "style": "tribal filled silhouette with internal scrollwork",
+        "placement": "low on the abdomen above the pubic mound"
+      },
+      "description": "A symmetric heart with intricate internal swirls is topped by a small pendant flame and curling tendril accents. To either side, flowing scrollwork mirrors outward into hooked tips, broadening the silhouette. The piece reads as a delicate, almost lace-like belly crest."
+    },
+    {
+      "id": "LyruSuccubusWomb11",
+      "label": "Succubus Womb 11",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\SuccubusWomb11.dds"
+        }
+      ],
+      "tags": {
+        "subject": "central heart, twin swan-neck curls, vertical pendant accents",
+        "style": "tribal filled silhouette",
+        "placement": "low on the abdomen above the pubic mound"
+      },
+      "description": "A central heart with internal teardrop carvings is framed by two graceful swan-neck curls that arch outward at the top. Slim vertical fronds drip beneath, ending in a small inverted teardrop point. The overall silhouette is compact and ornamental rather than aggressive."
+    },
+    {
+      "id": "LyruBilgewaterThigh",
+      "label": "Bilgewater Thigh",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\BilgewaterThigh.dds"
+        }
+      ],
+      "tags": {
+        "subject": "stylized blade and beast, curved fang motif, sharp tribal edges",
+        "style": "filled silhouette, angular tribal",
+        "placement": "down the outer side of the thigh"
+      },
+      "description": "A vertical composition of a stylized curved blade meeting a beast-like silhouette, with twin curved fang or hook accents at the top forming a small skull-cap motif. The lower portion flows into sharp serrated tribal fronds. The design feels piratical and edged, like a pirate's brand."
+    },
+    {
+      "id": "LyruAhriBelly",
+      "label": "Ahri Belly",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\AhriBelly.dds"
+        }
+      ],
+      "tags": {
+        "subject": "running nine-tailed fox spirit, splayed plume of tails",
+        "style": "fine ink linework with curling fronds",
+        "placement": "low on the abdomen beside the navel"
+      },
+      "description": "A slender fox-spirit caught mid-stride, its body slim and elegant while an enormous plume of nine fanned tails arcs upward behind it like a peacock crest. Each tail curls and tapers into a sharp tip, swept in unified motion. The composition reads as a leaping celestial fox."
+    },
+    {
+      "id": "LyruDragonBack",
+      "label": "Dragon Back",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\DragonBack.dds"
+        }
+      ],
+      "tags": {
+        "subject": "twin draconic crest, tall spire finial, coiled serpent core",
+        "style": "ornate filled silhouette with linear striations",
+        "placement": "high on the upper back between the shoulder blades"
+      },
+      "description": "A tall vertical crest topped by an interlocking spire of sharp blades, with a coiled serpent locked inside an oval cartouche at the lower middle. Two flanking dragon heads or fanged beasts mirror outward at the base, their forms dissolving into flame-like fronds. Subtle parallel striations texture the wider fills."
+    },
+    {
+      "id": "LyruFleurDeLisBack",
+      "label": "Fleur De Lis Back",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\fleur de lis back.dds"
+        }
+      ],
+      "tags": {
+        "subject": "classical fleur-de-lis, beaded antennae, banded waist",
+        "style": "filled silhouette with dotted accents",
+        "placement": "high on the upper back between the shoulder blades"
+      },
+      "description": "A bold classical fleur-de-lis with three flaring petals bound by a horizontal banded waist. Above the petals, three slender beaded antennae rise like dotted stamens, each capped by a small finial. The whole emblem reads as a regal heraldic badge."
+    },
+    {
+      "id": "LyruDibellaWomb",
+      "label": "Dibella Womb",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\DibellaWomb.dds"
+        }
+      ],
+      "tags": {
+        "subject": "ornate lotus blossom, dangling bead chains, crowning teardrop",
+        "style": "fine mandala linework with stippled detail",
+        "placement": "low on the abdomen above the pubic mound"
+      },
+      "description": "A wide symmetric lotus in full bloom spreads across the lower belly, its petals densely filled with fine internal mandala patterning. From the petal tips trail strings of small beads ending in delicate teardrops, and a single solid teardrop pendant rises above the center as a capping accent. The composition is intricate and devotional."
+    },
+    {
+      "id": "LyruWarlockBack",
+      "label": "Warlock Back",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\WarlockBack.dds"
+        }
+      ],
+      "tags": {
+        "subject": "downturned greatsword, draped pennant banner, splattered crossguard",
+        "style": "filled silhouette with rough ink splatters",
+        "placement": "down the spine from the upper back"
+      },
+      "description": "A long downturned greatsword hangs along the spine, its blade slim and pointed at the lower end, its crossguard flaring outward at the top with a frayed pennant banner draped above. The upper section is scattered with rough ink splatter and frayed edges, giving the weapon a battle-worn feel. The composition reads as a buried hero's blade."
+    },
+    {
+      "id": "LyruNatureBack",
+      "label": "Nature Back",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\NatureBack.dds"
+        }
+      ],
+      "tags": {
+        "subject": "koi fish circling a sun disc, lotus blossoms, breaking waves",
+        "style": "intricate Japanese ink illustration",
+        "placement": "between the shoulder blades on the upper back"
+      },
+      "description": "A koi fish curls around a large rising sun disc at the lower right, with a second smaller fish weaving in above and lotus blossoms scattered across the upper portion. Stylized waves break behind the composition with fine linework striations. The whole piece reads as a classical Japanese irezumi tableau in miniature."
+    },
+    {
+      "id": "LyruRavenArm",
+      "label": "Raven Arm",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\RavenArm.dds"
+        }
+      ],
+      "tags": {
+        "subject": "landing raven, flared wings, extended talons",
+        "style": "soft-edged filled silhouette",
+        "placement": "across the outer upper arm"
+      },
+      "description": "A raven captured mid-landing, with wings flared backward and talons reaching downward to grasp an unseen perch. The body is rendered as one smooth black silhouette with soft feathered edges rather than sharp linework. The pose conveys arrested motion at the moment of touchdown."
+    },
+    {
+      "id": "LyruHircinesHunterBack",
+      "label": "Hircines Hunter Back",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\HircinesHunterBack.dds"
+        }
+      ],
+      "tags": {
+        "subject": "tall narrow tree, twisting roots and branches, animal skull base",
+        "style": "filled silhouette with veined inner branching",
+        "placement": "down the spine from the upper back toward the lower back"
+      },
+      "description": "A tall thin tree dominates the column, its upper branches barely sketched while its trunk shows pale veined branching against a darker silhouette. At the base, a horned beast skull sits among gnarled roots that splay outward. The whole reads as a dead grove guarded by a hunter's totem."
+    },
+    {
+      "id": "LyruShamanForearm",
+      "label": "Shaman Forearm",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\ShamanForearm.dds"
+        }
+      ],
+      "tags": {
+        "subject": "oval feather-fringed disc, dense central body",
+        "style": "solid filled silhouette with frayed perimeter",
+        "placement": "wrapping the outer forearm"
+      },
+      "description": "A wide oval mass with a dense solid core surrounded by long wispy strands radiating outward along the top and bottom, like a feather cloak or a wind-blown pelt. The overall silhouette feels almost like a stylized buffalo or shaman's headdress viewed in profile. There is no internal detail, only the outer fringe."
+    },
+    {
+      "id": "LyruMantaRayBack",
+      "label": "Manta Ray Back",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\MantaRayBack.dds"
+        }
+      ],
+      "tags": {
+        "subject": "diving manta ray, broad triangular wings, tribal Polynesian fills",
+        "style": "Polynesian tribal patterning",
+        "placement": "between the shoulder blades on the upper back"
+      },
+      "description": "A manta ray diving downward, its broad triangular wings packed with classic Polynesian tribal patterning of small hooks, dots and bands. Above the body, a tall fin-like spire trails upward in serrated strokes. The composition uses negative space to define internal motifs rather than outline."
+    },
+    {
+      "id": "LyruHeartThighR",
+      "label": "Heart Thigh R",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\HeartThigh2.dds"
+        }
+      ],
+      "tags": {
+        "subject": "tribal heart, swirling vine flourishes, curling teardrops",
+        "style": "tribal outline with curling fronds",
+        "placement": "on the outer thigh"
+      },
+      "description": "A heart outlined in heavy tribal strokes, with the left side dissolving into swirling vine-like flourishes and small teardrops curling outward. Tight spirals coil within the flourishes, giving the design rhythmic motion. The right edge of the heart is left clean and curved, balancing the busy left side."
+    },
+    {
+      "id": "LyruHeartThighL",
+      "label": "Heart Thigh L",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\HeartThigh1.dds"
+        }
+      ],
+      "tags": {
+        "subject": "tribal heart, mirrored vine flourishes, curling teardrops",
+        "style": "tribal outline with curling fronds",
+        "placement": "on the outer thigh, mirroring its partner"
+      },
+      "description": "A heart traced in heavy tribal outline, with the right side flowing into swirling vine flourishes and spiraled teardrops while the left edge stays clean. The flourishes coil into tight inner spirals, echoing the partner design on the opposite thigh. Together the pair frames the front of the body symmetrically."
+    },
+    {
+      "id": "LyruDragonFront",
+      "label": "Dragon Front",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\DragonFront.dds"
+        }
+      ],
+      "tags": {
+        "subject": "coiled serpentine dragon, ornate scale patterning, curled tail",
+        "style": "intricate engraved linework with internal stippling",
+        "placement": "across the side of the chest and ribs"
+      },
+      "description": "A serpentine dragon curls into a C-shape, its body finely patterned with engraved scales and internal motifs while clawed limbs cling to the curve. The head turns inward at the top with bared fangs, and the tail flicks outward at the bottom. The composition feels like a carved talisman wrapped around the ribs."
+    },
+    {
+      "id": "LyruPaladinBack",
+      "label": "Paladin Back",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\PaladinBack.dds"
+        }
+      ],
+      "tags": {
+        "subject": "upright greatsword, tribal feathered wings, ornate crossguard",
+        "style": "ornate filled silhouette with mirrored linework",
+        "placement": "high on the upper back between the shoulder blades"
+      },
+      "description": "An upright greatsword stands at the center with a small cross detail on its blade, flanked by mirrored feathered tribal wings that flare outward into sharp blade tips. The crossguard and pommel are filigreed with curling accents. The overall silhouette reads as a paladin's heraldic crest."
+    },
+    {
+      "id": "LyruImmortalBack",
+      "label": "Immortal Back",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\ImmortalBack.dds"
+        }
+      ],
+      "tags": {
+        "subject": "ragged splattered cloud, hidden figures, ink-spray edges",
+        "style": "splattered ink blot with embedded silhouettes",
+        "placement": "high on the upper back between the shoulder blades"
+      },
+      "description": "A dense, irregular black cloud sits between the shoulder blades, its edges exploding outward in scattered ink droplets and frayed strokes. Within the mass, glimpses of curled figures and trailing tendrils suggest a swarm or a half-glimpsed beast. The piece reads as chaotic motion captured mid-burst."
+    },
+    {
+      "id": "LyruAngelWingsBack",
+      "label": "Angel Wings Back",
+      "layers": [
+        {
+          "texture": "Actors\\Character\\Character Assets\\Overlays\\LyruTattooPack\\AngelWingsBack.dds"
+        }
+      ],
+      "tags": {
+        "subject": "pair of feathered wings, raised tips, fine quill striations",
+        "style": "filled silhouette with linear feather detail",
+        "placement": "high on the upper back between the shoulder blades"
+      },
+      "description": "A symmetric pair of large feathered wings raised upward, their primaries arching outward and tapering to sharp points. Each feather is striated with fine vertical quill lines, giving the silhouette internal texture without breaking its solid mass. The base of the wings meets cleanly at the spine."
+    }
+  ]
+}

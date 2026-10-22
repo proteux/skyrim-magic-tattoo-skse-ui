@@ -1,0 +1,62 @@
+{
+  "schemaversion": 2,
+  "pluginid": "mtf.dragonborn",
+  "pluginlabel": "Dragonborn",
+  "conditions": [
+    {
+      "id": "shout.cooldown",
+      "label": "Voice on Cooldown",
+      "description": "Triggers while the actor's Shout voice is still recovering (just shouted)."
+    },
+    {
+      "id": "shout.equipped",
+      "label": "Shout Equipped",
+      "description": "Triggers while the actor has any Shout readied in the voice slot."
+    },
+    {
+      "id": "dragonsoul.unspent",
+      "label": "Unspent Dragon Souls",
+      "description": "Triggers when the actor is hoarding at least {param1} unspent dragon souls.",
+      "param": {
+        "label": "Dragon soul threshold",
+        "min": 1,
+        "max": 100,
+        "default": 1
+      }
+    },
+    {
+      "id": "dragonsoul.absorbed",
+      "label": "Absorbed Dragon Soul",
+      "description": "Triggers for {param1}s right after the actor absorbs a dragon soul.",
+      "param": {
+        "label": "Glow duration (s)",
+        "min": 1,
+        "max": 30,
+        "default": 5
+      }
+    },
+    {
+      "id": "shout.learned",
+      "label": "Shout Learned",
+      "description": "Triggers for {param1}s right after the Dragonborn learns a new shout (reads a word wall).",
+      "param": {
+        "label": "Glow duration (s)",
+        "min": 1,
+        "max": 30,
+        "default": 5
+      }
+    },
+    {
+      "id": "word.unlocked",
+      "label": "Word of Power Unlocked",
+      "description": "Triggers for {param1}s right after the Dragonborn unlocks a word of power (spends a dragon soul).",
+      "param": {
+        "label": "Glow duration (s)",
+        "min": 1,
+        "max": 30,
+        "default": 5
+      }
+    }
+  ],
+  "effects": []
+}

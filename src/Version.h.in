@@ -1,0 +1,5 @@
+#pragma once
+
+namespace mtfui {
+    inline constexpr const char* kVersion = "@MTFUI_VERSION@";
+}
