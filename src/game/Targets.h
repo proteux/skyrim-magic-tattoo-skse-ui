@@ -25,6 +25,12 @@ namespace mtfui::game {
     std::optional<ActorInfo> Describe(RE::FormID id);
     SkinInfo SkinFor(RE::FormID id);
 
+    // Keeps at most one NPC in place by switching its AI off; 0 lets the held one go. Never touches the
+    // player, and only switches back on AI that it switched off. Returns the actor now held, or 0.
+    RE::FormID HoldStill(RE::FormID id);
+    // After a load: switches an actor held in an earlier session back on, if its AI is still off.
+    void ReleaseLeftover(RE::FormID id);
+
     // Normalizes a texture path to the form BSResource expects ("textures\..." prefix, backslashes).
     std::string TexturePath(std::string path);
 }

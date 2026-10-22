@@ -54,8 +54,26 @@ namespace mtfui::io {
         strings("recents", recents);
         pauseGame = j->value("pauseGame", pauseGame);
         livePreviewEnabled = j->value("livePreview", livePreviewEnabled);
+        holdTarget = j->value("holdTarget", holdTarget);
+        heldActor = j->value("heldActor", heldActor);
         thumbSize = std::clamp(j->value("thumbSize", thumbSize), 48, 256);
         lastPreset = j->value("lastPreset", lastPreset);
+        splitPanels = j->value("splitPanels", splitPanels);
+        panelOpacity = std::clamp(j->value("panelOpacity", panelOpacity), 20, 100);
+        if (auto it = j->find("panels"); it != j->end() && it->is_object()) {
+            for (const auto& [name, v] : it->items()) {
+                if (!v.is_object()) {
+                    continue;
+                }
+                PanelState s;
+                s.x = v.value("x", 0.0f);
+                s.y = v.value("y", 0.0f);
+                s.w = std::max(0.0f, v.value("w", 0.0f));
+                s.h = std::max(0.0f, v.value("h", 0.0f));
+                s.open = v.value("open", false);
+                panels[name] = s;
+            }
+        }
         previewActors.clear();
         if (auto it = j->find("previewActors"); it != j->end() && it->is_array()) {
             for (const auto& v : *it) {
@@ -72,8 +90,16 @@ namespace mtfui::io {
         j["recents"] = recents;
         j["pauseGame"] = pauseGame;
         j["livePreview"] = livePreviewEnabled;
+        j["holdTarget"] = holdTarget;
+        j["heldActor"] = heldActor;
         j["thumbSize"] = thumbSize;
         j["lastPreset"] = lastPreset;
+        j["splitPanels"] = splitPanels;
+        j["panelOpacity"] = panelOpacity;
+        auto& jp = j["panels"] = nlohmann::json::object();
+        for (const auto& [name, s] : panels) {
+            jp[name] = { { "x", s.x }, { "y", s.y }, { "w", s.w }, { "h", s.h }, { "open", s.open } };
+        }
         j["previewActors"] = previewActors;
         return WriteTextAtomic(path, j.dump(2));
     }

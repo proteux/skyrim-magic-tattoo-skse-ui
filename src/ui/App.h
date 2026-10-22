@@ -60,6 +60,7 @@ namespace mtfui::ui {
         bool picking = false;
         int pickSlot = 0;
         void RequestTab(Tab tab) { requestedTab_ = tab; }
+        void ResetPanelLayout() { resetLayout_ = true; }
 
         void Toast(std::string text, bool error = false);
         void ReloadAll();
@@ -69,7 +70,7 @@ namespace mtfui::ui {
         model::Preset& Preset() { return *ed.preset; }
 
         void Open(const std::string& name);  // asks to save first when dirty
-        void CreateNew(const std::string& displayName);
+        void CreateNew(const std::string& displayName, const std::string& packId = {}, const std::string& entryId = {});  // tattoo goes on Default
         void Duplicate(const std::string& displayName);
         void Delete(const std::string& name);
         bool Save();
@@ -92,12 +93,20 @@ namespace mtfui::ui {
         void UseEntry(int slot, const std::string& packId, const std::string& entryId);
 
     private:
-        void Draw();
-        void DrawToasts();
+        void BeginFrame();
+        void Draw(bool presetsTab, bool targetBar);
+        bool DrawPanels();  // false once the main strip's X is clicked
+        void DrawPanel(const char* key, const char* title, const std::function<void()>& body, ImGuiMCP::ImGuiWindowFlags flags = 0);
+        io::PanelState& Panel(const std::string& key);
+        void HandlePanelRequests();
+        void ShowEditorWindows(bool show);
+        void DrawStatus();
         void DrawModals();
         void CommitFrame();
         void HandleShortcuts();
         void LoadPresetNow(const std::string& name);
+        void HoldVanityCamera(bool hold);
+        void HoldActor(RE::FormID id);  // 0 releases
 
         SKSEMenuFramework::Model::WindowInterface* window_ = nullptr;
         std::optional<Tab> requestedTab_;
@@ -111,6 +120,13 @@ namespace mtfui::ui {
         std::vector<ToastMsg> toasts_;
         double lastLint_ = 0.0;
         bool initialized_ = false;
+        bool vanityHeld_ = false;
+        RE::FormID holdWanted_ = 0;
+        bool resetLayout_ = false;
+        bool placeAlways_ = false;  // this frame, saved panel rects override wherever the user dragged them
+        bool peeking_ = false;
+        bool pickHintShown_ = false;
+        int lastSectionFrame_ = -100;
         std::map<std::string, int> overlayCapacity_;
     };
 }

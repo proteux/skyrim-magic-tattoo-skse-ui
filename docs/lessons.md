@@ -40,6 +40,9 @@ Notes for whoever works on Magic Tattoos UI next. Section 1 is carried over from
 - The header needs `RE/Skyrim.h` included before it (see `src/pch.h`).
 - Register in `kPostLoad`, not in `SKSEPluginLoad`. SKSE loads plugins alphabetically, and `MagicTattoosUI.dll` loads before `SKSEMenuFramework.dll`.
 - The window's "pause game" flag is fixed when the window is registered, so changing it takes a restart.
+- The Mod Control Panel can leave the game running, and menu input doesn't count as player activity. Skyrim's idle orbit camera (`fAutoVanityModeDelay:Camera`) then starts circling the target. `App` raises that setting while the editor is drawn and restores it on menu close.
+- Live preview needs the game unpaused, since MTF redraws through Papyrus and the pulse runs on game time. "Hold in place" switches the NPC target's AI off while the editor is drawn, so they don't wander off. Only AI the UI switched off is switched back on, and the held actor is saved in `settings.json` so the next load releases it if the game quit with the menu open.
+- One `AddWindow` render callback can open several top-level windows (`Begin`/`End` pairs). The split layout does this, and remembers panel rects in `settings.json` instead of relying on the framework's ImGui ini. The first frame logs which ini file and whether docking is on. Per-frame work (`BeginFrame`, `CommitFrame`) runs once per callback, not once per panel.
 - Textures are `ID3D11ShaderResourceView*` cast to `ImTextureID`. The device comes from `RE::BSGraphics::Renderer::GetDevice()`.
 - All Papyrus calls happen on the game thread through SKSE tasks. Results come back to the UI through a queue drained at the start of each frame (`MtfBridge::PostToUi` / `DrainUi`). UI state is never touched from the game thread.
 

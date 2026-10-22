@@ -129,6 +129,40 @@ namespace mtfui::game {
         return s;
     }
 
+    namespace {
+        RE::FormID g_held = 0;
+
+        void EnableAIOn(RE::FormID id) {
+            auto* actor = RE::TESForm::LookupByID<RE::Actor>(id);
+            if (actor && !actor->IsAIEnabled()) {
+                actor->EnableAI(true);
+            }
+        }
+    }
+
+    RE::FormID HoldStill(RE::FormID id) {
+        if (id == g_held) {
+            return g_held;
+        }
+        if (g_held != 0) {
+            EnableAIOn(g_held);
+            g_held = 0;
+        }
+        auto* actor = id != 0 ? RE::TESForm::LookupByID<RE::Actor>(id) : nullptr;
+        if (actor && !actor->IsPlayerRef() && actor->IsAIEnabled()) {
+            actor->EnableAI(false);
+            g_held = id;
+        }
+        return g_held;
+    }
+
+    void ReleaseLeftover(RE::FormID id) {
+        g_held = 0;
+        if (id != 0) {
+            EnableAIOn(id);
+        }
+    }
+
     std::string TexturePath(std::string path) {
         std::replace(path.begin(), path.end(), '/', '\\');
         while (!path.empty() && path.front() == '\\') {

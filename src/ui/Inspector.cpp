@@ -414,9 +414,9 @@ namespace mtfui::ui {
         }
     }
 
-    void DrawInspector(App& app, float width) {
-        if (!BeginChild("##inspector", ImVec2{ width, 0 }, ImGuiChildFlags_Border)) {
-            EndChild();
+    void DrawInspectorPanel(App& app) {
+        if (!app.HasPreset()) {
+            TextDisabled("Open a preset to edit its tiers.");
             return;
         }
         auto& p = app.Preset();
@@ -450,6 +450,5 @@ namespace mtfui::ui {
             }
             EndTabBar();
         }
-        EndChild();
     }
 }

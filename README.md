@@ -34,7 +34,7 @@ There is no plugin file, so it takes no load order slot.
 
 ## Opening it
 
-Open the SKSE Menu Framework menu (F1 by default) and choose **Magic Tattoos**. Click **Open in its own window** for a larger window you can move and resize. Esc closes it.
+Open the SKSE Menu Framework menu (F1 by default) and choose **Magic Tattoos**. Click **Open editor windows** to edit presets over the game. Presets, Tiers, and Tier editor open as separate panels you can drag around the target, and a strip at the top holds the target picker and live preview. Holding **Hold to peek** on the strip hides the panels for a moment. The layout is remembered. The tattoo browser, General, and Plugins stay as tabs in the menu. General > This menu has the panel opacity, a layout reset, and a switch back to one tabbed window. Esc closes the editor windows.
 
 ## Main features
 
@@ -54,7 +54,7 @@ Open the SKSE Menu Framework menu (F1 by default) and choose **Magic Tattoos**. 
 
 ### Tattoos
 
-- **A thumbnail browser** for every installed visual pack, with search, filters for area, subject, style, and placement, favorites, and a recently used list.
+- **A thumbnail browser** for every installed visual pack, with search, filters for area, subject, style, and placement, favorites, and a recently used list. Right-click a tattoo to start a new preset with it as the Default look.
 - Each tattoo shows a large preview in the selected tier's colors, its details, and which of your presets already use it.
 - Double-click a tattoo, or use **Use for...**, to put it on a tier.
 

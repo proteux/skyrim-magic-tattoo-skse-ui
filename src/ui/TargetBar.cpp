@@ -83,6 +83,12 @@ namespace mtfui::ui {
         }
         HelpMarker("Who live previews and Apply act on. Crosshair is whoever you were looking at when you opened the menu; "
                    "console selection is the actor you clicked in the console.");
+        SameLine();
+        if (Checkbox("Hold in place", &app.settings.holdTarget)) {
+            app.SaveSettings();
+        }
+        HelpMarker("Switches the target's AI off while this menu is open so they stop walking away. "
+                   "It comes back on when you close the menu or pick someone else. Never applies to you.");
 
         SameLine(0, 20);
         BeginDisabled(!mtf);

@@ -27,6 +27,8 @@ namespace mtfui::ui {
         std::string g_style;
         std::string g_placement;
         std::string g_selected;  // key
+        std::string g_newFrom;   // key of the tattoo a new preset is being named for
+        std::string g_newName;
 
         std::string Key(const model::VisualPack& p, const model::VisualEntry& e) {
             return io::ToLower(p.packId + "/" + e.id);
@@ -240,6 +242,14 @@ namespace mtfui::ui {
                     if (IsItemHovered(ImGuiHoveredFlags_DelayNormal)) {
                         SetTooltip("%s\n%s", it.entry->label.c_str(), it.pack->label.c_str());
                     }
+                    if (BeginPopupContextItem("##tctx")) {
+                        g_selected = it.key;
+                        if (MenuItem("New preset from this tattoo...")) {
+                            g_newFrom = it.key;
+                            g_newName = it.entry->label;
+                        }
+                        EndPopup();
+                    }
                     ImDrawListManager::AddRectFilled(dl, pos, ImVec2{ pos.x + thumb, pos.y + thumb }, render::ToImColor(0xC89F86, 1.0f), 4.0f, 0);
                     if (!it.entry->textures.empty()) {
                         const int texSize = 256;
@@ -348,6 +358,46 @@ namespace mtfui::ui {
             }
             EndChild();
         }
+
+        void DrawNewPresetPopup(App& app) {
+            if (!g_newFrom.empty() && !IsPopupOpen("New preset from tattoo")) {
+                OpenPopup("New preset from tattoo");
+            }
+            if (!BeginPopupModal("New preset from tattoo", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+                return;
+            }
+            const auto slash = g_newFrom.find('/');
+            const auto* pack = slash == std::string::npos ? nullptr : app.cat.FindPack(g_newFrom.substr(0, slash));
+            const auto* entry = pack ? pack->Find(g_newFrom.substr(slash + 1)) : nullptr;
+            if (entry) {
+                TextDisabled("Default look: %s (%s)", entry->label.c_str(), pack->label.c_str());
+            }
+            if (IsWindowAppearing()) {
+                SetKeyboardFocusHere();
+            }
+            SetNextItemWidth(280);
+            const bool enter = InputString("##newname", g_newName, "Display name", ImGuiInputTextFlags_EnterReturnsTrue, 64);
+            TextDisabled("File: %s.json", app.UniqueName(g_newName).c_str());
+            if (app.Dirty()) {
+                TextColored(kWarn, "Save or revert the open preset first.");
+            }
+            const bool ok = entry && !g_newName.empty() && !app.Dirty();
+            BeginDisabled(!ok);
+            if (Button("Create", ImVec2{ 100, 0 }) || (enter && ok)) {
+                app.picking = false;
+                app.CreateNew(g_newName, pack->packId, entry->id);
+                app.RequestTab(Tab::Presets);
+                g_newFrom.clear();
+                CloseCurrentPopup();
+            }
+            EndDisabled();
+            SameLine();
+            if (Button("Cancel", ImVec2{ 100, 0 }) || IsKeyPressed(ImGuiKey_Escape, false)) {
+                g_newFrom.clear();
+                CloseCurrentPopup();
+            }
+            EndPopup();
+        }
     }
 
     void DrawTattoosTab(App& app) {
@@ -359,5 +409,6 @@ namespace mtfui::ui {
         DrawGrid(app, items, GetContentRegionAvail().x - details - GetStyle()->ItemSpacing.x);
         SameLine();
         DrawDetails(app, items);
+        DrawNewPresetPopup(app);
     }
 }

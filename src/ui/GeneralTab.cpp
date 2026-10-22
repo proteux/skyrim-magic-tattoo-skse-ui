@@ -159,6 +159,23 @@ namespace mtfui::ui {
             app.SaveSettings();
             app.Toast("Takes effect after restarting the game");
         }
+        if (Checkbox("Separate panels in the standalone window", &app.settings.splitPanels)) {
+            app.SaveSettings();
+        }
+        HelpMarker("Shows Presets, Tiers and Tier editor as their own windows that you can place around the target, "
+                   "instead of one big tabbed window.");
+        if (app.settings.splitPanels) {
+            SameLine();
+            if (Button("Reset panel layout")) {
+                app.ResetPanelLayout();
+            }
+        }
+        SetNextItemWidth(260);
+        SliderInt("Window opacity", &app.settings.panelOpacity, 20, 100, "%d%%");
+        if (IsItemDeactivatedAfterEdit()) {
+            app.SaveSettings();
+        }
+        HelpMarker("Background opacity of the standalone window and its panels, so the target shows through.");
         if (Button("Open backups folder")) {
             std::error_code ec;
             const auto dir = app.paths.uiDir / "backups";

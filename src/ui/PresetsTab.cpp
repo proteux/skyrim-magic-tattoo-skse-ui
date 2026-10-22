@@ -19,11 +19,7 @@ namespace mtfui::ui {
             return std::any_of(app.applied.begin(), app.applied.end(), [&](const std::string& a) { return model::IEquals(a, name); });
         }
 
-        void DrawLibrary(App& app, float width) {
-            if (!BeginChild("##library", ImVec2{ width, 0 }, ImGuiChildFlags_Border)) {
-                EndChild();
-                return;
-            }
+        void DrawLibrary(App& app) {
             SearchBox("##presetsearch", g_search, -1.0f, "Search presets");
             if (Button("New")) {
                 g_nameAction = NameAction::New;
@@ -41,6 +37,7 @@ namespace mtfui::ui {
             Separator();
 
             if (BeginChild("##list")) {
+                const float onMarkerX = GetContentRegionAvail().x - CalcTextSize("on").x;
                 bool builtinHeader = false;
                 for (const auto& info : app.library) {
                     if (!MatchesSearch(info.displayName + " " + info.name, g_search)) {
@@ -63,7 +60,7 @@ namespace mtfui::ui {
                         SetTooltip("%s.json%s", info.name.c_str(), IsApplied(app, info.name) ? "\nApplied to the current target" : "");
                     }
                     if (IsApplied(app, info.name)) {
-                        SameLine(width - 34);
+                        SameLine(onMarkerX);
                         TextColored(kGood, "on");
                     }
                     if (BeginPopupContextItem("##ctx")) {
@@ -129,7 +126,6 @@ namespace mtfui::ui {
                 }
                 EndPopup();
             }
-            EndChild();
         }
 
         void MoveTier(model::Preset& p, int from, int to) {
@@ -326,17 +322,42 @@ namespace mtfui::ui {
         }
     }
 
-    void DrawPresetsTab(App& app) {
-        const float libWidth = 230.0f;
-        DrawLibrary(app, libWidth);
-        SameLine();
+    void DrawLibraryPanel(App& app) { DrawLibrary(app); }
+
+    void DrawTiersPanel(App& app) {
         if (!app.HasPreset()) {
-            BeginGroup();
             Spacing();
-            TextWrapped("Pick a preset on the left, or click New.");
+            TextWrapped("Pick a preset in the list, or click New.");
             Spacing();
             TextWrapped("A preset is a Default look plus a ladder of tiers that modify it. MTF checks tiers from the top; the first one "
                         "whose conditions match decides the tattoo's look and effects. When none match, Default is used.");
+            return;
+        }
+        DrawPresetHeader(app);
+        const float rowWidth = GetContentRegionAvail().x;
+        SeparatorText("Base");
+        HelpMarker("Default sets the base look. Tiers that leave their tattoo as \"Same as Default\" build on it, "
+                   "and it is shown whenever no tier matches.");
+        DrawTierRow(app, 0, rowWidth);
+        SeparatorText("Tiers (top wins)");
+        HelpMarker("Drag tiers to change priority. Right-click a tier for more. The first tier whose conditions are true is shown; "
+                   "Default applies when none are.");
+        for (int i = 1; i < model::kSlotCount && i < static_cast<int>(app.Preset().slots.size()); ++i) {
+            DrawTierRow(app, i, rowWidth);
+        }
+        SeparatorText("Checks");
+        DrawIssues(app);
+    }
+
+    void DrawPresetsTab(App& app) {
+        if (BeginChild("##library", ImVec2{ 230.0f, 0 }, ImGuiChildFlags_Border)) {
+            DrawLibrary(app);
+        }
+        EndChild();
+        SameLine();
+        if (!app.HasPreset()) {
+            BeginGroup();
+            DrawTiersPanel(app);
             EndGroup();
             return;
         }
@@ -344,23 +365,13 @@ namespace mtfui::ui {
         const float inspectorWidth = std::max(400.0f, GetContentRegionAvail().x * 0.48f);
         const float middleWidth = GetContentRegionAvail().x - inspectorWidth - GetStyle()->ItemSpacing.x;
         if (BeginChild("##middle", ImVec2{ middleWidth, 0 })) {
-            DrawPresetHeader(app);
-            const float rowWidth = GetContentRegionAvail().x;
-            SeparatorText("Base");
-            HelpMarker("Default sets the base look. Tiers that leave their tattoo as \"Same as Default\" build on it, "
-                       "and it is shown whenever no tier matches.");
-            DrawTierRow(app, 0, rowWidth);
-            SeparatorText("Tiers (top wins)");
-            HelpMarker("Drag tiers to change priority. Right-click a tier for more. The first tier whose conditions are true is shown; "
-                       "Default applies when none are.");
-            for (int i = 1; i < model::kSlotCount && i < static_cast<int>(app.Preset().slots.size()); ++i) {
-                DrawTierRow(app, i, rowWidth);
-            }
-            SeparatorText("Checks");
-            DrawIssues(app);
+            DrawTiersPanel(app);
         }
         EndChild();
         SameLine();
-        DrawInspector(app, inspectorWidth);
+        if (BeginChild("##inspector", ImVec2{ inspectorWidth, 0 }, ImGuiChildFlags_Border)) {
+            DrawInspectorPanel(app);
+        }
+        EndChild();
     }
 }
