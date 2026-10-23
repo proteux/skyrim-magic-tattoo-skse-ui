@@ -30,7 +30,7 @@ namespace mtfui::io {
         int panelOpacity = 100;   // percent, panel backgrounds only
         std::map<std::string, PanelState> panels;
         std::string lastPreset;
-        // Actors that may still carry a live preview: cleaned up on the next load.
+        // Actors that have worn the live preview, newest first: every load removes it from them.
         std::vector<std::uint32_t> previewActors;
         // NPC whose AI this menu switched off: switched back on at the next load if it's still set.
         std::uint32_t heldActor = 0;

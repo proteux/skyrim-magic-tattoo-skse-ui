@@ -9,28 +9,32 @@ namespace mtfui::ui {
     using namespace ImGuiMCP;
 
     namespace {
-        std::string g_search;
-        std::string g_nameDraft;
         enum class NameAction { None, New, Duplicate };
-        NameAction g_nameAction = NameAction::None;
-        std::string g_deleteName;
 
-        bool IsApplied(const App& app, const std::string& name) {
-            return std::any_of(app.applied.begin(), app.applied.end(), [&](const std::string& a) { return model::IEquals(a, name); });
-        }
+        struct PresetsTabState {
+            std::string search;
+            std::string nameDraft;
+            NameAction nameAction = NameAction::None;
+            std::string deleteName;
+        };
+        PresetsTabState g;
 
         void DrawLibrary(App& app) {
-            SearchBox("##presetsearch", g_search, -1.0f, "Search presets");
+            if (app.focusSearch) {
+                SetKeyboardFocusHere();
+                app.focusSearch = false;
+            }
+            SearchBox("##presetsearch", g.search, -1.0f, "Search presets");
             if (Button("New")) {
-                g_nameAction = NameAction::New;
-                g_nameDraft = "My Preset";
+                g.nameAction = NameAction::New;
+                g.nameDraft = "My Preset";
                 OpenPopup("Preset name");
             }
             SameLine();
             BeginDisabled(!app.HasPreset());
             if (Button("Duplicate")) {
-                g_nameAction = NameAction::Duplicate;
-                g_nameDraft = app.Preset().displayName + " copy";
+                g.nameAction = NameAction::Duplicate;
+                g.nameDraft = app.Preset().displayName + " copy";
                 OpenPopup("Preset name");
             }
             EndDisabled();
@@ -40,7 +44,7 @@ namespace mtfui::ui {
                 const float onMarkerX = GetContentRegionAvail().x - CalcTextSize("on").x;
                 bool builtinHeader = false;
                 for (const auto& info : app.library) {
-                    if (!MatchesSearch(info.displayName + " " + info.name, g_search)) {
+                    if (!MatchesSearch(info.displayName + " " + info.name, g.search)) {
                         continue;
                     }
                     if (info.builtin && !builtinHeader) {
@@ -49,6 +53,7 @@ namespace mtfui::ui {
                     }
                     PushID(info.name.c_str());
                     const bool open = app.HasPreset() && model::IEquals(app.Preset().name, info.name) && !app.ed.isNew;
+                    const bool applied = app.IsApplied(info.name);
                     std::string label = info.displayName;
                     if (open && app.Dirty()) {
                         label += " *";
@@ -57,9 +62,9 @@ namespace mtfui::ui {
                         app.Open(info.name);
                     }
                     if (IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
-                        SetTooltip("%s.json%s", info.name.c_str(), IsApplied(app, info.name) ? "\nApplied to the current target" : "");
+                        SetTooltip("%s.json%s", info.name.c_str(), applied ? "\nApplied to the current target" : "");
                     }
-                    if (IsApplied(app, info.name)) {
+                    if (applied) {
                         SameLine(onMarkerX);
                         TextColored(kGood, "on");
                     }
@@ -67,11 +72,11 @@ namespace mtfui::ui {
                         if (MenuItem("Apply to target")) {
                             app.ApplyToTarget(info.name);
                         }
-                        if (IsApplied(app, info.name) && MenuItem("Remove from target")) {
+                        if (applied && MenuItem("Remove from target")) {
                             app.RemoveFromTarget(info.name);
                         }
                         if (!info.builtin && MenuItem("Delete...")) {
-                            g_deleteName = info.name;
+                            g.deleteName = info.name;
                         }
                         EndPopup();
                     }
@@ -83,58 +88,94 @@ namespace mtfui::ui {
             }
             EndChild();
 
-            if (!g_deleteName.empty()) {
+            if (!g.deleteName.empty()) {
                 OpenPopup("Delete preset?");
             }
             if (BeginPopupModal("Delete preset?", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-                Text("Delete '%s'?", g_deleteName.c_str());
-                TextDisabled("MTF keeps a hidden placeholder file; a backup goes to MagicTattoosUI/backups.");
+                Text("Delete '%s'?", g.deleteName.c_str());
+                TextDisabled("You can bring it back from General > Deleted presets.");
                 if (Button("Delete", ImVec2{ 100, 0 })) {
-                    app.Delete(g_deleteName);
-                    g_deleteName.clear();
+                    app.Delete(g.deleteName);
+                    g.deleteName.clear();
                     CloseCurrentPopup();
                 }
                 SameLine();
-                if (Button("Cancel", ImVec2{ 100, 0 })) {
-                    g_deleteName.clear();
+                if (Button("Cancel", ImVec2{ 100, 0 }) || IsKeyPressed(ImGuiKey_Escape, false)) {
+                    g.deleteName.clear();
                     CloseCurrentPopup();
                 }
                 EndPopup();
             }
 
             if (BeginPopupModal("Preset name", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-                if (IsWindowAppearing()) {
-                    SetKeyboardFocusHere();
-                }
-                SetNextItemWidth(280);
-                const bool enter = InputString("##name", g_nameDraft, "Display name", ImGuiInputTextFlags_EnterReturnsTrue, 64);
-                TextDisabled("File: %s.json", app.UniqueName(g_nameDraft).c_str());
-                const bool ok = !g_nameDraft.empty();
-                BeginDisabled(!ok);
-                if (Button("Create", ImVec2{ 100, 0 }) || (enter && ok)) {
-                    if (g_nameAction == NameAction::New) {
-                        app.CreateNew(g_nameDraft);
-                    } else {
-                        app.Duplicate(g_nameDraft);
-                    }
-                    CloseCurrentPopup();
-                }
-                EndDisabled();
-                SameLine();
-                if (Button("Cancel", ImVec2{ 100, 0 })) {
-                    CloseCurrentPopup();
+                switch (NamePrompt(g.nameDraft, app.UniqueName(g.nameDraft))) {
+                    case NamePromptResult::Confirmed:
+                        if (g.nameAction == NameAction::New) {
+                            app.CreateNew(g.nameDraft);
+                        } else {
+                            app.Duplicate(g.nameDraft);
+                        }
+                        CloseCurrentPopup();
+                        break;
+                    case NamePromptResult::Cancelled:
+                        CloseCurrentPopup();
+                        break;
+                    default:
+                        break;
                 }
                 EndPopup();
             }
         }
 
-        void MoveTier(model::Preset& p, int from, int to) {
-            if (from == to || from < 1 || to < 1 || from >= model::kSlotCount || to >= model::kSlotCount) {
-                return;
+        void DrawTierMenu(App& app, int i) {
+            auto& p = app.Preset();
+            if (i > 1 && MenuItem("Move up", "Alt+Up")) {
+                app.MoveTier(i, i - 1);
             }
-            auto slot = p.slots[from];
-            p.slots.erase(p.slots.begin() + from);
-            p.slots.insert(p.slots.begin() + to, slot);
+            if (i > 0 && i + 1 < static_cast<int>(p.slots.size()) && MenuItem("Move down", "Alt+Down")) {
+                app.MoveTier(i, i + 1);
+            }
+            if (i > 0 && MenuItem("Clear tier")) {
+                p.slots[i] = model::DefaultSlot();
+            }
+            Separator();
+            if (MenuItem("Copy tier")) {
+                app.clip.tier = p.slots[i];
+                app.clip.tierVisual = model::ResolveVisual(p, i);
+            }
+            if (BeginMenu("Paste", app.clip.tier.has_value())) {
+                const auto& src = *app.clip.tier;
+                auto& dst = p.slots[i];
+                if (i > 0 && MenuItem("Whole tier")) {
+                    const auto vis = app.clip.tierVisual;
+                    dst = src;
+                    model::SetLook(dst, false, src, vis);
+                }
+                if (MenuItem("Look only (tattoo, layers, pulse)")) {
+                    model::SetLook(dst, i == 0, src, app.clip.tierVisual);
+                }
+                if (i > 0 && MenuItem("Conditions only", nullptr, false, !src.conditions.empty())) {
+                    dst.conditions = src.conditions;
+                    dst.op = src.op;
+                }
+                if (MenuItem("Effects only", nullptr, false, !src.effects.empty())) {
+                    dst.effects = src.effects;
+                }
+                if (i > 0 && MenuItem("Timing only")) {
+                    dst.persistMin = src.persistMin;
+                    dst.allowOverride = src.allowOverride;
+                    dst.coolMin = src.coolMin;
+                }
+                ImGuiMCP::EndMenu();
+            }
+            if (BeginMenu("Copy look from")) {
+                for (int j = 0; j < static_cast<int>(p.slots.size()); ++j) {
+                    if (j != i && MenuItem(model::SlotLabel(p, j).c_str())) {
+                        model::CopyLook(p, j, i);
+                    }
+                }
+                ImGuiMCP::EndMenu();
+            }
         }
 
         void DrawTierRow(App& app, int i, float width) {
@@ -154,33 +195,12 @@ namespace mtfui::ui {
             }
             if (i > 0 && BeginDragDropTarget()) {
                 if (const auto* payload = AcceptDragDropPayload("MTFUI_TIER")) {
-                    const int from = *static_cast<const int*>(payload->Data);
-                    MoveTier(p, from, i);
-                    app.ed.slot = i;
+                    app.MoveTier(*static_cast<const int*>(payload->Data), i);
                 }
                 EndDragDropTarget();
             }
             if (BeginPopupContextItem("##tierctx")) {
-                if (i > 1 && MenuItem("Move up")) {
-                    MoveTier(p, i, i - 1);
-                    app.ed.slot = i - 1;
-                }
-                if (i > 0 && i + 1 < model::kSlotCount && MenuItem("Move down")) {
-                    MoveTier(p, i, i + 1);
-                    app.ed.slot = i + 1;
-                }
-                if (i > 0 && MenuItem("Clear tier")) {
-                    p.slots[i] = model::DefaultSlot();
-                }
-                if (BeginMenu("Copy look from")) {
-                    for (int j = 0; j < model::kSlotCount; ++j) {
-                        if (j != i && MenuItem(model::SlotLabel(p, j).c_str())) {
-                            p.slots[i].layers = p.slots[j].layers;
-                            p.slots[i].pulse = p.slots[j].pulse;
-                        }
-                    }
-                    ImGuiMCP::EndMenu();
-                }
+                DrawTierMenu(app, i);
                 EndPopup();
             }
             const ImVec2 after = GetCursorScreenPos();
@@ -218,14 +238,8 @@ namespace mtfui::ui {
                 const auto vis = model::ResolveVisual(p, i);
                 if (!vis.none) {
                     if (const auto* e = app.cat.FindEntry(vis.packId, vis.entryId); e && !e->textures.empty()) {
-                        if (const auto* tex = render::RequestCropped(e->textures.front(), 256, thumb, 1024)) {
-                            const ImVec2 a{ start.x + width - thumb - 4.0f, start.y + 4.0f };
-                            ImVec2 uv0, uv1;
-                            render::ContentUV(*tex, uv0, uv1);
-                            ImDrawListManager::AddRectFilled(dl, a, ImVec2{ a.x + thumb, a.y + thumb }, render::ToImColor(0xC89F86, 1.0f), 3.0f, 0);
-                            ImDrawListManager::AddImage(dl, reinterpret_cast<ImTextureID>(tex->srv), a, ImVec2{ a.x + thumb, a.y + thumb }, uv0, uv1,
-                                render::ToImColor(s.layers[0].tint, s.layers[0].alpha / 100.0f));
-                        }
+                        render::DrawThumbAt(dl, ImVec2{ start.x + width - thumb - 4.0f, start.y + 4.0f }, thumb, e->textures.front(), s.layers[0].tint,
+                            s.layers[0].alpha / 100.0f, 3.0f);
                     }
                 }
             }
@@ -299,6 +313,11 @@ namespace mtfui::ui {
                         p.fade.durationMs = ms;
                     }
                 }
+                if (Button("Copy as JSON")) {
+                    app.ExportToClipboard();
+                }
+                HelpMarker("Puts the whole preset on the clipboard, to share it or keep it somewhere. "
+                           "General > Backups can paste one back in as a new preset.");
             }
         }
 
@@ -307,17 +326,34 @@ namespace mtfui::ui {
                 TextColored(kGood, "No problems found");
                 return;
             }
+            // A fix changes the list, so apply it after the loop.
+            std::optional<model::LintIssue> fix;
             int shown = 0;
             for (const auto& issue : app.issues) {
                 PushID(shown++);
                 if (issue.slot >= 0) {
                     if (SmallButton(model::SlotLabel(app.Preset(), issue.slot).c_str())) {
                         app.ed.slot = issue.slot;
+                        if (issue.tab != model::LintTab::None) {
+                            app.inspectorTab = issue.tab;
+                        }
+                    }
+                    if (IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
+                        SetTooltip("Select this tier and show where to fix it");
+                    }
+                    SameLine();
+                }
+                if (issue.fix.kind != model::LintFix::Kind::None) {
+                    if (SmallButton(issue.fix.kind == model::LintFix::Kind::MoveAbove ? "Move it up" : "Enable it")) {
+                        fix = issue;
                     }
                     SameLine();
                 }
                 SeverityText(issue.severity, issue.message);
                 PopID();
+            }
+            if (fix) {
+                app.ApplyLintFix(*fix);
             }
         }
     }
@@ -340,8 +376,8 @@ namespace mtfui::ui {
                    "and it is shown whenever no tier matches.");
         DrawTierRow(app, 0, rowWidth);
         SeparatorText("Tiers (top wins)");
-        HelpMarker("Drag tiers to change priority. Right-click a tier for more. The first tier whose conditions are true is shown; "
-                   "Default applies when none are.");
+        HelpMarker("Drag tiers to change priority, or select one and press Alt+Up / Alt+Down. Right-click a tier to copy, paste or clear it. "
+                   "The first tier whose conditions are true is shown; Default applies when none are.");
         for (int i = 1; i < model::kSlotCount && i < static_cast<int>(app.Preset().slots.size()); ++i) {
             DrawTierRow(app, i, rowWidth);
         }

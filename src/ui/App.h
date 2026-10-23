@@ -28,6 +28,17 @@ namespace mtfui::ui {
 
     enum class Tab { Presets, Tattoos, General, Plugins };
 
+    // Copied parts of a tier, for pasting into another tier or preset.
+    struct TierClipboard {
+        std::optional<model::Slot> tier;
+        model::ResolvedVisual tierVisual;
+        std::optional<model::Layer> layer;
+        std::optional<model::Pulse> pulse;
+    };
+
+    // <game>/Data, from the executable's folder rather than the working directory.
+    fs::path GameDataDir();
+
     class App {
     public:
         static App& Get();
@@ -39,12 +50,14 @@ namespace mtfui::ui {
         void OnMenuOpen();
         void OnMenuClose();
         void OnGameLoaded();
+        void OnSaving();  // game thread, right before a save is written
 
         // Shared state for the tabs.
         Paths paths;
         model::Catalogs cat;
         io::UiSettings settings;
         std::vector<model::PresetFileInfo> library;
+        std::vector<model::PresetFileInfo> hiddenPresets;  // soft-deleted user presets
         model::UsageIndex usage;  // user presets only
         Editor ed;
         std::vector<model::LintIssue> issues;
@@ -59,6 +72,9 @@ namespace mtfui::ui {
         // Tattoos tab in "pick for this tier" mode.
         bool picking = false;
         int pickSlot = 0;
+        TierClipboard clip;
+        std::optional<model::LintTab> inspectorTab;  // tab the tier editor switches to next frame
+        bool focusSearch = false;  // Ctrl+F: the preset list's search box takes focus next frame
         void RequestTab(Tab tab) { requestedTab_ = tab; }
         void ResetPanelLayout() { resetLayout_ = true; }
 
@@ -70,6 +86,7 @@ namespace mtfui::ui {
         model::Preset& Preset() { return *ed.preset; }
 
         void Open(const std::string& name);  // asks to save first when dirty
+        void WhenSafe(std::function<void()> then);  // runs then now, or after the unsaved-changes prompt
         void CreateNew(const std::string& displayName, const std::string& packId = {}, const std::string& entryId = {});  // tattoo goes on Default
         void Duplicate(const std::string& displayName);
         void Delete(const std::string& name);
@@ -78,6 +95,12 @@ namespace mtfui::ui {
         void Undo();
         void Redo();
         void Relint();
+        bool RestoreBackup(const fs::path& backup, const std::string& name);
+        bool Undelete(const std::string& name);
+        void ExportToClipboard();
+        void ImportFromClipboard();
+        void ApplyLintFix(const model::LintIssue& issue);
+        void MoveTier(int from, int to);  // keeps the moved tier selected
 
         void SetTarget(RE::FormID id, std::string name);
         void ApplyToTarget(const std::string& name);
@@ -87,6 +110,8 @@ namespace mtfui::ui {
         void UpdatePreview();
         void SaveSettings();
 
+        const model::PresetFileInfo* FindLibrary(const std::string& name) const;
+        bool IsApplied(const std::string& name) const;  // on the current target
         bool BuiltinNameTaken(const std::string& name) const;
         std::string UniqueName(const std::string& displayName) const;
         model::LintContext LintCtx() const;
@@ -104,14 +129,26 @@ namespace mtfui::ui {
         void DrawModals();
         void CommitFrame();
         void HandleShortcuts();
+        void HandlePlainShortcuts();
         void LoadPresetNow(const std::string& name);
+        void CreateNewNow(const std::string& displayName, const std::string& packId, const std::string& entryId);
+        void ClearEditor();
+        // Unsaved edits survive a game exit in drafts/current.json.
+        fs::path DraftPath() const;
+        void WriteDraft();
+        void DiscardDraft();
+        void RestoreDraft();
         void HoldVanityCamera(bool hold);
         void HoldActor(RE::FormID id);  // 0 releases
 
         SKSEMenuFramework::Model::WindowInterface* window_ = nullptr;
         std::optional<Tab> requestedTab_;
-        std::string pendingOpen_;
+        std::function<void()> pendingAction_;  // runs once the unsaved-changes prompt is answered
         bool confirmOpen_ = false;
+        bool draftPending_ = false;  // edits not yet in the draft file
+        double lastDraft_ = 0.0;
+        bool draftOffer_ = false;  // ask whether to restore a draft from an earlier session
+        std::string draftName_;
         struct ToastMsg {
             std::string text;
             bool error;
@@ -127,6 +164,26 @@ namespace mtfui::ui {
         bool peeking_ = false;
         bool pickHintShown_ = false;
         int lastSectionFrame_ = -100;
+        int beganFrame_ = -1;
+        int committedFrame_ = -1;
+        int modalsFrame_ = -1;
+        struct PreviewInputs {
+            RE::FormID target = 0;
+            int slot = -1;
+            bool effects = false;
+            model::Slot tier;
+            model::Slot base;  // Default, which the tier may inherit its tattoo from
+            bool operator==(const PreviewInputs&) const = default;
+        };
+        std::optional<PreviewInputs> previewInputs_;
+        struct LintInputs {
+            std::uint64_t textures = 0;
+            bool fresh = false;
+            std::map<std::string, bool> pluginEnabled;
+            std::array<int, 4> overlayStart{};
+            bool operator==(const LintInputs&) const = default;
+        };
+        LintInputs lintInputs_;
         std::map<std::string, int> overlayCapacity_;
     };
 }

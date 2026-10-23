@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Build Magic Tattoos UI and copy it to Vortex staging (default), the game Data folder, or a release zip.
-# Usage: build.sh [staging|live|package|test|uninstall-staging|uninstall-live]
+# Build Magic Tattoos UI and copy it to the game Data folder (default), Vortex staging, or a release zip.
+# Usage: build.sh [live|staging|package|test|uninstall-staging|uninstall-live]
 # Set SKYRIM_DIR, VORTEX_STAGING, or VCPKG_ROOT to override the paths below.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
-TARGET="${1:-staging}"
+TARGET="${1:-live}"
 GAME="${SKYRIM_DIR:-/c/Program Files (x86)/Steam/steamapps/common/Skyrim Special Edition}"
 DATA="$GAME/Data"
 STAGING="${VORTEX_STAGING:-/c/Users/white/AppData/Roaming/Vortex/skyrimse/mods/Magic Tattoos UI}"
@@ -37,6 +37,20 @@ case "$TARGET" in
 esac
 
 VERSION="$(tr -d '[:space:]' < "$ROOT/VERSION")"
+LIVE_DLL="$DATA/SKSE/Plugins/MagicTattoosUI.dll"
+
+# Skyrim keeps the DLL open while it runs, so copying over it would fail after a full build.
+skyrim_holds_dll() {
+  if MSYS_NO_PATHCONV=1 tasklist.exe /FI "IMAGENAME eq SkyrimSE.exe" /NH 2> /dev/null | grep -qi "SkyrimSE.exe"; then
+    return 0
+  fi
+  [[ -f "$LIVE_DLL" ]] && ! (: >> "$LIVE_DLL") 2> /dev/null
+}
+QUIT_MSG="Skyrim is running and has MagicTattoosUI.dll locked. Quit Skyrim to desktop, then rerun."
+if [[ "$TARGET" == "live" ]] && skyrim_holds_dll; then
+  echo "$QUIT_MSG" >&2
+  exit 2
+fi
 
 # Use the CMake and Ninja that vcpkg downloads when they aren't installed system-wide.
 tool_dir() { dirname "$(cygpath -u "$("$VCPKG_ROOT/vcpkg.exe" fetch "$1" 2>/dev/null | tail -1)")"; }
@@ -83,7 +97,10 @@ case "$TARGET" in
     ;;
   live)
     mkdir -p "$DATA/SKSE/Plugins"
-    cp -f "$DIST/SKSE/Plugins/MagicTattoosUI.dll" "$DIST/SKSE/Plugins/MagicTattoosUI.pdb" "$DATA/SKSE/Plugins/"
+    if ! cp -f "$DIST/SKSE/Plugins/MagicTattoosUI.dll" "$DIST/SKSE/Plugins/MagicTattoosUI.pdb" "$DATA/SKSE/Plugins/"; then
+      echo "$QUIT_MSG" >&2
+      exit 2
+    fi
     ;;
   package)
     PACKAGE="$DIST/package"

@@ -363,6 +363,23 @@ namespace mtfui::model {
         return p;
     }
 
+    std::optional<Json> ParsePresetText(const std::string& text, std::string* error) {
+        auto fail = [error](std::string why) -> std::optional<Json> {
+            if (error) {
+                *error = std::move(why);
+            }
+            return std::nullopt;
+        };
+        Json j = Json::parse(text, nullptr, false);
+        if (j.is_discarded()) {
+            return fail("the clipboard does not hold JSON");
+        }
+        if (!j.is_object() || !j.contains("slot") || !j["slot"].is_array()) {
+            return fail("the clipboard JSON is not a Magic Tattoos preset");
+        }
+        return j;
+    }
+
     Json PresetToJson(const Preset& preset) {
         Json j = preset.raw.is_object() ? preset.raw : Json::object();
         j["hidden"] = 0;
@@ -424,5 +441,41 @@ namespace mtfui::model {
         }
         r.none = r.packId.empty() || r.packId == kNoTexture || r.entryId.empty();
         return r;
+    }
+
+    bool MoveTier(Preset& preset, int from, int to) {
+        const int count = static_cast<int>(preset.slots.size());
+        if (from == to || from < 1 || to < 1 || from >= count || to >= count) {
+            return false;
+        }
+        auto slot = std::move(preset.slots[from]);
+        preset.slots.erase(preset.slots.begin() + from);
+        preset.slots.insert(preset.slots.begin() + to, std::move(slot));
+        return true;
+    }
+
+    void SetLook(Slot& dst, bool dstIsDefault, const Slot& src, const ResolvedVisual& srcVisual) {
+        dst.layers = src.layers;
+        dst.pulse = src.pulse;
+        if (srcVisual.inherited && !dstIsDefault) {
+            dst.packId.clear();
+            dst.entryId.clear();
+        } else if (srcVisual.none) {
+            dst.packId = dstIsDefault ? "" : kNoTexture;
+            dst.entryId.clear();
+        } else {
+            dst.packId = srcVisual.packId;
+            dst.entryId = srcVisual.entryId;
+        }
+    }
+
+    void CopyLook(Preset& preset, int from, int to) {
+        const int count = static_cast<int>(preset.slots.size());
+        if (from == to || from < 0 || to < 0 || from >= count || to >= count) {
+            return;
+        }
+        const auto vis = ResolveVisual(preset, from);
+        const Slot src = preset.slots[from];
+        SetLook(preset.slots[to], to == 0, src, vis);
     }
 }

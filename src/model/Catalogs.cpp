@@ -7,21 +7,23 @@
 
 namespace mtfui::model {
     namespace {
-        std::vector<fs::path> JsonFiles(const fs::path& dir) {
-            std::vector<fs::path> out;
-            std::error_code ec;
-            if (!fs::is_directory(dir, ec)) {
-                return out;
-            }
-            for (const auto& e : fs::directory_iterator(dir, ec)) {
-                if (e.is_regular_file(ec) && io::ToLower(e.path().extension().string()) == ".json") {
-                    out.push_back(e.path());
+        std::vector<fs::path> JsonFiles(const fs::path& dir) { return io::ListFiles(dir, ".json"); }
+
+        // A third-party catalog with an unexpected type must not take the whole menu down.
+        template <class T, class Fn>
+        void LoadEach(const fs::path& dir, std::vector<T>& out, Fn load, std::vector<std::string>& errors) {
+            for (const auto& f : JsonFiles(dir)) {
+                try {
+                    if (auto v = load(f)) {
+                        out.push_back(std::move(*v));
+                    } else {
+                        std::string why;
+                        errors.push_back(io::PathText(f) + ": " + (io::ReadJson(f, &why) ? std::string("not in the expected format") : why));
+                    }
+                } catch (const std::exception& e) {
+                    errors.push_back(io::PathText(f) + ": " + e.what());
                 }
             }
-            std::sort(out.begin(), out.end(), [](const fs::path& a, const fs::path& b) {
-                return io::ToLower(a.filename().string()) < io::ToLower(b.filename().string());
-            });
-            return out;
         }
 
         const CatalogEntry* FindIn(const std::vector<PluginCatalog>& plugins, const std::map<std::string, std::string>& moduleMap,
@@ -64,31 +66,26 @@ namespace mtfui::model {
         packs.clear();
         waveforms.clear();
         moduleMap.clear();
-        for (const auto& f : JsonFiles(root / "plugins")) {
-            if (auto c = LoadPluginCatalog(f)) {
-                plugins.push_back(std::move(*c));
-            }
+        loadErrors.clear();
+        LoadEach(root / "plugins", plugins, LoadPluginCatalog, loadErrors);
+        LoadEach(root / "visuals", packs, LoadVisualPack, loadErrors);
+        LoadEach(root / "waveforms", waveforms, LoadWaveform, loadErrors);
+        try {
+            colors = LoadColors(root / "colors.json");
+        } catch (const std::exception& e) {
+            colors.clear();
+            loadErrors.push_back("colors.json: " + std::string(e.what()));
         }
-        for (const auto& f : JsonFiles(root / "visuals")) {
-            if (auto p = LoadVisualPack(f)) {
-                packs.push_back(std::move(*p));
-            }
-        }
-        for (const auto& f : JsonFiles(root / "waveforms")) {
-            if (auto w = LoadWaveform(f)) {
-                waveforms.push_back(std::move(*w));
-            }
-        }
-        colors = LoadColors(root / "colors.json");
         if (auto j = io::ReadJson(root / "mtf.module_map.json"); j && j->is_object()) {
             if (auto s = j->find("string"); s != j->end() && s->is_object()) {
                 for (auto it = s->begin(); it != s->end(); ++it) {
-                    if (it.value().is_string() && it.key().front() != '_') {
+                    if (it.value().is_string() && !it.key().empty() && it.key().front() != '_') {
                         moduleMap[io::ToLower(it.key())] = it.value().get<std::string>();
                     }
                 }
             }
         }
+        ++generation;
     }
 
     const PluginCatalog* Catalogs::FindPlugin(const std::string& pluginId) const {
@@ -134,28 +131,36 @@ namespace mtfui::model {
         return nullptr;
     }
 
-    std::vector<PresetFileInfo> Catalogs::ListPresets(bool includeBuiltin) const {
+    std::vector<PresetFileInfo> Catalogs::ListPresets(bool includeBuiltin, std::vector<PresetFileInfo>* hidden) const {
+        if (hidden) {
+            hidden->clear();
+        }
         std::vector<PresetFileInfo> out;
         auto scan = [&](const fs::path& dir, bool builtin) {
             for (const auto& f : JsonFiles(dir)) {
                 PresetFileInfo info;
-                info.name = f.stem().string();
-                if (info.name.rfind("_mtfui", 0) == 0) {
+                info.name = io::NarrowName(f, true).value_or("");
+                if (info.name.empty() || info.name.rfind("_mtfui", 0) == 0) {
                     continue;
                 }
                 info.path = f;
                 info.builtin = builtin;
                 std::error_code ec;
                 info.modified = fs::last_write_time(f, ec);
+                info.displayName = info.name;
                 if (auto j = io::ReadJson(f); j && j->is_object()) {
-                    info.displayName = j->value("displayname", info.name);
+                    if (auto d = j->find("displayname"); d != j->end() && d->is_string()) {
+                        info.displayName = d->get<std::string>();
+                    }
                     if (auto h = j->find("hidden"); h != j->end() && h->is_number()) {
                         info.hidden = h->get<int>();
                     }
-                } else {
-                    info.displayName = info.name;
+                    info.json = std::move(*j);
                 }
                 if (info.hidden == 1) {
+                    if (hidden && !builtin) {
+                        hidden->push_back(std::move(info));
+                    }
                     continue;
                 }
                 const bool shadowed = std::any_of(out.begin(), out.end(), [&](const PresetFileInfo& o) { return IEquals(o.name, info.name); });

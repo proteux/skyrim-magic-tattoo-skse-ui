@@ -4,8 +4,41 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cmath>
+#include <limits>
+#include <type_traits>
 
 namespace mtfui::io {
+    namespace {
+        // Each reader leaves out untouched when the key is missing or has another type.
+        void GetBool(const nlohmann::json& j, const char* key, bool& out) {
+            if (auto it = j.find(key); it != j.end() && it->is_boolean()) {
+                out = it->get<bool>();
+            }
+        }
+
+        template <class T>
+        void GetNumber(const nlohmann::json& j, const char* key, T& out) {
+            if (auto it = j.find(key); it != j.end() && it->is_number()) {
+                const double v = it->get<double>();
+                if constexpr (std::is_floating_point_v<T>) {
+                    if (std::isfinite(v)) {
+                        out = static_cast<T>(v);
+                    }
+                } else if (std::isfinite(v) && v >= static_cast<double>(std::numeric_limits<T>::min()) &&
+                           v <= static_cast<double>(std::numeric_limits<T>::max())) {
+                    out = static_cast<T>(v);
+                }
+            }
+        }
+
+        void GetString(const nlohmann::json& j, const char* key, std::string& out) {
+            if (auto it = j.find(key); it != j.end() && it->is_string()) {
+                out = it->get<std::string>();
+            }
+        }
+    }
+
     std::string ToLower(std::string s) {
         std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
         return s;
@@ -52,25 +85,29 @@ namespace mtfui::io {
         };
         strings("favorites", favorites);
         strings("recents", recents);
-        pauseGame = j->value("pauseGame", pauseGame);
-        livePreviewEnabled = j->value("livePreview", livePreviewEnabled);
-        holdTarget = j->value("holdTarget", holdTarget);
-        heldActor = j->value("heldActor", heldActor);
-        thumbSize = std::clamp(j->value("thumbSize", thumbSize), 48, 256);
-        lastPreset = j->value("lastPreset", lastPreset);
-        splitPanels = j->value("splitPanels", splitPanels);
-        panelOpacity = std::clamp(j->value("panelOpacity", panelOpacity), 20, 100);
+        GetBool(*j, "pauseGame", pauseGame);
+        GetBool(*j, "livePreview", livePreviewEnabled);
+        GetBool(*j, "holdTarget", holdTarget);
+        GetNumber(*j, "heldActor", heldActor);
+        GetNumber(*j, "thumbSize", thumbSize);
+        thumbSize = std::clamp(thumbSize, 48, 256);
+        GetString(*j, "lastPreset", lastPreset);
+        GetBool(*j, "splitPanels", splitPanels);
+        GetNumber(*j, "panelOpacity", panelOpacity);
+        panelOpacity = std::clamp(panelOpacity, 20, 100);
         if (auto it = j->find("panels"); it != j->end() && it->is_object()) {
             for (const auto& [name, v] : it->items()) {
                 if (!v.is_object()) {
                     continue;
                 }
                 PanelState s;
-                s.x = v.value("x", 0.0f);
-                s.y = v.value("y", 0.0f);
-                s.w = std::max(0.0f, v.value("w", 0.0f));
-                s.h = std::max(0.0f, v.value("h", 0.0f));
-                s.open = v.value("open", false);
+                GetNumber(v, "x", s.x);
+                GetNumber(v, "y", s.y);
+                GetNumber(v, "w", s.w);
+                GetNumber(v, "h", s.h);
+                GetBool(v, "open", s.open);
+                s.w = std::max(0.0f, s.w);
+                s.h = std::max(0.0f, s.h);
                 panels[name] = s;
             }
         }
@@ -101,6 +138,7 @@ namespace mtfui::io {
             jp[name] = { { "x", s.x }, { "y", s.y }, { "w", s.w }, { "h", s.h }, { "open", s.open } };
         }
         j["previewActors"] = previewActors;
-        return WriteTextAtomic(path, j.dump(2));
+        // Preset names are in the ANSI code page, which isn't always valid UTF-8.
+        return WriteTextAtomic(path, j.dump(2, ' ', false, nlohmann::json::error_handler_t::replace));
     }
 }

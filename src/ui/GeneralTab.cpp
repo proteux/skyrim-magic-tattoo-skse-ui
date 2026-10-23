@@ -1,4 +1,5 @@
 #include "game/MtfBridge.h"
+#include "io/JsonStore.h"
 #include "render/DdsCache.h"
 #include "render/Preview2D.h"
 #include "ui/App.h"
@@ -10,7 +11,15 @@ namespace mtfui::ui {
     using namespace ImGuiMCP;
 
     namespace {
-        float g_interval = -1.0f;
+        struct GeneralTabState {
+            float interval = -1.0f;
+            int overlayArea = -1;  // area whose slider is being dragged
+            int overlayDraft = 0;
+            std::string backupSearch;
+            std::vector<io::BackupInfo> backups;
+            double backupsRead = -100.0;
+        };
+        GeneralTabState g;
 
         int LayersUsedIn(const App& app, const std::string& area) {
             std::size_t most = 0;
@@ -30,15 +39,24 @@ namespace mtfui::ui {
             const auto& snap = bridge.Snapshot();
             const std::string name = game::kAreas[area];
             const int used = LayersUsedIn(app, name);
-            int start = snap.overlayStart[area];
+            // While dragging, only the draft moves; MTF re-applies every overlay on a change, so it hears the final value once.
+            int start = g.overlayArea == area ? g.overlayDraft : snap.overlayStart[area];
 
             PushID(area);
             AlignTextToFramePadding();
             TextUnformatted(name.c_str());
             SameLine(80);
             SetNextItemWidth(140);
-            if (SliderInt("##start", &start, 0, std::max(0, capacity - 1), "starts at %d")) {
+            SliderInt("##start", &start, 0, std::max(0, capacity - 1), "starts at %d");
+            if (IsItemActive()) {
+                g.overlayArea = area;
+                g.overlayDraft = start;
+            }
+            if (IsItemDeactivatedAfterEdit()) {
                 bridge.SetOverlaySlot(area, start);
+            }
+            if (!IsItemActive() && g.overlayArea == area) {
+                g.overlayArea = -1;
             }
             SameLine();
 
@@ -64,6 +82,98 @@ namespace mtfui::ui {
             }
             PopID();
         }
+
+        // "20261022-153012-123" -> "2026-10-22 15:30:12"
+        std::string StampText(const std::string& s) {
+            if (s.size() < 15) {
+                return s;
+            }
+            return s.substr(0, 4) + "-" + s.substr(4, 2) + "-" + s.substr(6, 2) + " " + s.substr(9, 2) + ":" + s.substr(11, 2) + ":" + s.substr(13, 2);
+        }
+
+        void DrawRecovery(App& app) {
+            SeparatorText("Deleted presets");
+            if (app.hiddenPresets.empty()) {
+                TextDisabled("None");
+            }
+            std::string undelete;
+            for (const auto& info : app.hiddenPresets) {
+                PushID(info.name.c_str());
+                if (SmallButton("Restore")) {
+                    undelete = info.name;
+                }
+                SameLine();
+                Text("%s", info.displayName.c_str());
+                SameLine();
+                TextDisabled("%s.json", info.name.c_str());
+                PopID();
+            }
+            if (!undelete.empty()) {
+                app.Undelete(undelete);
+            }
+
+            SeparatorText("Backups");
+            TextWrapped("Every save, delete and restore keeps the file it replaces, the last 10 per preset.");
+            if (Button("Paste a preset from the clipboard")) {
+                app.ImportFromClipboard();
+            }
+            HelpMarker("Opens preset JSON from the clipboard (for example from Copy as JSON under Preset options) as a new, unsaved preset.");
+            SameLine();
+            if (Button("Open backups folder")) {
+                std::error_code ec;
+                const auto dir = app.paths.uiDir / "backups";
+                fs::create_directories(dir, ec);
+                ShellExecuteW(nullptr, L"open", dir.wstring().c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+            }
+            if (!CollapsingHeader("Restore a backup")) {
+                return;
+            }
+            if (GetTime() - g.backupsRead > 2.0) {
+                g.backups = io::ListBackups(app.paths.uiDir / "backups");
+                g.backupsRead = GetTime();
+            }
+            if (g.backups.empty()) {
+                TextDisabled("No backups yet.");
+                return;
+            }
+            SearchBox("##backupsearch", g.backupSearch, 260.0f, "Filter by preset");
+            std::optional<io::BackupInfo> restore;
+            if (BeginTable("##backups", 3, ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_BordersInnerV, ImVec2{ 0, 260 })) {
+                TableSetupColumn("Preset", ImGuiTableColumnFlags_WidthStretch);
+                TableSetupColumn("Saved", ImGuiTableColumnFlags_WidthFixed, CalcTextSize("0000-00-00 00:00:00").x);
+                TableSetupColumn("##restore", ImGuiTableColumnFlags_WidthFixed, CalcTextSize("Restore").x + 12.0f);
+                TableHeadersRow();
+                int row = 0;
+                for (const auto& b : g.backups) {
+                    if (!MatchesSearch(b.stem, g.backupSearch)) {
+                        continue;
+                    }
+                    PushID(row++);
+                    TableNextRow();
+                    TableNextColumn();
+                    const auto* live = app.FindLibrary(b.stem);
+                    TextUnformatted(b.stem.c_str());
+                    if (!live) {
+                        SameLine();
+                        TextDisabled("(deleted)");
+                    }
+                    TableNextColumn();
+                    TextUnformatted(StampText(b.stamp).c_str());
+                    TableNextColumn();
+                    if (SmallButton("Restore")) {
+                        restore = b;
+                    }
+                    if (IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
+                        SetTooltip("Replace %s.json with this version. The current file is backed up first.", b.stem.c_str());
+                    }
+                    PopID();
+                }
+                EndTable();
+            }
+            if (restore && app.RestoreBackup(restore->path, restore->stem)) {
+                g.backupsRead = -100.0;
+            }
+        }
     }
 
     void DrawGeneralTab(App& app) {
@@ -73,10 +183,12 @@ namespace mtfui::ui {
         if (!bridge.Installed()) {
             TextColored(kError, "MagicTattoosFramework.esp is not loaded, so these settings are unavailable.");
             TextWrapped("Presets can still be edited; they are plain files in Data/SKSE/Plugins/StorageUtilData/MagicTattoosFramework/presets.");
+            DrawRecovery(app);
             return;
         }
         if (!snap.fresh) {
             TextDisabled("Reading MTF settings...");
+            DrawRecovery(app);
             return;
         }
 
@@ -93,13 +205,13 @@ namespace mtfui::ui {
         }
         HelpMarker("Writes extra lines to the Papyrus log and shows notifications. Leave off for normal play.");
 
-        if (g_interval < 0.0f || !IsAnyItemActive()) {
-            g_interval = snap.updateInterval;
+        if (g.interval < 0.0f || !IsAnyItemActive()) {
+            g.interval = snap.updateInterval;
         }
         SetNextItemWidth(260);
-        SliderFloat("Update interval", &g_interval, 0.1f, 45.0f, "%.1f s", ImGuiSliderFlags_Logarithmic);
+        SliderFloat("Update interval", &g.interval, 0.1f, 45.0f, "%.1f s", ImGuiSliderFlags_Logarithmic);
         if (IsItemDeactivatedAfterEdit()) {
-            bridge.SetUpdateInterval(g_interval);
+            bridge.SetUpdateInterval(g.interval);
         }
         HelpMarker("How often MTF re-checks conditions. Lower reacts faster but costs more script time.");
 
@@ -176,16 +288,11 @@ namespace mtfui::ui {
             app.SaveSettings();
         }
         HelpMarker("Background opacity of the standalone window and its panels, so the target shows through.");
-        if (Button("Open backups folder")) {
-            std::error_code ec;
-            const auto dir = app.paths.uiDir / "backups";
-            fs::create_directories(dir, ec);
-            ShellExecuteW(nullptr, L"open", dir.wstring().c_str(), nullptr, nullptr, SW_SHOWNORMAL);
-        }
-        HelpMarker("Every save and delete keeps the previous file here (last 10 per preset).");
-        SameLine();
         if (Button("Clear texture cache")) {
             render::DdsCache::Get().Clear();
         }
+        HelpMarker("Reloads tattoo thumbnails from disk, after you replace a texture file.");
+
+        DrawRecovery(app);
     }
 }

@@ -30,6 +30,8 @@ namespace mtfui::game {
     RE::FormID HoldStill(RE::FormID id);
     // After a load: switches an actor held in an earlier session back on, if its AI is still off.
     void ReleaseLeftover(RE::FormID id);
+    // Right before a save is written, so the save never has the NPC frozen. Returns the actor that was released, or 0.
+    RE::FormID ReleaseForSave();
 
     // Normalizes a texture path to the form BSResource expects ("textures\..." prefix, backslashes).
     std::string TexturePath(std::string path);

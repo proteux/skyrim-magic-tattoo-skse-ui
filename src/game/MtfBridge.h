@@ -62,6 +62,8 @@ namespace mtfui::game {
         static void RunOnGame(std::function<void()> fn);
         static void PostToUi(std::function<void()> fn);
         static void DrainUi();
+        // After a save loads: callbacks from calls started earlier are dropped instead of run.
+        static void NewSession();
 
     private:
         RE::TESQuest* quest_ = nullptr;

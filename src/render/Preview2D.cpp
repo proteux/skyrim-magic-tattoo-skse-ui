@@ -18,6 +18,7 @@ namespace mtfui::render {
         constexpr std::uint32_t kSkinTone = 0xC89F86;
         constexpr float kPadding = 1.15f;
         constexpr float kMaxZoom = 32.0f;
+        constexpr int kMaxSharpSize = 2048;  // a 4096 copy per layer costs tens of MB of VRAM for little visible gain
 
         ImTextureID Tex(const Texture* t) { return reinterpret_cast<ImTextureID>(t->srv); }
 
@@ -138,7 +139,7 @@ namespace mtfui::render {
 
         // Zoomed in, the base copy is too coarse: fetch one whose visible part fills the preview.
         int sharpSize = textureSize;
-        while (sharpSize < 4096 && sharpSize < size * view.zoom) {
+        while (sharpSize < kMaxSharpSize && sharpSize < size * view.zoom) {
             sharpSize *= 2;
         }
         bool loading = false;
@@ -177,29 +178,24 @@ namespace mtfui::render {
         }
     }
 
-    void DrawThumb(const std::vector<std::string>& textures, float size, std::uint32_t tint) {
-        const ImVec2 origin = GetCursorScreenPos();
-        const ImVec2 end{ origin.x + size, origin.y + size };
-        auto* dl = GetWindowDrawList();
-        ImDrawListManager::AddRectFilled(dl, origin, end, ToImColor(kSkinTone, 1.0f), 4.0f, 0);
-        bool any = false;
-        bool failed = false;
-        const int texSize = size > 160.0f ? 512 : 256;
-        for (const auto& t : textures) {
-            if (const auto* tex = RequestCropped(t, texSize, size, 1024)) {
-                ImVec2 uv0, uv1;
-                ContentUV(*tex, uv0, uv1);
-                ImDrawListManager::AddImage(dl, Tex(tex), origin, end, uv0, uv1, ToImColor(tint, 1.0f));
-                any = true;
-            } else {
-                failed = failed || DdsCache::Get().Failed(t, texSize);
-            }
+    ThumbState DrawThumbAt(ImDrawList* dl, ImVec2 pos, float size, const std::string& texture, std::uint32_t tint, float alpha, float rounding) {
+        const ImVec2 end{ pos.x + size, pos.y + size };
+        ImDrawListManager::AddRectFilled(dl, pos, end, ToImColor(kSkinTone, 1.0f), rounding, 0);
+        if (texture.empty()) {
+            return ThumbState::Missing;
         }
-        if (!any) {
-            const char* label = failed ? "missing" : "...";
-            ImDrawListManager::AddText(dl, ImVec2{ origin.x + 6, origin.y + 6 }, IM_COL32(40, 30, 30, 255), label);
+        constexpr int kBase = 256;
+        if (const auto* tex = RequestCropped(texture, kBase, size, 1024)) {
+            ImVec2 uv0, uv1;
+            ContentUV(*tex, uv0, uv1);
+            ImDrawListManager::AddImage(dl, Tex(tex), pos, end, uv0, uv1, ToImColor(tint, alpha));
+            return ThumbState::Drawn;
         }
-        Dummy(ImVec2{ size, size });
+        if (DdsCache::Get().Failed(texture, kBase)) {
+            ImDrawListManager::AddText(dl, ImVec2{ pos.x + 6, pos.y + 6 }, IM_COL32(200, 40, 40, 255), "missing");
+            return ThumbState::Missing;
+        }
+        return ThumbState::Loading;
     }
 
     void DrawPulseGraph(const model::Pulse& pulse, const model::Waveform* wave, float width, float height) {

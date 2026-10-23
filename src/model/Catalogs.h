@@ -5,6 +5,8 @@
 #include "model/VisualPacks.h"
 #include "model/Waveform.h"
 
+#include <nlohmann/json.hpp>
+
 #include <filesystem>
 #include <map>
 #include <string>
@@ -20,6 +22,7 @@ namespace mtfui::model {
         bool builtin = false;
         int hidden = 0;
         fs::file_time_type modified{};
+        nlohmann::json json;  // the parsed file; null when it could not be read
     };
 
     // MTF's on-disk data under Data/SKSE/Plugins/StorageUtilData/MagicTattoosFramework.
@@ -30,6 +33,8 @@ namespace mtfui::model {
         std::vector<Waveform> waveforms;
         std::vector<NamedColor> colors;
         std::map<std::string, std::string> moduleMap;  // "cond:<id>" / "eff:<id>" lowercase -> plugin id
+        std::vector<std::string> loadErrors;  // catalog files that were skipped, with the reason
+        int generation = 0;  // bumped on every Load
 
         void Load(const fs::path& mtfRoot);
 
@@ -45,7 +50,8 @@ namespace mtfui::model {
         const VisualEntry* FindEntry(const std::string& packId, const std::string& entryId) const;
         const Waveform* FindWaveform(const std::string& name) const;  // nullptr for "" (built-in cosine)
 
-        std::vector<PresetFileInfo> ListPresets(bool includeBuiltin) const;
+        // Visible presets, user presets shadowing built-ins of the same name. Soft-deleted user presets go to hidden.
+        std::vector<PresetFileInfo> ListPresets(bool includeBuiltin, std::vector<PresetFileInfo>* hidden = nullptr) const;
     };
 
     bool IEquals(const std::string& a, const std::string& b);

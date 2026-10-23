@@ -1,6 +1,7 @@
 #include "render/DdsCache.h"
 
 #include "game/Targets.h"
+#include "io/DdsHeader.h"
 #include "io/UiSettings.h"
 
 #include <condition_variable>
@@ -9,63 +10,9 @@
 
 namespace mtfui::render {
     namespace {
-        constexpr std::size_t kMagic = 4;
-        constexpr std::size_t kHeader = 124;
-        constexpr std::size_t kDx10 = 20;
         constexpr std::uint64_t kEvictAfterFrames = 60 * 60;  // about a minute unused
         constexpr std::size_t kMaxEntries = 384;
-
-        std::uint32_t U32(const std::uint8_t* p) {
-            std::uint32_t v;
-            std::memcpy(&v, p, 4);
-            return v;
-        }
-        void SetU32(std::uint8_t* p, std::uint32_t v) { std::memcpy(p, &v, 4); }
-
-        constexpr std::uint32_t FourCC(char a, char b, char c, char d) {
-            return static_cast<std::uint32_t>(a) | (static_cast<std::uint32_t>(b) << 8) | (static_cast<std::uint32_t>(c) << 16) |
-                   (static_cast<std::uint32_t>(d) << 24);
-        }
-
-        // Returns {blockBytes, true} for block-compressed formats or {bytesPerPixel, false}.
-        std::optional<std::pair<int, bool>> FormatInfo(const std::uint8_t* h, bool dx10, std::uint32_t dxgi) {
-            if (dx10) {
-                if (dxgi >= 70 && dxgi <= 72) return std::pair{ 8, true };
-                if (dxgi >= 73 && dxgi <= 78) return std::pair{ 16, true };
-                if (dxgi >= 79 && dxgi <= 81) return std::pair{ 8, true };
-                if (dxgi >= 82 && dxgi <= 84) return std::pair{ 16, true };
-                if (dxgi >= 94 && dxgi <= 99) return std::pair{ 16, true };
-                if ((dxgi >= 27 && dxgi <= 32) || (dxgi >= 87 && dxgi <= 93)) return std::pair{ 4, false };
-                if (dxgi == 61 || dxgi == 62 || dxgi == 63 || dxgi == 64 || dxgi == 65) return std::pair{ 1, false };
-                return std::nullopt;
-            }
-            const std::uint32_t pfFlags = U32(h + 76);
-            const std::uint32_t fourcc = U32(h + 80);
-            if (pfFlags & 0x4) {
-                switch (fourcc) {
-                    case FourCC('D', 'X', 'T', '1'):
-                    case FourCC('A', 'T', 'I', '1'):
-                    case FourCC('B', 'C', '4', 'U'):
-                    case FourCC('B', 'C', '4', 'S'):
-                        return std::pair{ 8, true };
-                    case FourCC('D', 'X', 'T', '2'):
-                    case FourCC('D', 'X', 'T', '3'):
-                    case FourCC('D', 'X', 'T', '4'):
-                    case FourCC('D', 'X', 'T', '5'):
-                    case FourCC('A', 'T', 'I', '2'):
-                    case FourCC('B', 'C', '5', 'U'):
-                    case FourCC('B', 'C', '5', 'S'):
-                        return std::pair{ 16, true };
-                    default:
-                        return std::nullopt;
-                }
-            }
-            const std::uint32_t bits = U32(h + 84);
-            if (bits == 8 || bits == 16 || bits == 24 || bits == 32) {
-                return std::pair{ static_cast<int>(bits / 8), false };
-            }
-            return std::nullopt;
-        }
+        constexpr std::size_t kMaxBytes = 256u << 20;
 
         // Finds where the ink is on a small CPU-decoded mip. Overlay textures are mostly empty
         // canvas (transparent, or a flat color), with the design somewhere inside it.
@@ -135,72 +82,6 @@ namespace mtfui::render {
             tex.v1 = static_cast<float>(y1 + 1) / h;
         }
 
-        std::size_t MipBytes(std::uint32_t w, std::uint32_t h, std::pair<int, bool> fmt) {
-            if (fmt.second) {
-                return static_cast<std::size_t>(std::max(1u, (w + 3) / 4)) * std::max(1u, (h + 3) / 4) * fmt.first;
-            }
-            return static_cast<std::size_t>(w) * h * fmt.first;
-        }
-    }
-
-    std::optional<std::vector<std::uint8_t>> ShrinkDds(const std::vector<std::uint8_t>& header, int maxSize, std::size_t* skipBytes,
-        std::size_t* keepBytes) {
-        if (header.size() < kMagic + kHeader || U32(header.data()) != FourCC('D', 'D', 'S', ' ')) {
-            return std::nullopt;
-        }
-        const std::uint8_t* h = header.data() + kMagic;
-        const bool dx10 = (U32(h + 76) & 0x4) && U32(h + 80) == FourCC('D', 'X', '1', '0');
-        if (dx10 && header.size() < kMagic + kHeader + kDx10) {
-            return std::nullopt;
-        }
-        const std::uint32_t caps2 = U32(h + 108);
-        if (caps2 & 0x200) {  // cubemap
-            return std::nullopt;
-        }
-        std::uint32_t dxgi = 0;
-        if (dx10) {
-            const std::uint8_t* x = h + kHeader;
-            dxgi = U32(x);
-            if (U32(x + 12) > 1) {  // texture array
-                return std::nullopt;
-            }
-        }
-        const auto fmt = FormatInfo(h, dx10, dxgi);
-        if (!fmt) {
-            return std::nullopt;
-        }
-        std::uint32_t w = U32(h + 12);
-        std::uint32_t ht = U32(h + 8);
-        const std::uint32_t flags = U32(h + 4);
-        std::uint32_t mips = (flags & 0x20000) ? std::max(1u, U32(h + 24)) : 1u;
-
-        std::size_t skip = 0;
-        std::uint32_t first = 0;
-        while (first + 1 < mips && std::max(w, ht) > static_cast<std::uint32_t>(maxSize)) {
-            skip += MipBytes(w, ht, *fmt);
-            w = std::max(1u, w / 2);
-            ht = std::max(1u, ht / 2);
-            ++first;
-        }
-        std::size_t keep = 0;
-        std::uint32_t mw = w, mh = ht;
-        for (std::uint32_t i = first; i < mips; ++i) {
-            keep += MipBytes(mw, mh, *fmt);
-            mw = std::max(1u, mw / 2);
-            mh = std::max(1u, mh / 2);
-        }
-
-        std::vector<std::uint8_t> out(header.begin(), header.begin() + static_cast<std::ptrdiff_t>(kMagic + kHeader + (dx10 ? kDx10 : 0)));
-        std::uint8_t* o = out.data() + kMagic;
-        SetU32(o + 8, ht);
-        SetU32(o + 12, w);
-        SetU32(o + 24, mips - first);
-        if (fmt->second) {
-            SetU32(o + 16, static_cast<std::uint32_t>(MipBytes(w, ht, *fmt)));
-        }
-        *skipBytes = skip;
-        *keepBytes = keep;
-        return out;
     }
 
     DdsCache& DdsCache::Get() {
@@ -208,9 +89,20 @@ namespace mtfui::render {
         return instance;
     }
 
+    DdsCache::~DdsCache() {
+        // Static destruction runs at process exit, after Windows has already ended the worker and possibly the
+        // D3D device: joining or releasing here could hang or crash, so only let go of the thread.
+        stop_ = true;
+        cv_.notify_all();
+        if (thread_.joinable()) {
+            thread_.detach();
+        }
+    }
+
     void DdsCache::Init(ID3D11Device* device) {
         device_ = device;
         if (device_ && !thread_.joinable()) {
+            stop_ = false;
             thread_ = std::thread([this] { Worker(); });
         }
     }
@@ -222,6 +114,22 @@ namespace mtfui::render {
             thread_.join();
         }
         Clear();
+        std::scoped_lock lock(mutex_);
+        for (const auto& r : retired_) {
+            r.srv->Release();
+        }
+        retired_.clear();
+    }
+
+    void DdsCache::Retire(ID3D11ShaderResourceView* srv) {
+        if (srv) {
+            retired_.push_back({ srv, frame_ });
+        }
+    }
+
+    std::size_t DdsCache::Bytes() const {
+        std::scoped_lock lock(mutex_);
+        return bytes_;
     }
 
     const Texture* DdsCache::Request(const std::string& path, int maxSize) {
@@ -262,18 +170,46 @@ namespace mtfui::render {
     void DdsCache::EndFrame() {
         std::scoped_lock lock(mutex_);
         ++frame_;
-        if (frame_ % 120 != 0) {
+        // A view retired this frame may still be in this frame's draw lists; free it once those have been rendered.
+        std::erase_if(retired_, [this](const Retired& r) {
+            if (frame_ - r.frame < 2) {
+                return false;
+            }
+            r.srv->Release();
+            return true;
+        });
+
+        const bool overBudget = bytes_ > kMaxBytes;
+        if (frame_ % 120 != 0 && !overBudget) {
             return;
         }
         for (auto it = entries_.begin(); it != entries_.end();) {
             const bool stale = frame_ - it->second.lastUsed > kEvictAfterFrames;
             if (stale || (entries_.size() > kMaxEntries && frame_ - it->second.lastUsed > 120)) {
-                if (it->second.tex.srv) {
-                    it->second.tex.srv->Release();
-                }
+                Retire(it->second.tex.srv);
+                bytes_ -= it->second.bytes;
                 it = entries_.erase(it);
             } else {
                 ++it;
+            }
+        }
+        if (bytes_ > kMaxBytes) {
+            // Least recently used first; anything used in the last couple of frames is on screen and stays.
+            std::vector<std::pair<std::uint64_t, std::string>> lru;
+            for (const auto& [k, e] : entries_) {
+                if (e.bytes > 0 && frame_ - e.lastUsed > 2) {
+                    lru.emplace_back(e.lastUsed, k);
+                }
+            }
+            std::sort(lru.begin(), lru.end());
+            for (const auto& [_, k] : lru) {
+                if (bytes_ <= kMaxBytes * 3 / 4) {
+                    break;
+                }
+                auto it = entries_.find(k);
+                Retire(it->second.tex.srv);
+                bytes_ -= it->second.bytes;
+                entries_.erase(it);
             }
         }
     }
@@ -281,11 +217,10 @@ namespace mtfui::render {
     void DdsCache::Clear() {
         std::scoped_lock lock(mutex_);
         for (auto& [k, e] : entries_) {
-            if (e.tex.srv) {
-                e.tex.srv->Release();
-            }
+            Retire(e.tex.srv);
         }
         entries_.clear();
+        bytes_ = 0;
         queue_.clear();
         queued_.clear();
     }
@@ -310,16 +245,15 @@ namespace mtfui::render {
                 RE::BSResourceNiBinaryStream stream(resPath.c_str());
                 if (stream.good() && stream.stream) {
                     const std::size_t total = stream.stream->totalSize;
-                    std::vector<std::uint8_t> head(kMagic + kHeader);
+                    std::vector<std::uint8_t> head(io::kDdsMagicSize + io::kDdsHeaderSize);
                     if (total >= head.size() && stream.read(reinterpret_cast<char*>(head.data()), static_cast<std::uint32_t>(head.size()))) {
-                        const std::uint8_t* h = head.data() + kMagic;
-                        if ((U32(h + 76) & 0x4) && U32(h + 80) == FourCC('D', 'X', '1', '0')) {
-                            head.resize(head.size() + kDx10);
-                            stream.read(reinterpret_cast<char*>(head.data() + kMagic + kHeader), static_cast<std::uint32_t>(kDx10));
+                        if (io::DdsHasDx10(head)) {
+                            head.resize(head.size() + io::kDdsDx10Size);
+                            stream.read(reinterpret_cast<char*>(head.data() + io::kDdsMagicSize + io::kDdsHeaderSize), static_cast<std::uint32_t>(io::kDdsDx10Size));
                         }
                         std::size_t skip = 0, keep = 0;
                         std::vector<std::uint8_t> bytes;
-                        if (auto shrunk = ShrinkDds(head, job.maxSize, &skip, &keep); shrunk && head.size() + skip + keep <= total) {
+                        if (auto shrunk = io::ShrinkDds(head, job.maxSize, &skip, &keep); shrunk && head.size() + skip + keep <= total) {
                             const auto before = stream.tell();
                             if (skip > 0) {
                                 stream.seek(static_cast<std::int32_t>(skip));
@@ -355,6 +289,8 @@ namespace mtfui::render {
                                 entry.tex.srv = srv;
                                 entry.tex.width = static_cast<int>(desc.Width);
                                 entry.tex.height = static_cast<int>(desc.Height);
+                                // Full mip chain is about a third more than the top level.
+                                entry.bytes = static_cast<std::size_t>(desc.Width) * desc.Height * DirectX::BitsPerPixel(desc.Format) / 8 * 4 / 3;
                                 entry.failed = false;
                                 FindContent(bytes, entry.tex);
                             } else {
@@ -374,10 +310,18 @@ namespace mtfui::render {
 
             std::scoped_lock lock(mutex_);
             queued_.erase(job.key);
+            ++generation_;
             entry.lastUsed = frame_;
-            if (auto it = entries_.find(job.key); it != entries_.end() && it->second.tex.srv) {
-                it->second.tex.srv->Release();
+            if (auto it = entries_.find(job.key); it != entries_.end() && !it->second.failed) {
+                // A duplicate load: the UI may already be drawing the existing texture, so keep that one.
+                if (entry.tex.srv) {
+                    entry.tex.srv->Release();
+                }
+                continue;
+            } else if (it != entries_.end()) {
+                bytes_ -= it->second.bytes;
             }
+            bytes_ += entry.bytes;
             entries_[job.key] = entry;
         }
     }

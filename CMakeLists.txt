@@ -18,6 +18,7 @@ configure_file(src/Version.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/Version.h
 add_library(mtfui_core STATIC
     src/io/StyledJson.cpp
     src/io/JsonStore.cpp
+    src/io/DdsHeader.cpp
     src/io/UiSettings.cpp
     src/model/Preset.cpp
     src/model/PluginCatalog.cpp
@@ -28,6 +29,7 @@ add_library(mtfui_core STATIC
     src/model/Lint.cpp
     src/model/Catalogs.cpp
     src/model/Usage.cpp
+    src/model/Text.cpp
 )
 target_include_directories(mtfui_core PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_link_libraries(mtfui_core PUBLIC nlohmann_json::nlohmann_json)
@@ -46,9 +48,12 @@ add_commonlibsse_plugin(${PROJECT_NAME}
         src/game/MtfBridge.cpp
         src/game/Targets.cpp
         src/game/LivePreview.cpp
+        src/game/Camera.cpp
         src/render/DdsCache.cpp
         src/render/Preview2D.cpp
         src/ui/App.cpp
+        src/ui/AppEditor.cpp
+        src/ui/AppLayout.cpp
         src/ui/Widgets.cpp
         src/ui/PresetsTab.cpp
         src/ui/Inspector.cpp

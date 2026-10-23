@@ -8,6 +8,20 @@ namespace mtfui::game {
     namespace {
         std::mutex g_uiMutex;
         std::deque<std::function<void()>> g_uiQueue;
+        std::atomic<int> g_session{ 0 };
+
+        // Results of calls started before a save was loaded describe a world that is gone; drop them.
+        template <class... A>
+        std::function<void(A...)> Guarded(std::function<void(A...)> fn) {
+            if (!fn) {
+                return fn;
+            }
+            return [s = g_session.load(), fn = std::move(fn)](A... a) {
+                if (s == g_session.load()) {
+                    fn(std::forward<A>(a)...);
+                }
+            };
+        }
 
         RE::Actor* ActorFor(RE::FormID id) {
             return id ? RE::TESForm::LookupByID<RE::Actor>(id) : nullptr;
@@ -46,8 +60,20 @@ namespace mtfui::game {
             work.swap(g_uiQueue);
         }
         for (auto& fn : work) {
-            fn();
+            try {
+                fn();
+            } catch (const std::exception& e) {
+                logger::error("UI callback threw: {}", e.what());
+            } catch (...) {
+                logger::error("UI callback threw an unknown exception");
+            }
         }
+    }
+
+    void MtfBridge::NewSession() {
+        ++g_session;
+        std::scoped_lock lock(g_uiMutex);
+        g_uiQueue.clear();
     }
 
     void MtfBridge::OnDataLoaded() {
@@ -71,6 +97,7 @@ namespace mtfui::game {
         RunOnGame([this] {
             auto obj = ScriptObject(quest_, kMainQuestScript);
             if (!obj) {
+                logger::warn("MTF's main quest has no {} script yet; its settings are unavailable", kMainQuestScript);
                 PostToUi([this] {
                     snap_.loaded = false;
                     snap_.fresh = true;
@@ -127,6 +154,16 @@ namespace mtfui::game {
                 }
             }
 
+            // Every menu open refreshes; only log MTF's state when it changed.
+            static std::string lastState;
+            const auto state = std::format("MTF state: {}, {} plugin(s) registered, update every {:.1f} s, overlay starts Body {} Face {} Hands {} Feet {}",
+                s.modActive ? "active" : "disabled", s.pluginCount, s.updateInterval, s.overlayStart[0], s.overlayStart[1], s.overlayStart[2],
+                s.overlayStart[3]);
+            if (state != lastState) {
+                logger::info("{}", state);
+                lastState = state;
+            }
+
             PostToUi([this, s] {
                 auto keep = std::move(snap_.pluginEnabled);
                 auto keepIds = std::move(snap_.registeredPlugins);
@@ -163,26 +200,22 @@ namespace mtfui::game {
             }
             auto idsMutex = std::make_shared<std::mutex>();
             for (auto& p : plugins) {
-                auto* fargs = RE::MakeFunctionArguments();
-                RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> cb(
-                    new CallbackFunctor([this, ids, remaining, idsMutex](const RE::BSScript::Variable& r) {
+                CallObject(p, "GetPluginId", [this, ids, remaining, idsMutex](const RE::BSScript::Variable& r) {
+                    {
+                        std::scoped_lock lock(*idsMutex);
+                        if (r.IsString()) {
+                            ids->push_back(io::ToLower(std::string(r.GetString())));
+                        }
+                    }
+                    if (--*remaining == 0) {
+                        std::vector<std::string> out;
                         {
                             std::scoped_lock lock(*idsMutex);
-                            if (r.IsString()) {
-                                ids->push_back(io::ToLower(std::string(r.GetString())));
-                            }
+                            out = *ids;
                         }
-                        if (--*remaining == 0) {
-                            std::vector<std::string> out;
-                            {
-                                std::scoped_lock lock(*idsMutex);
-                                out = *ids;
-                            }
-                            PostToUi([this, out] { snap_.registeredPlugins = out; });
-                        }
-                    }));
-                auto obj2 = p;
-                VM()->DispatchMethodCall(obj2, "GetPluginId", fargs, cb);
+                        PostToUi([this, out] { snap_.registeredPlugins = out; });
+                    }
+                });
             }
         });
     }
@@ -289,6 +322,7 @@ namespace mtfui::game {
         }
         const std::string file = std::string("MagicTattoosFramework/") + (builtin ? "presets_builtin/" : "presets/") + name;
         const bool reloadEditor = !builtin && model::IEquals(snap_.mcmEditing, name);
+        done = Guarded(std::move(done));
         RunOnGame([this, file, name, reloadEditor, done = std::move(done)]() mutable {
             CallStatic(
                 "JsonUtil", "Unload",
@@ -320,9 +354,11 @@ namespace mtfui::game {
     }
 
     void MtfBridge::Apply(RE::FormID actor, const std::string& name, std::function<void(int)> done) {
+        done = Guarded(std::move(done));
         RunOnGame([this, actor, name, done = std::move(done)]() mutable {
             auto* a = ActorFor(actor);
             if (!a || !quest_) {
+                logger::info("Apply {} skipped: actor {:08X} not found", name, actor);
                 PostToUi([done = std::move(done)] {
                     if (done) {
                         done(-2);
@@ -330,10 +366,12 @@ namespace mtfui::game {
                 });
                 return;
             }
-            const bool sent = CallMethod(
+            // A failed dispatch answers with None, which reads as -5 here.
+            CallMethod(
                 quest_, kMainQuestScript, "AddAppliedPreset",
-                [done](const RE::BSScript::Variable& r) {
+                [done, name, actor](const RE::BSScript::Variable& r) {
                     const int rc = r.IsInt() ? r.GetSInt() : -5;
+                    logger::info("AddAppliedPreset({:08X}, {}) returned {}", actor, name, rc);
                     PostToUi([done, rc] {
                         if (done) {
                             done(rc);
@@ -341,17 +379,11 @@ namespace mtfui::game {
                     });
                 },
                 std::move(a), RE::BSFixedString(name));
-            if (!sent) {
-                PostToUi([done] {
-                    if (done) {
-                        done(-5);
-                    }
-                });
-            }
         });
     }
 
     void MtfBridge::Remove(RE::FormID actor, const std::string& name, std::function<void()> done) {
+        done = Guarded(std::move(done));
         RunOnGame([this, actor, name, done = std::move(done)]() mutable {
             auto* a = ActorFor(actor);
             if (!a || !quest_) {
@@ -372,6 +404,10 @@ namespace mtfui::game {
     }
 
     void MtfBridge::ListApplied(RE::FormID actor, std::function<void(std::vector<std::string>)> done) {
+        if (!done) {
+            return;
+        }
+        done = Guarded(std::move(done));
         RunOnGame([this, actor, done = std::move(done)]() mutable {
             auto* a = ActorFor(actor);
             if (!a || !quest_) {
@@ -381,7 +417,7 @@ namespace mtfui::game {
             CallMethod(
                 quest_, kMainQuestScript, "GetActorPresetCount",
                 [this, actor, done](const RE::BSScript::Variable& r) {
-                    const int n = r.IsInt() ? r.GetSInt() : 0;
+                    const int n = r.IsInt() ? std::min(r.GetSInt(), 256) : 0;
                     if (n <= 0) {
                         PostToUi([done] { done({}); });
                         return;

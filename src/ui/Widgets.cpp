@@ -26,6 +26,40 @@ namespace mtfui::ui {
         return false;
     }
 
+    bool ColorEditRgb(const char* label, std::uint32_t& rgb, const std::vector<model::NamedColor>& palette) {
+        PushID(label);
+        bool changed = ColorEditRgb(label, rgb);
+        if (!palette.empty()) {
+            SameLine();
+            if (SmallButton("Palette")) {
+                OpenPopup("##palette");
+            }
+            SameLine();
+            TextDisabled("%s", model::NearestColorName(palette, rgb).c_str());
+            if (BeginPopup("##palette")) {
+                const float size = GetFrameHeight();
+                const float maxX = GetCursorScreenPos().x + 10 * (size + GetStyle()->ItemSpacing.x);
+                for (std::size_t i = 0; i < palette.size(); ++i) {
+                    const auto& c = palette[i];
+                    PushID(static_cast<int>(i));
+                    const ImVec4 col{ ((c.rgb >> 16) & 0xFF) / 255.0f, ((c.rgb >> 8) & 0xFF) / 255.0f, (c.rgb & 0xFF) / 255.0f, 1.0f };
+                    if (ColorButton(c.name.c_str(), col, 0, ImVec2{ size, size })) {
+                        rgb = c.rgb & 0xFFFFFF;
+                        changed = true;
+                        CloseCurrentPopup();
+                    }
+                    PopID();
+                    if (i + 1 < palette.size() && GetItemRectMax().x + size + GetStyle()->ItemSpacing.x < maxX) {
+                        SameLine();
+                    }
+                }
+                EndPopup();
+            }
+        }
+        PopID();
+        return changed;
+    }
+
     bool ParamEditor(const char* id, const model::ParamSpec& spec, model::ParamValue& value, float width) {
         PushID(id);
         bool changed = false;
@@ -34,21 +68,7 @@ namespace mtfui::ui {
         switch (spec.kind) {
             case model::ParamKind::Slider: {
                 int v = static_cast<int>(model::ParamInt(value));
-                std::string fmt = "%d";
-                if (!spec.format.empty()) {
-                    fmt = spec.format;
-                    if (auto pos = fmt.find("{0}"); pos != std::string::npos) {
-                        fmt.replace(pos, 3, "%d");
-                    }
-                    std::string escaped;
-                    for (std::size_t i = 0; i < fmt.size(); ++i) {
-                        escaped += fmt[i];
-                        if (fmt[i] == '%' && (i + 1 >= fmt.size() || fmt[i + 1] != 'd')) {
-                            escaped += '%';
-                        }
-                    }
-                    fmt = escaped;
-                }
+                const std::string fmt = model::SliderPrintfFormat(spec.format);
                 if (SliderInt(label, &v, static_cast<int>(spec.min), static_cast<int>(spec.max), fmt.c_str(), ImGuiSliderFlags_AlwaysClamp)) {
                     if (spec.step > 1) {
                         v = static_cast<int>(spec.min + ((v - spec.min + spec.step / 2) / spec.step) * spec.step);
@@ -65,7 +85,7 @@ namespace mtfui::ui {
                     const auto current = model::ParamStr(value);
                     for (const auto& o : spec.menu) {
                         const bool selected = model::IEquals(o.id, current);
-                        if (Selectable(o.label.c_str(), selected)) {
+                        if (Selectable((o.label + "##" + o.id).c_str(), selected)) {
                             value = o.id;
                             changed = true;
                         }
@@ -135,24 +155,25 @@ namespace mtfui::ui {
         return InputString(id, text, hint, 0, 128);
     }
 
-    bool MatchesSearch(const std::string& haystack, const std::string& needle) {
-        if (needle.empty()) {
-            return true;
+    NamePromptResult NamePrompt(std::string& displayName, const std::string& fileName, bool canConfirm, const char* confirmLabel) {
+        if (IsWindowAppearing()) {
+            SetKeyboardFocusHere();
         }
-        const auto h = io::ToLower(haystack);
-        // Every whitespace-separated word must appear.
-        std::size_t start = 0;
-        const auto n = io::ToLower(needle);
-        while (start < n.size()) {
-            auto end = n.find(' ', start);
-            if (end == std::string::npos) {
-                end = n.size();
-            }
-            if (end > start && h.find(n.substr(start, end - start)) == std::string::npos) {
-                return false;
-            }
-            start = end + 1;
+        SetNextItemWidth(280);
+        const bool enter = InputString("##name", displayName, "Display name", ImGuiInputTextFlags_EnterReturnsTrue, 64);
+        TextDisabled("File: %s.json", fileName.c_str());
+        const bool ok = canConfirm && !displayName.empty();
+        auto result = NamePromptResult::Open;
+        BeginDisabled(!ok);
+        if (Button(confirmLabel, ImVec2{ 100, 0 }) || (enter && ok)) {
+            result = NamePromptResult::Confirmed;
         }
-        return true;
+        EndDisabled();
+        SameLine();
+        if (Button("Cancel", ImVec2{ 100, 0 }) || IsKeyPressed(ImGuiKey_Escape, false)) {
+            result = NamePromptResult::Cancelled;
+        }
+        return result;
     }
+
 }

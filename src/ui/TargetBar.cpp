@@ -111,10 +111,10 @@ namespace mtfui::ui {
         const bool canApply = mtf && app.HasPreset() && !app.ed.isNew;
         BeginDisabled(!canApply);
         if (Button("Apply to target")) {
-            if (app.Dirty() && !app.ed.builtin) {
-                app.Save();
+            // Applying after a failed save would put the old file on the target.
+            if (!(app.Dirty() && !app.ed.builtin) || app.Save()) {
+                app.ApplyToTarget(app.Preset().name);
             }
-            app.ApplyToTarget(app.Preset().name);
         }
         EndDisabled();
         if (IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
@@ -138,10 +138,15 @@ namespace mtfui::ui {
             }
             for (const auto& name : app.applied) {
                 PushID(name.c_str());
-                const auto it = std::find_if(app.library.begin(), app.library.end(), [&](const model::PresetFileInfo& i) { return model::IEquals(i.name, name); });
-                TextUnformatted(it != app.library.end() ? it->displayName.c_str() : name.c_str());
+                const bool preview = model::IEquals(name, game::kPreviewPreset);
+                const auto* info = app.FindLibrary(name);
+                if (preview) {
+                    TextColored(kAccent, "Live preview (temporary)");
+                } else {
+                    TextUnformatted(info ? info->displayName.c_str() : name.c_str());
+                }
                 SameLine(260);
-                if (SmallButton("Edit")) {
+                if (!preview && SmallButton("Edit")) {
                     app.Open(name);
                     app.RequestTab(Tab::Presets);
                     CloseCurrentPopup();

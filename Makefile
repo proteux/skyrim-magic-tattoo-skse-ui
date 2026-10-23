@@ -1,6 +1,6 @@
 # Build Magic Tattoos UI.
+# make, make live         copies straight into the Skyrim Data folder (quit Skyrim first)
 # make staging            copies into the Vortex mod folder
-# make live               copies straight into the Skyrim Data folder
 # make package            writes dist/MagicTattoosUI-<version>.zip for Nexus
 # make test               builds and runs the offline tests only
 # make uninstall-staging  deletes the Vortex mod folder
@@ -9,7 +9,7 @@ SHELL := bash
 .SHELLFLAGS := -eu -o pipefail -c
 .PHONY: all staging live package test uninstall-staging uninstall-live
 
-all: staging
+all: live
 
 staging:
 	bash build.sh staging

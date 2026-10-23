@@ -36,8 +36,12 @@ namespace mtfui::model {
     UsageIndex BuildUsage(const Catalogs& cat, const std::vector<PresetFileInfo>& presets) {
         UsageIndex index;
         for (const auto& info : presets) {
-            auto json = io::ReadJson(info.path);
-            if (!json || !json->is_object()) {
+            std::optional<Json> read;
+            if (info.json.is_null()) {
+                read = io::ReadJson(info.path);
+            }
+            const Json* json = read ? &*read : &info.json;
+            if (!json->is_object()) {
                 continue;
             }
             const auto preset = PresetFromJson(info.name, *json);

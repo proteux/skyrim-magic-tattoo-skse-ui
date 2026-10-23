@@ -18,6 +18,26 @@ namespace mtfui::game {
         return handle == policy->EmptyHandle() ? 0 : handle;
     }
 
+    void DispatchFailed(const char* className, const char* fn, const VmResult& cb) {
+        logger::warn("Could not call {}.{} (script not loaded or function missing)", className, fn);
+        if (cb) {
+            cb(RE::BSScript::Variable{});
+        }
+    }
+
+    bool CallObject(RE::BSTSmartPointer<RE::BSScript::Object> obj, const char* fn, VmResult cb) {
+        auto* vm = VM();
+        if (vm && obj) {
+            auto* fargs = RE::MakeFunctionArguments();
+            RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> functor(new CallbackFunctor(cb));
+            if (vm->DispatchMethodCall(obj, fn, fargs, functor)) {
+                return true;
+            }
+        }
+        DispatchFailed("(object)", fn, cb);
+        return false;
+    }
+
     RE::BSTSmartPointer<RE::BSScript::Object> ScriptObject(RE::TESForm* form, const char* className) {
         RE::BSTSmartPointer<RE::BSScript::Object> obj;
         auto* vm = VM();

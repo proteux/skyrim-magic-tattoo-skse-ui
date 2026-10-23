@@ -1,12 +1,12 @@
 #include "ui/App.h"
 
-#include "Version.h"
+#include "game/Camera.h"
 #include "game/LivePreview.h"
 #include "game/MtfBridge.h"
 #include "game/Targets.h"
 #include "io/JsonStore.h"
+#include "model/Text.h"
 #include "render/DdsCache.h"
-#include "ui/Tabs.h"
 #include "ui/Widgets.h"
 
 namespace mtfui::ui {
@@ -15,55 +15,15 @@ namespace mtfui::ui {
     namespace {
         constexpr std::size_t kUndoDepth = 100;
 
-        fs::path GameDataDir() {
-            wchar_t exe[MAX_PATH] = {};
-            GetModuleFileNameW(nullptr, exe, MAX_PATH);
-            return fs::path(exe).parent_path() / L"Data";
-        }
-
         int IniInt(const fs::path& ini, const wchar_t* section, const wchar_t* key, int fallback) {
             return static_cast<int>(GetPrivateProfileIntW(section, key, fallback, ini.wstring().c_str()));
         }
+    }
 
-        // First-use spots for the split layout: editing panels hug the screen edges so the middle, where the target
-        // usually stands, stays clear.
-        io::PanelState DefaultPanel(std::string_view key, ImVec2 view) {
-            const float m = 16.0f;
-            const float top = 150.0f;
-            const float leftW = std::clamp(view.x * 0.24f, 360.0f, 520.0f);
-            const float rightW = std::clamp(view.x * 0.26f, 420.0f, 560.0f);
-            const float tall = view.y - top - m;
-            if (key == "main") {
-                return { std::max(m, view.x / 2 - 470.0f), m, 0.0f, 0.0f, true };
-            }
-            if (key == "library") {
-                return { m, top, leftW, tall * 0.36f, true };
-            }
-            if (key == "tiers") {
-                return { m, top + tall * 0.36f + 8.0f, leftW, tall * 0.64f - 8.0f, true };
-            }
-            return { view.x - rightW - m, top, rightW, tall, true };
-        }
-
-        // Game thread only. The idle orbit camera otherwise starts circling the target behind the editor.
-        void SetVanityCameraHeld(bool hold) {
-            static std::optional<float> saved;
-            constexpr auto kName = "fAutoVanityModeDelay:Camera";
-            auto* setting = RE::INISettingCollection::GetSingleton()->GetSetting(kName);
-            if (!setting) {
-                setting = RE::INIPrefSettingCollection::GetSingleton()->GetSetting(kName);
-            }
-            if (!setting) {
-                return;
-            }
-            if (hold && !saved) {
-                saved = setting->GetFloat();
-                setting->SetFloat(1.0e9f);
-            } else if (!hold && saved) {
-                setting->SetFloat(*saved);
-                saved.reset();
-            }
-        }
+    fs::path GameDataDir() {
+        wchar_t exe[MAX_PATH] = {};
+        GetModuleFileNameW(nullptr, exe, MAX_PATH);
+        return fs::path(exe).parent_path() / L"Data";
     }
 
     void App::HoldVanityCamera(bool hold) {
@@ -71,7 +31,7 @@ namespace mtfui::ui {
             return;
         }
         vanityHeld_ = hold;
-        game::MtfBridge::RunOnGame([hold] { SetVanityCameraHeld(hold); });
+        game::MtfBridge::RunOnGame([hold] { game::SetVanityCameraHeld(hold); });
     }
 
     void App::HoldActor(RE::FormID id) {
@@ -114,24 +74,43 @@ namespace mtfui::ui {
             n = IniInt(custom, section, L"iNumOverlays", n);
             overlayCapacity_[area] = n;
         }
+        logger::info("Overlay slots: Body {}, Face {}, Hands {}, Feet {}", overlayCapacity_["Body"], overlayCapacity_["Face"], overlayCapacity_["Hands"],
+            overlayCapacity_["Feet"]);
 
-        game::LivePreview::Get().Init(paths.mtfRoot / "presets_builtin", [this](const std::vector<RE::FormID>& ids) {
+        game::LivePreview::Get().Init(paths.mtfRoot / "presets_builtin", settings.previewActors, [this](const std::vector<RE::FormID>& ids) {
                 settings.previewActors = ids;
                 SaveSettings();
             });
         ReloadAll();
+        if (auto draft = io::ReadJson(DraftPath()); draft && draft->is_object()) {
+            draftOffer_ = true;
+            draftName_ = draft->value("name", std::string{});
+            if (auto p = draft->find("preset"); p != draft->end() && p->is_object()) {
+                draftName_ = p->value("displayname", draftName_);
+            }
+            logger::info("Found unsaved edits to {} from an earlier session", draftName_);
+        }
         initialized_ = true;
-        logger::info("UI ready: {} presets, {} packs, {} plugin catalogs", library.size(), cat.packs.size(), cat.plugins.size());
+        logger::info("UI ready: {} presets ({} deleted), {} packs, {} plugin catalogs", library.size(), hiddenPresets.size(), cat.packs.size(),
+            cat.plugins.size());
     }
 
     void App::ReloadAll() {
         cat.Load(paths.mtfRoot);
+        // Every menu open reloads; only log a broken file again once something changed.
+        static std::vector<std::string> logged;
+        if (cat.loadErrors != logged) {
+            for (const auto& e : cat.loadErrors) {
+                logger::warn("Skipped catalog file: {}", e);
+            }
+            logged = cat.loadErrors;
+        }
         ReloadLibrary();
         Relint();
     }
 
     void App::ReloadLibrary() {
-        library = cat.ListPresets(true);
+        library = cat.ListPresets(true, &hiddenPresets);
         std::vector<model::PresetFileInfo> mine;
         std::copy_if(library.begin(), library.end(), std::back_inserter(mine), [](const model::PresetFileInfo& i) { return !i.builtin; });
         usage = model::BuildUsage(cat, mine);
@@ -151,6 +130,15 @@ namespace mtfui::ui {
         return ed.preset && (ed.isNew || !(*ed.preset == ed.saved));
     }
 
+    const model::PresetFileInfo* App::FindLibrary(const std::string& name) const {
+        const auto it = std::find_if(library.begin(), library.end(), [&](const model::PresetFileInfo& i) { return model::IEquals(i.name, name); });
+        return it == library.end() ? nullptr : &*it;
+    }
+
+    bool App::IsApplied(const std::string& name) const {
+        return std::any_of(applied.begin(), applied.end(), [&](const std::string& a) { return model::IEquals(a, name); });
+    }
+
     bool App::BuiltinNameTaken(const std::string& name) const {
         std::error_code ec;
         return fs::exists(cat.BuiltinPresetsDir() / (name + ".json"), ec);
@@ -161,18 +149,7 @@ namespace mtfui::ui {
         if (base.empty()) {
             base = "Preset";
         }
-        auto taken = [&](const std::string& n) {
-            if (BuiltinNameTaken(n)) {
-                return true;
-            }
-            return std::any_of(library.begin(), library.end(), [&](const model::PresetFileInfo& i) { return model::IEquals(i.name, n); });
-        };
-        std::string name = base;
-        for (int i = 2; taken(name); ++i) {
-            const std::string suffix = "_" + std::to_string(i);
-            name = base.substr(0, 32 - suffix.size()) + suffix;
-        }
-        return name;
+        return model::NextFreeName(base, [&](const std::string& n) { return BuiltinNameTaken(n) || FindLibrary(n) != nullptr; });
     }
 
     model::LintContext App::LintCtx() const {
@@ -208,199 +185,6 @@ namespace mtfui::ui {
         lastLint_ = GetTime();
     }
 
-    void App::Open(const std::string& name) {
-        if (ed.preset && model::IEquals(ed.preset->name, name) && !ed.isNew) {
-            return;
-        }
-        if (Dirty()) {
-            pendingOpen_ = name;
-            confirmOpen_ = true;
-            return;
-        }
-        LoadPresetNow(name);
-    }
-
-    void App::LoadPresetNow(const std::string& name) {
-        const auto it = std::find_if(library.begin(), library.end(), [&](const model::PresetFileInfo& i) { return model::IEquals(i.name, name); });
-        if (it == library.end()) {
-            Toast("Preset '" + name + "' no longer exists", true);
-            return;
-        }
-        std::string error;
-        auto json = io::ReadJson(it->path, &error);
-        if (!json) {
-            Toast("Could not read " + it->path.filename().string() + ": " + error, true);
-            return;
-        }
-        ed = {};
-        ed.preset = model::PresetFromJson(it->name, *json);
-        ed.saved = *ed.preset;
-        ed.committed = *ed.preset;
-        ed.builtin = it->builtin;
-        settings.lastPreset = it->name;
-        SaveSettings();
-        Relint();
-    }
-
-    void App::CreateNew(const std::string& displayName, const std::string& packId, const std::string& entryId) {
-        if (Dirty()) {
-            Toast("Save or revert the open preset first", true);
-            return;
-        }
-        ed = {};
-        ed.preset = model::NewPreset(UniqueName(displayName), displayName);
-        if (!packId.empty()) {
-            ed.preset->slots[0].packId = packId;
-            ed.preset->slots[0].entryId = entryId;
-            settings.PushRecent(packId + "/" + entryId);
-            SaveSettings();
-        }
-        ed.saved = *ed.preset;
-        ed.committed = *ed.preset;
-        ed.isNew = true;
-        Relint();
-    }
-
-    void App::Duplicate(const std::string& displayName) {
-        if (!ed.preset) {
-            return;
-        }
-        auto copy = *ed.preset;
-        copy.displayName = displayName;
-        copy.name = UniqueName(displayName);
-        copy.hidden = 0;
-        ed = {};
-        ed.preset = std::move(copy);
-        ed.saved = *ed.preset;
-        ed.committed = *ed.preset;
-        ed.isNew = true;
-        Relint();
-    }
-
-    void App::Delete(const std::string& name) {
-        const auto path = cat.PresetPath(name);
-        auto json = io::ReadJson(path);
-        if (!json) {
-            Toast("Only your own presets can be deleted", true);
-            return;
-        }
-        io::Backup(path, paths.uiDir / "backups");
-        // Same soft delete as MTF: a hidden=1 tombstone that MTF skips and a later save can reclaim.
-        (*json)["hidden"] = 1;
-        std::string error;
-        if (!io::WriteJsonStyled(path, *json, &error)) {
-            Toast("Delete failed: " + error, true);
-            return;
-        }
-        if (ed.preset && model::IEquals(ed.preset->name, name)) {
-            ed = {};
-        }
-        game::MtfBridge::Get().PresetChanged(name, false);
-        ReloadLibrary();
-        Toast("Deleted " + name + " (a backup was kept)");
-    }
-
-    bool App::Save() {
-        if (!ed.preset) {
-            return false;
-        }
-        auto& p = *ed.preset;
-        if (ed.builtin) {
-            Toast("Built-in presets are read-only. Use Duplicate to make your own copy.", true);
-            return false;
-        }
-        if (p.name.empty()) {
-            p.name = UniqueName(p.displayName);
-        }
-        if (BuiltinNameTaken(p.name)) {
-            Toast("'" + p.name + "' is reserved by an MTF built-in preset. Duplicate it under another name.", true);
-            return false;
-        }
-        const auto path = cat.PresetPath(p.name);
-        io::Backup(path, paths.uiDir / "backups");
-        const auto json = model::PresetToJson(p);
-        std::string error;
-        if (!io::WriteJsonStyled(path, json, &error)) {
-            Toast("Save failed: " + error, true);
-            return false;
-        }
-        p.raw = json;
-        p.schemaVersion = model::kSchemaVersion;
-        p.hidden = 0;
-        ed.saved = p;
-        ed.committed = p;
-        ed.isNew = false;
-        settings.lastPreset = p.name;
-        SaveSettings();
-        ReloadLibrary();
-        const std::string name = p.name;
-        const std::string display = p.displayName;
-        const bool wearing = std::any_of(applied.begin(), applied.end(), [&](const std::string& a) { return model::IEquals(a, name); });
-        game::MtfBridge::Get().PresetChanged(name, false, [this, name, display, wearing] {
-            if (wearing) {
-                // MTF redraws on tier changes only; re-applying shows the edit right away.
-                const auto target = targetId;
-                game::MtfBridge::Get().Remove(target, name, [this, target, name, display] {
-                    game::MtfBridge::Get().Apply(target, name, [this, display](int rc) {
-                        Toast(rc == 1 || rc == 0 ? "Saved " + display + " and refreshed it on " + targetName : "Saved, but re-applying failed: " + game::ApplyResultText(rc), rc < 0);
-                        RefreshApplied();
-                    });
-                });
-            } else {
-                Toast("Saved " + display);
-            }
-        });
-        logger::info("Saved preset {}", name);
-        return true;
-    }
-
-    void App::Revert() {
-        if (!ed.preset) {
-            return;
-        }
-        if (ed.isNew) {
-            ed = {};
-            return;
-        }
-        ed.undo.push_back(*ed.preset);
-        *ed.preset = ed.saved;
-        ed.committed = ed.saved;
-        Relint();
-    }
-
-    void App::Undo() {
-        if (!ed.preset || ed.undo.empty()) {
-            return;
-        }
-        ed.redo.push_back(*ed.preset);
-        *ed.preset = ed.undo.back();
-        ed.undo.pop_back();
-        ed.committed = *ed.preset;
-        Relint();
-    }
-
-    void App::Redo() {
-        if (!ed.preset || ed.redo.empty()) {
-            return;
-        }
-        ed.undo.push_back(*ed.preset);
-        *ed.preset = ed.redo.back();
-        ed.redo.pop_back();
-        ed.committed = *ed.preset;
-        Relint();
-    }
-
-    void App::UseEntry(int slot, const std::string& packId, const std::string& entryId) {
-        if (!ed.preset || slot < 0 || slot >= static_cast<int>(ed.preset->slots.size())) {
-            return;
-        }
-        auto& s = ed.preset->slots[slot];
-        s.packId = packId;
-        s.entryId = entryId;
-        settings.PushRecent(packId + "/" + entryId);
-        SaveSettings();
-    }
-
     void App::SetTarget(RE::FormID id, std::string name) {
         if (id == targetId) {
             return;
@@ -420,7 +204,6 @@ namespace mtfui::ui {
             if (id != targetId) {
                 return;
             }
-            std::erase_if(names, [](const std::string& n) { return model::IEquals(n, game::kPreviewPreset); });
             applied = std::move(names);
             appliedKnown = true;
         });
@@ -455,7 +238,14 @@ namespace mtfui::ui {
             }
             return;
         }
-        lp.Request(targetId, *ed.preset, ed.slot, previewEffects);
+        // Building the preview document every frame is wasteful; only a change to what it is built from matters.
+        const int slot = std::clamp(ed.slot, 0, static_cast<int>(ed.preset->slots.size()) - 1);
+        PreviewInputs in{ targetId, slot, previewEffects, ed.preset->slots[slot], ed.preset->slots[0] };
+        if (lp.Active() && previewInputs_ == in) {
+            return;
+        }
+        previewInputs_ = std::move(in);
+        lp.Request(targetId, *ed.preset, slot, previewEffects);
     }
 
     void App::SaveSettings() {
@@ -483,11 +273,8 @@ namespace mtfui::ui {
                 RefreshApplied();
             });
         });
-        if (!ed.preset && !settings.lastPreset.empty()) {
-            const bool exists = std::any_of(library.begin(), library.end(), [&](const model::PresetFileInfo& i) { return model::IEquals(i.name, settings.lastPreset); });
-            if (exists) {
-                LoadPresetNow(settings.lastPreset);
-            }
+        if (!ed.preset && !draftOffer_ && !settings.lastPreset.empty() && FindLibrary(settings.lastPreset)) {
+            LoadPresetNow(settings.lastPreset);
         }
     }
 
@@ -498,12 +285,16 @@ namespace mtfui::ui {
         SaveSettings();
     }
 
+    // Runs from the SKSE message handler. That is the main thread, where the menu framework also renders, so touching
+    // UI state here is safe; what must not run is a callback from before the load, which NewSession drops.
     void App::OnGameLoaded() {
+        game::MtfBridge::NewSession();
+        HoldVanityCamera(false);
         targetId = 0x14;
         targetName = "You";
         applied.clear();
         appliedKnown = false;
-        game::LivePreview::Get().Cleanup(settings.previewActors);
+        game::LivePreview::Get().Cleanup();
         holdWanted_ = 0;
         game::MtfBridge::RunOnGame([id = settings.heldActor] { game::ReleaseLeftover(id); });
         if (settings.heldActor != 0) {
@@ -513,9 +304,21 @@ namespace mtfui::ui {
         game::MtfBridge::Get().Refresh();
     }
 
+    void App::OnSaving() {
+        // The game thread is the one saving, so this releases the NPC before the save is written. The next
+        // frame of the editor holds them again.
+        if (game::ReleaseForSave() != 0) {
+            holdWanted_ = 0;
+        }
+    }
+
     void App::HandleShortcuts() {
         auto* io = GetIO();
-        if (!io->KeyCtrl || io->WantTextInput) {
+        if (io->WantTextInput || IsPopupOpen("", ImGuiPopupFlags_AnyPopupId | ImGuiPopupFlags_AnyPopupLevel)) {
+            return;
+        }
+        if (!io->KeyCtrl) {
+            HandlePlainShortcuts();
             return;
         }
         if (IsKeyPressed(ImGuiKey_S, false) && Dirty()) {
@@ -528,10 +331,39 @@ namespace mtfui::ui {
             }
         } else if (IsKeyPressed(ImGuiKey_Y, false)) {
             Redo();
+        } else if (IsKeyPressed(ImGuiKey_N, false)) {
+            CreateNew("New preset");
+            RequestTab(Tab::Presets);
+        } else if (IsKeyPressed(ImGuiKey_D, false) && ed.preset) {
+            Duplicate(ed.preset->displayName + " copy");
+        } else if (IsKeyPressed(ImGuiKey_F, false)) {
+            focusSearch = true;
+        }
+    }
+
+    void App::HandlePlainShortcuts() {
+        if (!ed.preset) {
+            return;
+        }
+        auto* io = GetIO();
+        if (IsKeyPressed(ImGuiKey_F5, false) && !io->KeyAlt && !io->KeyShift) {
+            if (ed.isNew) {
+                Toast("Save the preset before applying it", true);
+            } else if (!(Dirty() && !ed.builtin) || Save()) {
+                ApplyToTarget(ed.preset->name);
+            }
+        } else if (io->KeyAlt && IsKeyPressed(ImGuiKey_UpArrow, false) && ed.slot > 1) {
+            MoveTier(ed.slot, ed.slot - 1);
+        } else if (io->KeyAlt && IsKeyPressed(ImGuiKey_DownArrow, false) && ed.slot >= 1) {
+            MoveTier(ed.slot, ed.slot + 1);
         }
     }
 
     void App::CommitFrame() {
+        if (GetFrameCount() == committedFrame_) {
+            return;
+        }
+        committedFrame_ = GetFrameCount();
         if (ed.preset && !(*ed.preset == ed.committed) && !IsAnyItemActive()) {
             ed.undo.push_back(ed.committed);
             if (ed.undo.size() > kUndoDepth) {
@@ -539,284 +371,36 @@ namespace mtfui::ui {
             }
             ed.redo.clear();
             ed.committed = *ed.preset;
+            draftPending_ = true;
             Relint();
-        } else if (GetTime() - lastLint_ > 2.0) {
-            Relint();
+        } else if (GetTime() - lastLint_ > 0.5) {
+            // Lint also depends on MTF's settings and on which textures failed to load; recheck when those move.
+            const auto& snap = game::MtfBridge::Get().Snapshot();
+            LintInputs in{ render::DdsCache::Get().Generation(), snap.fresh && snap.loaded, snap.pluginEnabled, snap.overlayStart };
+            lastLint_ = GetTime();
+            if (!(in == lintInputs_)) {
+                lintInputs_ = std::move(in);
+                Relint();
+            }
+        }
+        if (draftPending_ && GetTime() - lastDraft_ > 3.0) {
+            lastDraft_ = GetTime();
+            WriteDraft();
         }
         UpdatePreview();
         game::LivePreview::Get().Tick();
         render::DdsCache::Get().EndFrame();
     }
 
-    void App::DrawModals() {
-        if (confirmOpen_) {
-            OpenPopup("Unsaved changes");
-            confirmOpen_ = false;
-        }
-        SetNextWindowSize(ImVec2{ 420, 0 }, ImGuiCond_Appearing);
-        if (BeginPopupModal("Unsaved changes", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-            TextWrapped("'%s' has unsaved changes.", ed.preset ? ed.preset->displayName.c_str() : "");
-            Spacing();
-            if (Button("Save", ImVec2{ 110, 0 })) {
-                if (Save()) {
-                    LoadPresetNow(pendingOpen_);
-                }
-                CloseCurrentPopup();
-            }
-            SameLine();
-            if (Button("Discard", ImVec2{ 110, 0 })) {
-                ed = {};
-                LoadPresetNow(pendingOpen_);
-                CloseCurrentPopup();
-            }
-            SameLine();
-            if (Button("Cancel", ImVec2{ 110, 0 }) || IsKeyPressed(ImGuiKey_Escape, false)) {
-                CloseCurrentPopup();
-            }
-            EndPopup();
-        }
-    }
-
-    void App::DrawStatus() {
-        const double now = GetTime();
-        std::erase_if(toasts_, [now](const ToastMsg& t) { return t.until < now; });
-        if (!toasts_.empty()) {
-            const auto& t = toasts_.back();
-            TextColored(t.error ? kError : kGood, "%s", t.text.c_str());
+    void App::BeginFrame() {
+        // The menu section and the editor window are separate callbacks in the same ImGui frame.
+        if (GetFrameCount() == beganFrame_) {
             return;
         }
-        const auto& bridge = game::MtfBridge::Get();
-        if (!bridge.Installed()) {
-            TextColored(kError, "Magic Tattoos Framework is not loaded. You can still edit preset files.");
-        } else if (bridge.Snapshot().fresh && !bridge.Snapshot().modActive) {
-            TextColored(kWarn, "MTF is disabled in its settings. Tattoos will not update.");
-        } else {
-            const auto& lp = game::LivePreview::Get();
-            const int pending = render::DdsCache::Get().Pending();
-            if (!lp.Status().empty()) {
-                TextColored(kAccent, "%s on %s", lp.Status().c_str(), targetName.c_str());
-            } else if (pending > 0) {
-                TextDisabled("Loading %d texture(s)...", pending);
-            } else {
-                TextDisabled("Magic Tattoos UI %s  |  Ctrl+S save, Ctrl+Z undo, Ctrl+Y redo", kVersion);
-            }
-        }
-    }
-
-    void App::BeginFrame() {
+        beganFrame_ = GetFrameCount();
         HoldVanityCamera(true);
         HoldActor(settings.holdTarget ? targetId : 0);
         game::MtfBridge::DrainUi();
         HandleShortcuts();
-    }
-
-    void App::Draw(bool presetsTab, bool targetBar) {
-        if (targetBar) {
-            DrawTargetBar(*this);
-        }
-
-        if (BeginTabBar("##mtfui_tabs")) {
-            auto tab = [&](const char* label, Tab t, void (*fn)(App&)) {
-                const int flags = requestedTab_ == t ? ImGuiTabItemFlags_SetSelected : 0;
-                if (BeginTabItem(label, nullptr, flags)) {
-                    if (requestedTab_ == t) {
-                        requestedTab_.reset();
-                    }
-                    const float footer = GetFrameHeight() + 8.0f;
-                    if (BeginChild("##tab", ImVec2{ 0, -footer })) {
-                        fn(*this);
-                    }
-                    EndChild();
-                    EndTabItem();
-                }
-            };
-            if (presetsTab) {
-                tab("Presets", Tab::Presets, DrawPresetsTab);
-            }
-            tab(picking ? "Tattoos (choosing)###tattoos" : "Tattoos###tattoos", Tab::Tattoos, DrawTattoosTab);
-            tab("General", Tab::General, DrawGeneralTab);
-            tab("Plugins", Tab::Plugins, DrawPluginsTab);
-            EndTabBar();
-        }
-        Separator();
-        DrawStatus();
-        DrawModals();
-    }
-
-    io::PanelState& App::Panel(const std::string& key) {
-        auto [it, added] = settings.panels.try_emplace(key);
-        if (added || (it->second.w <= 0.0f && key != "main")) {
-            const bool open = it->second.open;
-            it->second = DefaultPanel(key, GetIO()->DisplaySize);
-            if (!added) {
-                it->second.open = open;
-            }
-        }
-        return it->second;
-    }
-
-    void App::ShowEditorWindows(bool show) {
-        if (!window_ || window_->IsOpen == show) {
-            return;
-        }
-        window_->IsOpen = show;
-        if (show) {
-            for (const char* key : { "library", "tiers", "inspector" }) {
-                Panel(key).open = true;
-            }
-        } else {
-            OnMenuClose();
-        }
-    }
-
-    void App::HandlePanelRequests() {
-        // The Presets tab lives in the editor windows; the other tabs stay in the menu section, which consumes them.
-        if (requestedTab_ == Tab::Presets) {
-            Panel("tiers").open = true;
-            Panel("inspector").open = true;
-            requestedTab_.reset();
-        }
-        if (requestedTab_ == Tab::Tattoos && !pickHintShown_ && GetFrameCount() - lastSectionFrame_ > 2) {
-            Toast("Choose the tattoo on the Tattoos tab of Magic Tattoos > Editor in the menu");
-            pickHintShown_ = true;
-        }
-        if (!requestedTab_) {
-            pickHintShown_ = false;
-        }
-    }
-
-    void App::DrawPanel(const char* key, const char* title, const std::function<void()>& body, ImGuiWindowFlags flags) {
-        auto& st = Panel(key);
-        if (!st.open) {
-            return;
-        }
-        const ImGuiCond cond = placeAlways_ ? ImGuiCond_Always : ImGuiCond_Appearing;
-        SetNextWindowPos(ImVec2{ st.x, st.y }, cond);
-        if (!(flags & ImGuiWindowFlags_AlwaysAutoResize)) {
-            SetNextWindowSize(ImVec2{ st.w, st.h }, cond);
-        }
-        SetNextWindowSizeConstraints(ImVec2{ 260, 160 }, ImVec2{ 8192, 8192 });
-        SetNextWindowBgAlpha(settings.panelOpacity / 100.0f);
-        bool open = true;
-        if (Begin(title, &open, flags | ImGuiWindowFlags_NoCollapse)) {
-            body();
-        }
-        const ImVec2 pos = GetWindowPos();
-        const ImVec2 size = GetWindowSize();
-        End();
-        st.x = pos.x;
-        st.y = pos.y;
-        if (!(flags & ImGuiWindowFlags_AlwaysAutoResize)) {
-            st.w = size.x;
-            st.h = size.y;
-        }
-        if (!open) {
-            st.open = false;
-        }
-    }
-
-    bool App::DrawPanels() {
-        if (resetLayout_) {
-            settings.panels.clear();
-            resetLayout_ = false;
-            placeAlways_ = true;
-        }
-        HandlePanelRequests();
-
-        // The main strip always shows, peeking or not, so the peek button stays under the cursor.
-        bool open = true;
-        peeking_ = false;
-        {
-            auto& st = Panel("main");
-            SetNextWindowPos(ImVec2{ st.x, st.y }, placeAlways_ ? ImGuiCond_Always : ImGuiCond_Appearing);
-            SetNextWindowBgAlpha(settings.panelOpacity / 100.0f);
-            if (Begin("Magic Tattoos###mtfui_main", &open, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize)) {
-                DrawTargetBar(*this);
-                Button("Hold to peek");
-                peeking_ = IsItemActive();
-                if (IsItemHovered()) {
-                    SetTooltip("Hides the other panels while you hold the mouse button down. Drag panels by their title bar to move them; "
-                               "the layout is remembered.");
-                }
-                SameLine(0, 16);
-                DrawStatus();
-                DrawModals();
-            }
-            const ImVec2 pos = GetWindowPos();
-            End();
-            st.x = pos.x;
-            st.y = pos.y;
-        }
-
-        if (!peeking_) {
-            DrawPanel("library", "Presets###mtfui_library", [this] { DrawLibraryPanel(*this); });
-            DrawPanel("tiers", "Tiers###mtfui_tiers", [this] { DrawTiersPanel(*this); });
-            DrawPanel("inspector", "Tier editor###mtfui_inspector", [this] { DrawInspectorPanel(*this); });
-        }
-        placeAlways_ = false;
-        return open;
-    }
-
-    void App::DrawSection() {
-        if (!initialized_) {
-            TextUnformatted("Magic Tattoos UI is starting...");
-            return;
-        }
-        lastSectionFrame_ = GetFrameCount();
-        BeginFrame();
-        if (!window_) {
-            Draw(true, true);
-        } else if (settings.splitPanels) {
-            const bool shown = window_->IsOpen;
-            if (requestedTab_ == Tab::Presets) {
-                requestedTab_.reset();
-                ShowEditorWindows(true);
-            }
-            if (Button(shown ? "Close editor windows" : "Open editor windows")) {
-                ShowEditorWindows(!shown);
-            }
-            HelpMarker("Presets, Tiers and Tier editor open as separate panels over the game, with the target and live preview "
-                       "on a strip at the top. Place them around the target; the layout is remembered. Esc or the X on the strip closes them.");
-            // The strip has the target bar while the editor windows are up.
-            Draw(false, !window_->IsOpen);
-        } else {
-            if (Button("Open in its own window")) {
-                window_->IsOpen = true;
-            }
-            HelpMarker("A larger, movable window with the same editor. Esc or the X closes it.");
-            Draw(true, true);
-        }
-        CommitFrame();
-    }
-
-    void App::DrawWindow() {
-        if (!initialized_ || !window_) {
-            return;
-        }
-        static bool loggedIo = false;
-        if (!loggedIo) {
-            const auto* io = GetIO();
-            logger::info("ImGui ini file: {}, docking: {}", io->IniFilename ? io->IniFilename : "(none)",
-                (io->ConfigFlags & ImGuiConfigFlags_DockingEnable) != 0);
-            loggedIo = true;
-        }
-        BeginFrame();
-        bool open = true;
-        if (settings.splitPanels) {
-            open = DrawPanels();
-        } else {
-            SetNextWindowSize(ImVec2{ 1180, 760 }, ImGuiCond_FirstUseEver);
-            SetNextWindowSizeConstraints(ImVec2{ 820, 520 }, ImVec2{ 4096, 4096 });
-            SetNextWindowBgAlpha(settings.panelOpacity / 100.0f);
-            if (Begin("Magic Tattoos##mtfui", &open, ImGuiWindowFlags_NoCollapse)) {
-                Draw(true, true);
-            }
-            End();
-        }
-        CommitFrame();
-        if (!open || (IsKeyPressed(ImGuiKey_Escape, false) && !IsPopupOpen("", ImGuiPopupFlags_AnyPopupId) && !GetIO()->WantTextInput)) {
-            window_->IsOpen = false;
-            OnMenuClose();
-        }
     }
 }

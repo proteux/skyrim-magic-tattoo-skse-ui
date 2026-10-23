@@ -5,6 +5,7 @@
 #include <array>
 #include <cstdint>
 #include <filesystem>
+#include <optional>
 #include <string>
 #include <variant>
 #include <vector>
@@ -107,6 +108,8 @@ namespace mtfui::model {
     std::string SanitizePresetName(const std::string& raw);
 
     Preset PresetFromJson(const std::string& name, const Json& j);
+    // A preset document pasted as text: a JSON object with a "slot" array. nullopt with error otherwise.
+    std::optional<Json> ParsePresetText(const std::string& text, std::string* error);
     // Merges the typed fields back into preset.raw and returns the document SavePreset would write.
     Json PresetToJson(const Preset& preset);
 
@@ -121,4 +124,12 @@ namespace mtfui::model {
         bool inherited = false;
     };
     ResolvedVisual ResolveVisual(const Preset& preset, int slot);
+
+    // Moves tier from to position to, shifting the ones between. Default (0) never moves. False when nothing moved.
+    bool MoveTier(Preset& preset, int from, int to);
+
+    // Gives dst the tattoo, layers and pulse of src, where srcVisual is src's resolved tattoo. A tier that inherited
+    // Default's tattoo still inherits when pasted onto another tier; pasted onto Default, it gets the tattoo it showed.
+    void SetLook(Slot& dst, bool dstIsDefault, const Slot& src, const ResolvedVisual& srcVisual);
+    void CopyLook(Preset& preset, int from, int to);
 }

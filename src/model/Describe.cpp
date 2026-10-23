@@ -72,6 +72,15 @@ namespace mtfui::model {
             }
         }
         out += ": " + DescribeVisual(cat, preset, slot);
+        if (!ResolveVisual(preset, slot).none) {
+            const Layer& layer = s.layers[0];
+            if ((layer.tint & 0xFFFFFF) != 0xFFFFFF) {
+                out += ", tinted " + NearestColorName(cat.colors, layer.tint);
+            }
+            if (layer.emissiveMult > 0.0) {
+                out += ", glowing " + NearestColorName(cat.colors, layer.emissive);
+            }
+        }
         if (s.pulse.Enabled() && s.pulse.rate > 0.0 && s.pulse.depth > 0) {
             char buf[64];
             std::snprintf(buf, sizeof(buf), ", pulsing %.2g/s at %lld%%", s.pulse.rate, static_cast<long long>(s.pulse.depth));

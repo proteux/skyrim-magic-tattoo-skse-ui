@@ -32,6 +32,9 @@ namespace mtfui::game {
 
     ActorInfo PlayerInfo() {
         auto* player = RE::PlayerCharacter::GetSingleton();
+        if (!player) {
+            return { 0x14, "You", 0.0f, true, false };
+        }
         ActorInfo i = Info(player, player->GetPosition());
         i.name = "You (" + i.name + ")";
         return i;
@@ -152,15 +155,29 @@ namespace mtfui::game {
         if (actor && !actor->IsPlayerRef() && actor->IsAIEnabled()) {
             actor->EnableAI(false);
             g_held = id;
+            const char* name = actor->GetDisplayFullName();
+            logger::info("Holding {:08X} ({}) in place", id, name ? name : "");
         }
         return g_held;
     }
 
     void ReleaseLeftover(RE::FormID id) {
         g_held = 0;
-        if (id != 0) {
+        // FF ids are created at runtime and reused, so in this session the id may name an unrelated actor.
+        if (id != 0 && (id >> 24) != 0xFF) {
+            logger::info("Switching AI back on for {:08X}, held when the game last quit", id);
             EnableAIOn(id);
         }
+    }
+
+    RE::FormID ReleaseForSave() {
+        const RE::FormID id = g_held;
+        if (id != 0) {
+            EnableAIOn(id);
+            g_held = 0;
+            logger::info("Released {:08X} before saving", id);
+        }
+        return id;
     }
 
     std::string TexturePath(std::string path) {

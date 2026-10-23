@@ -22,16 +22,22 @@ namespace mtfui::game {
     RE::VMHandle HandleFor(RE::TESForm* form);
     RE::BSTSmartPointer<RE::BSScript::Object> ScriptObject(RE::TESForm* form, const char* className);
 
+    // A call that could not be dispatched still answers, with a None result, so chains of calls always finish.
+    void DispatchFailed(const char* className, const char* fn, const VmResult& cb);
+
     // Global (static) Papyrus function, e.g. JsonUtil.Unload.
     template <class... Args>
     bool CallStatic(const char* className, const char* fn, VmResult cb, Args&&... args) {
         auto* vm = VM();
-        if (!vm) {
-            return false;
+        if (vm) {
+            auto* fargs = RE::MakeFunctionArguments(std::decay_t<Args>(std::forward<Args>(args))...);
+            RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> functor(new CallbackFunctor(cb));
+            if (vm->DispatchStaticCall(className, fn, fargs, functor)) {
+                return true;
+            }
         }
-        auto* fargs = RE::MakeFunctionArguments(std::decay_t<Args>(std::forward<Args>(args))...);
-        RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> functor(new CallbackFunctor(std::move(cb)));
-        return vm->DispatchStaticCall(className, fn, fargs, functor);
+        DispatchFailed(className, fn, cb);
+        return false;
     }
 
     // Method on the script of className attached to form.
@@ -39,11 +45,17 @@ namespace mtfui::game {
     bool CallMethod(RE::TESForm* form, const char* className, const char* fn, VmResult cb, Args&&... args) {
         auto* vm = VM();
         const auto handle = HandleFor(form);
-        if (!vm || handle == 0) {
-            return false;
+        if (vm && handle != 0) {
+            auto* fargs = RE::MakeFunctionArguments(std::decay_t<Args>(std::forward<Args>(args))...);
+            RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> functor(new CallbackFunctor(cb));
+            if (vm->DispatchMethodCall(handle, className, fn, fargs, functor)) {
+                return true;
+            }
         }
-        auto* fargs = RE::MakeFunctionArguments(std::decay_t<Args>(std::forward<Args>(args))...);
-        RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> functor(new CallbackFunctor(std::move(cb)));
-        return vm->DispatchMethodCall(handle, className, fn, fargs, functor);
+        DispatchFailed(className, fn, cb);
+        return false;
     }
+
+    // Method on a script object held directly, e.g. an entry of a Papyrus object array.
+    bool CallObject(RE::BSTSmartPointer<RE::BSScript::Object> obj, const char* fn, VmResult cb);
 }

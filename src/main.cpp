@@ -10,13 +10,17 @@ namespace {
         if (!dir) {
             return;
         }
-        auto path = *dir / "MagicTattoosUI.log";
-        auto sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(path.string(), true);
-        auto log = std::make_shared<spdlog::logger>("global", std::move(sink));
-        log->set_level(spdlog::level::info);
-        log->flush_on(spdlog::level::info);
-        log->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] %v");
-        spdlog::set_default_logger(std::move(log));
+        try {
+            auto path = *dir / "MagicTattoosUI.log";
+            auto sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(path.string(), true);
+            auto log = std::make_shared<spdlog::logger>("global", std::move(sink));
+            log->set_level(spdlog::level::info);
+            log->flush_on(spdlog::level::info);
+            log->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] %v");
+            spdlog::set_default_logger(std::move(log));
+        } catch (...) {
+            // A Documents path the ANSI code page can't hold: run without a log rather than not at all.
+        }
     }
 
     void __stdcall RenderSection() { mtfui::ui::App::Get().DrawSection(); }
@@ -38,7 +42,7 @@ namespace {
         }
         // The window's pause flag is fixed at registration, before App::Init has run.
         mtfui::io::UiSettings early;
-        early.Load("Data/SKSE/Plugins/MagicTattoosUI/settings.json");
+        early.Load(mtfui::ui::GameDataDir() / "SKSE" / "Plugins" / "MagicTattoosUI" / "settings.json");
 
         SKSEMenuFramework::SetSection("Magic Tattoos");
         SKSEMenuFramework::AddSectionItem("Editor", RenderSection);
@@ -48,21 +52,46 @@ namespace {
         logger::info("Registered with SKSE Menu Framework {}", SKSEMenuFramework::GetMenuFrameworkVersion());
     }
 
+    void LogEnvironment() {
+        const auto runtime = REL::Module::get().version();
+        logger::info("Game runtime {}", runtime.string());
+        auto* data = RE::TESDataHandler::GetSingleton();
+        const bool mtf = data && data->LookupModByName(mtfui::game::kMtfPlugin);
+        logger::info("{}: {}", mtfui::game::kMtfPlugin, mtf ? "loaded" : "not loaded");
+        const bool papyrusUtil = GetModuleHandleW(L"PapyrusUtil.dll") != nullptr;
+        logger::info("PapyrusUtil.dll: {}", papyrusUtil ? "loaded" : "not found");
+    }
+
     void OnMessage(SKSE::MessagingInterface::Message* msg) {
         switch (msg->type) {
         case SKSE::MessagingInterface::kPostLoad:
             RegisterMenu();
             break;
         case SKSE::MessagingInterface::kDataLoaded: {
+            LogEnvironment();
             mtfui::game::MtfBridge::Get().OnDataLoaded();
             auto* device = reinterpret_cast<ID3D11Device*>(RE::BSGraphics::Renderer::GetDevice());
             mtfui::render::DdsCache::Get().Init(device);
-            mtfui::ui::App::Get().Init();
+            try {
+                mtfui::ui::App::Get().Init();
+            } catch (const std::exception& e) {
+                logger::critical("Magic Tattoos UI failed to start: {}", e.what());
+            }
             break;
         }
         case SKSE::MessagingInterface::kPostLoadGame:
+            // data is a bool: false when the load failed, in which case the old world is still there.
+            if (msg->data == nullptr) {
+                logger::warn("Save failed to load; leaving state as it was");
+                break;
+            }
+            mtfui::ui::App::Get().OnGameLoaded();
+            break;
         case SKSE::MessagingInterface::kNewGame:
             mtfui::ui::App::Get().OnGameLoaded();
+            break;
+        case SKSE::MessagingInterface::kSaveGame:
+            mtfui::ui::App::Get().OnSaving();
             break;
         default:
             break;

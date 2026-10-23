@@ -1,7 +1,9 @@
 #pragma once
 
+#include "model/Colors.h"
 #include "model/Lint.h"
 #include "model/PluginCatalog.h"
+#include "model/Text.h"
 
 namespace mtfui::ui {
     inline constexpr ImGuiMCP::ImVec4 kGood{ 0.45f, 0.85f, 0.45f, 1.0f };
@@ -12,6 +14,8 @@ namespace mtfui::ui {
 
     bool InputString(const char* label, std::string& value, const char* hint = nullptr, int flags = 0, std::size_t capacity = 256);
     bool ColorEditRgb(const char* label, std::uint32_t& rgb);
+    // Same, with a swatch button that opens the palette, and the nearest palette name beside it.
+    bool ColorEditRgb(const char* label, std::uint32_t& rgb, const std::vector<model::NamedColor>& palette);
     // Edits one catalog parameter, converting between the int/string storage forms.
     bool ParamEditor(const char* id, const model::ParamSpec& spec, model::ParamValue& value, float width);
     void HelpMarker(const char* text);
@@ -19,5 +23,10 @@ namespace mtfui::ui {
     const ImGuiMCP::ImVec4& SeverityColor(model::Severity s);
     // Filter box; returns true when text changed.
     bool SearchBox(const char* id, std::string& text, float width, const char* hint = "Search");
-    bool MatchesSearch(const std::string& haystack, const std::string& needle);
+
+    enum class NamePromptResult { Open, Confirmed, Cancelled };
+    // Body of a "name this preset" modal: the display name box, the file it will get, and Create/Cancel. Call
+    // between BeginPopupModal and EndPopup; close the popup on Confirmed or Cancelled.
+    NamePromptResult NamePrompt(std::string& displayName, const std::string& fileName, bool canConfirm = true, const char* confirmLabel = "Create");
+    using model::MatchesSearch;
 }

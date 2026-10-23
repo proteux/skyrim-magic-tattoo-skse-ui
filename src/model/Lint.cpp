@@ -125,7 +125,7 @@ namespace mtfui::model {
 
             if (i > 0 && !s.Configured()) {
                 if (HasContent(s)) {
-                    out.push_back({ Severity::Warning, i, label + " has a look or effects but no condition, so it never activates" });
+                    out.push_back({ Severity::Warning, i, label + " has a look or effects but no condition, so it never activates", LintTab::Condition });
                 }
                 continue;
             }
@@ -133,7 +133,8 @@ namespace mtfui::model {
             for (int j = 1; j < i; ++j) {
                 if (Shadows(cat, preset.slots[j], s)) {
                     out.push_back({ Severity::Warning, i,
-                        label + " can never activate: " + SlotLabel(preset, j) + " is higher in the list and always matches first. Move it up." });
+                        label + " can never activate: " + SlotLabel(preset, j) + " is higher in the list and always matches first. Move it up.",
+                        LintTab::Condition, { LintFix::Kind::MoveAbove, j, {} } });
                     break;
                 }
             }
@@ -142,18 +143,24 @@ namespace mtfui::model {
                 const PluginCatalog* owner = nullptr;
                 const auto* entry = cat.FindCondition(c.pluginId, &owner);
                 if (!entry) {
-                    out.push_back({ Severity::Error, i, "Condition '" + c.pluginId + "' is not installed; this tier will not activate" });
+                    out.push_back({ Severity::Error, i, "Condition '" + c.pluginId + "' is not installed; this tier will not activate", LintTab::Condition });
                     continue;
                 }
                 if (ctx.pluginEnabled && !ctx.pluginEnabled(owner->pluginId)) {
-                    out.push_back({ Severity::Warning, i, owner->label + " is disabled in MTF; '" + entry->label + "' will never be true" });
+                    out.push_back({ Severity::Warning, i, owner->label + " is disabled in MTF; '" + entry->label + "' will never be true", LintTab::Condition,
+                        { LintFix::Kind::EnablePlugin, -1, owner->pluginId } });
                 }
+                const auto before = out.size();
                 CheckParams(*entry, ConditionParams(c), 3, i, entry->label, out);
                 if (entry->params[0].kind == ParamKind::Text && ParamStr(c.param).empty()) {
                     out.push_back({ Severity::Info, i, entry->label + ": text is empty, which usually matches anything" });
                 }
+                for (auto k = before; k < out.size(); ++k) {
+                    out[k].tab = LintTab::Condition;
+                }
             }
 
+            const auto lookStart = out.size();
             const auto vis = ResolveVisual(preset, i);
             if (!vis.inherited && !s.packId.empty() && s.packId != kNoTexture) {
                 const auto* pack = cat.FindPack(s.packId);
@@ -184,20 +191,29 @@ namespace mtfui::model {
                 }
             }
 
-            if (s.pulse.depth > 0 && s.pulse.rate <= 0.0) {
-                out.push_back({ Severity::Info, i, "Pulse depth is set but rate is 0, so it will not pulse" });
+            // Only the layers the tattoo has textures for are drawn; the others' opacity doesn't matter.
+            if (const auto* shown = vis.none ? nullptr : cat.FindEntry(vis.packId, vis.entryId); shown && !shown->textures.empty()) {
+                const int used = std::min<int>(kLayerCount, static_cast<int>(shown->textures.size()));
+                bool anyVisible = false;
+                for (int l = 0; l < used; ++l) {
+                    anyVisible = anyVisible || s.layers[l].alpha > 0;
+                }
+                if (!anyVisible) {
+                    out.push_back({ Severity::Info, i, used == 1 ? "The tattoo's layer is fully transparent" : "Every layer of the tattoo is fully transparent" });
+                }
             }
-            if (!s.pulse.waveform.empty() && !cat.FindWaveform(s.pulse.waveform)) {
-                out.push_back({ Severity::Warning, i, "Waveform '" + s.pulse.waveform + "' is not installed; MTF falls back to a smooth pulse" });
-            }
-            bool anyVisible = false;
-            for (const auto& l : s.layers) {
-                anyVisible = anyVisible || l.alpha > 0;
-            }
-            if (!vis.none && !anyVisible) {
-                out.push_back({ Severity::Info, i, "Every layer is fully transparent" });
+            for (auto k = lookStart; k < out.size(); ++k) {
+                out[k].tab = LintTab::Look;
             }
 
+            if (s.pulse.depth > 0 && s.pulse.rate <= 0.0) {
+                out.push_back({ Severity::Info, i, "Pulse depth is set but rate is 0, so it will not pulse", LintTab::Pulse });
+            }
+            if (!s.pulse.waveform.empty() && !cat.FindWaveform(s.pulse.waveform)) {
+                out.push_back({ Severity::Warning, i, "Waveform '" + s.pulse.waveform + "' is not installed; MTF falls back to a smooth pulse", LintTab::Pulse });
+            }
+
+            const auto fxStart = out.size();
             for (const auto& fx : s.effects) {
                 const PluginCatalog* owner = nullptr;
                 const auto* entry = cat.FindEffect(fx.key, &owner);
@@ -206,13 +222,17 @@ namespace mtfui::model {
                     continue;
                 }
                 if (ctx.pluginEnabled && !ctx.pluginEnabled(owner->pluginId)) {
-                    out.push_back({ Severity::Warning, i, owner->label + " is disabled in MTF; '" + entry->label + "' will not run" });
+                    out.push_back({ Severity::Warning, i, owner->label + " is disabled in MTF; '" + entry->label + "' will not run", LintTab::Effects,
+                        { LintFix::Kind::EnablePlugin, -1, owner->pluginId } });
                 }
                 CheckParams(*entry, fx.params, entry->ParamCount(), i, entry->label, out);
             }
             if (static_cast<int>(s.effects.size()) > kEffectCap) {
                 out.push_back({ Severity::Info, i, "More than " + std::to_string(kEffectCap) + " effects; MTF's MCM will only show the first " +
                                                         std::to_string(kEffectCap) });
+            }
+            for (auto k = fxStart; k < out.size(); ++k) {
+                out[k].tab = LintTab::Effects;
             }
         }
         return out;

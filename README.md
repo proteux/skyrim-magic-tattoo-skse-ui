@@ -41,7 +41,8 @@ Open the SKSE Menu Framework menu (F1 by default) and choose **Magic Tattoos**. 
 ### Presets
 
 - **The whole preset on one screen.** Tiers are listed in priority order, top wins, with Default at the bottom. Each one has a sentence summary like "When the wearer is at least 50% aroused: Dragon Coil, pulsing at 1.2/s, 2 effects", plus a thumbnail of its tattoo.
-- **Drag tiers to reorder them.** Right-click a tier to move it, clear it, or copy another tier's look.
+- **Drag tiers to reorder them**, or select one and press Alt+Up / Alt+Down. Right-click a tier to move it, clear it, copy another tier's look, or copy it and paste it into another tier or preset, whole or just its look, conditions, effects, or timing.
+- **Copy and paste layers and pulses.** Right-click a layer header to copy, paste, or use its colors on every layer, and use **Copy pulse** / **Paste pulse** on the Pulse tab. Color pickers have a **Palette** button with MTF's named colors.
 - **An inspector for the selected tier** with Condition, Look, Pulse, Effects, and Timing tabs. Every condition and effect comes from the installed plugin catalogs, with its own sliders and menus, and is described in plain words as you edit it.
 - **Built-in checks.** The editor warns about mistakes MTF won't tell you about:
   - a tier that can never activate because a higher tier always wins first (for example "at least 50%" above "at least 80%");
@@ -50,7 +51,11 @@ Open the SKSE Menu Framework menu (F1 by default) and choose **Magic Tattoos**. 
   - tattoos or textures that aren't installed;
   - layers that overflow your RaceMenu overlay slots;
   - a pulse that has nothing to animate.
+
+  Click a check's tier button to jump to the tab where it can be fixed. Some checks have a one-click fix: **Move it up** for a tier hidden by a higher one, and **Enable it** for a plugin that's turned off.
 - **Undo and redo** (Ctrl+Z, Ctrl+Y), **Save** (Ctrl+S), and **Revert**. Every save keeps a backup of the previous file.
+- **Your work isn't lost.** Opening another preset, starting a new one, or reverting a new one asks whether to save, discard, or cancel first. Unsaved edits are also written to a draft every few seconds, and if the game closes before you save, the editor offers to restore them next time.
+- **Shortcuts:** Ctrl+S save, Ctrl+Z / Ctrl+Y undo and redo, Ctrl+N new preset, Ctrl+D duplicate, Ctrl+F search presets, F5 apply to the target, Alt+Up / Alt+Down move the selected tier. Hover the version in the status line for the list.
 
 ### Tattoos
 
@@ -74,12 +79,14 @@ Open the SKSE Menu Framework menu (F1 by default) and choose **Magic Tattoos**. 
 - MTF's settings: on/off, debug messages, update interval, rescan visual packs, and the SkyrimNet option when SkyrimNet is installed.
 - **An overlay slot map** for body, face, hands, and feet. It shows which RaceMenu overlay slots MTF uses, compared with how many your `skee64.ini` provides.
 - **Plugins:** turn each MTF plugin on or off, see what conditions and effects it provides, and which of your presets use it.
+- **Deleted presets and backups:** restore a deleted preset, or any of the last 10 backups of each preset, from the General tab. Restoring backs up the file it replaces first. **Copy as JSON** (under Preset options) and **Paste a preset from the clipboard** share presets as text.
 
 ## Notes
 
 - Built-in presets that ship with MTF are read-only. Use **Duplicate** to make your own copy.
-- Deleting a preset works like MTF's own delete: the file is kept but hidden. A backup also goes to `Data/SKSE/Plugins/MagicTattoosUI/backups`.
-- The UI keeps its own settings in `Data/SKSE/Plugins/MagicTattoosUI/settings.json`. It never changes MTF's files except the presets you save or delete.
+- Deleting a preset works like MTF's own delete: the file is kept but hidden, and General > Deleted presets brings it back. A backup also goes to `Data/SKSE/Plugins/MagicTattoosUI/backups`.
+- The UI keeps its own settings in `Data/SKSE/Plugins/MagicTattoosUI/settings.json` and unsaved drafts in `drafts/` next to it. It never changes MTF's files except the presets you save, delete, or restore.
+- Saving the game while an NPC is held in place releases them first, so a frozen NPC is never written into the save.
 
 ## Troubleshooting
 
@@ -94,13 +101,14 @@ The log is at `Documents/My Games/Skyrim Special Edition/SKSE/MagicTattoosUI.log
 Needs Visual Studio 2022 or later (or the standalone Build Tools with the C++ workload) and [vcpkg](https://github.com/microsoft/vcpkg). Set `VCPKG_ROOT` if vcpkg isn't at the default path in `build.sh`.
 
 ```
-make            # build, run tests, copy to the Vortex staging folder
-make live       # build and copy straight into Skyrim's Data folder
+make            # same as make live
+make live       # build, run tests, copy straight into Skyrim's Data folder
+make staging    # build, run tests, copy to the Vortex staging folder
 make test       # build and run the offline tests only
 make package    # dist/MagicTattoosUI-<version>.zip
 ```
 
-`SKYRIM_DIR` and `VORTEX_STAGING` override the default install paths. The offline tests in `tests/` check that saved presets match PapyrusUtil's JSON output byte for byte, using copies of real presets in `tests/fixtures`.
+`make live` stops before building if Skyrim is running, because Skyrim locks the DLL. Quit to desktop and rerun it. While using `live`, keep the mod disabled in Vortex, or a Vortex deploy overwrites the files. `SKYRIM_DIR` and `VORTEX_STAGING` override the default install paths. The offline tests in `tests/` check that saved presets match PapyrusUtil's JSON output byte for byte, using copies of real presets in `tests/fixtures`. They also cover the checks, tier copy and move, waveforms, the DDS header shrinking, settings, and backups.
 
 See `docs/lessons.md` for how MTF applies preset changes and other notes for working on this.
 

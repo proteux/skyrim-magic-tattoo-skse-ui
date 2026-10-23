@@ -10,10 +10,13 @@ namespace mtfui::ui {
     using namespace ImGuiMCP;
 
     namespace {
-        std::string g_pickerSearch;
-        game::SkinInfo g_skin;
-        RE::FormID g_skinFor = 0;
-        bool g_skinLoading = false;
+        struct InspectorState {
+            std::string pickerSearch;
+            game::SkinInfo skin;  // the target's skin textures, drawn behind the tattoo preview
+            RE::FormID skinFor = 0;
+            bool skinLoading = false;
+        };
+        InspectorState g;
 
         bool PluginEnabled(const std::string& pid) {
             const auto& snap = game::MtfBridge::Get().Snapshot();
@@ -28,24 +31,24 @@ namespace mtfui::ui {
         }
 
         // Searchable, plugin-grouped picker for conditions or effects. Returns true when key changes.
+        // Sized by the caller's PushItemWidth, which leaves room for the row's buttons.
         bool CatalogPicker(App& app, const char* id, std::string& key, bool conditions) {
             const model::PluginCatalog* owner = nullptr;
             const auto* current = conditions ? app.cat.FindCondition(key, &owner) : app.cat.FindEffect(key, &owner);
             std::string preview = key.empty() ? "(choose)" : current ? current->label : key + " (not installed)";
             bool changed = false;
-            SetNextItemWidth(-1);
             if (BeginCombo(id, preview.c_str(), ImGuiComboFlags_HeightLargest)) {
                 if (IsWindowAppearing()) {
-                    g_pickerSearch.clear();
+                    g.pickerSearch.clear();
                     SetKeyboardFocusHere();
                 }
-                SearchBox("##pick", g_pickerSearch, -1.0f);
+                SearchBox("##pick", g.pickerSearch, -1.0f);
                 for (const auto& plugin : app.cat.plugins) {
                     const auto& list = conditions ? plugin.conditions : plugin.effects;
                     bool header = false;
                     const bool enabled = PluginEnabled(plugin.pluginId);
                     for (const auto& e : list) {
-                        if (!MatchesSearch(plugin.label + " " + e.label + " " + e.description, g_pickerSearch)) {
+                        if (!MatchesSearch(plugin.label + " " + e.label + " " + e.description, g.pickerSearch)) {
                             continue;
                         }
                         if (!header) {
@@ -112,8 +115,11 @@ namespace mtfui::ui {
                     model::ParamValue* values[] = { &c.param, &c.param2, &c.param3 };
                     for (int p = 0; p < 3; ++p) {
                         if (e->params[p].kind != model::ParamKind::None) {
-                            *values[p] = e->params[p].Coerce(*values[p]);
-                            ParamEditor(("p" + std::to_string(p)).c_str(), e->params[p], *values[p], std::max(160.0f, avail * 0.55f));
+                            // Only an edit writes back: viewing a tier must not change a stored "50" into 50.
+                            auto v = e->params[p].Coerce(*values[p]);
+                            if (ParamEditor(("p" + std::to_string(p)).c_str(), e->params[p], v, std::max(160.0f, avail * 0.55f))) {
+                                *values[p] = v;
+                            }
                         }
                     }
                     PushStyleColor(ImGuiCol_Text, kMuted);
@@ -139,17 +145,17 @@ namespace mtfui::ui {
         }
 
         void EnsureSkin(App& app) {
-            if (g_skinFor == app.targetId || g_skinLoading) {
+            if (g.skinFor == app.targetId || g.skinLoading) {
                 return;
             }
-            g_skinLoading = true;
+            g.skinLoading = true;
             const auto id = app.targetId;
             game::MtfBridge::RunOnGame([id] {
                 auto skin = game::SkinFor(id);
                 game::MtfBridge::PostToUi([id, skin] {
-                    g_skin = skin;
-                    g_skinFor = id;
-                    g_skinLoading = false;
+                    g.skin = skin;
+                    g.skinFor = id;
+                    g.skinLoading = false;
                 });
             });
         }
@@ -230,11 +236,11 @@ namespace mtfui::ui {
                 EnsureSkin(app);
                 render::PreviewInput in;
                 if (pack && pack->area == "Body") {
-                    in.backdrop = g_skin.body;
+                    in.backdrop = g.skin.body;
                 } else if (pack && pack->area == "Hands") {
-                    in.backdrop = g_skin.hands;
+                    in.backdrop = g.skin.hands;
                 } else if (pack && pack->area == "Feet") {
-                    in.backdrop = g_skin.feet;
+                    in.backdrop = g.skin.feet;
                 }
                 in.textures = entry->textures;
                 in.layers = s.layers;
@@ -256,18 +262,44 @@ namespace mtfui::ui {
                     header += entry ? "  (this tattoo has no texture here)" : "";
                 }
                 SetNextItemOpen(used, ImGuiCond_Appearing);
-                if (CollapsingHeader((header + "###layer").c_str())) {
+                const bool open = CollapsingHeader((header + "###layer").c_str());
+                if (BeginPopupContextItem("##layerctx")) {
+                    if (MenuItem("Copy layer")) {
+                        app.clip.layer = layer;
+                    }
+                    if (MenuItem("Paste layer", nullptr, false, app.clip.layer.has_value())) {
+                        layer = *app.clip.layer;
+                    }
+                    if (MenuItem("Use this layer's colors on every layer")) {
+                        for (auto& other : s.layers) {
+                            other = layer;
+                        }
+                    }
+                    EndPopup();
+                }
+                if (open) {
                     if (!used) {
                         PushStyleColor(ImGuiCol_Text, kMuted);
                     }
-                    ColorEditRgb("Tint", layer.tint);
+                    ColorEditRgb("Tint", layer.tint, app.cat.colors);
                     HelpMarker("Multiplies the tattoo's own color. White keeps the original ink.");
+                    if (usedLayers > 1) {
+                        SameLine();
+                        if (SmallButton("To all")) {
+                            for (auto& other : s.layers) {
+                                other.tint = layer.tint;
+                            }
+                        }
+                        if (IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
+                            SetTooltip("Apply this tint to every layer. Right-click a layer header to copy or paste a whole layer.");
+                        }
+                    }
                     int alpha = static_cast<int>(layer.alpha);
                     SetNextItemWidth(220);
                     if (SliderInt("Opacity", &alpha, 0, 100, "%d%%")) {
                         layer.alpha = alpha;
                     }
-                    ColorEditRgb("Glow color", layer.emissive);
+                    ColorEditRgb("Glow color", layer.emissive, app.cat.colors);
                     float mult = static_cast<float>(layer.emissiveMult);
                     SetNextItemWidth(220);
                     if (SliderFloat("Glow strength", &mult, 0.0f, 10.0f, "%.2f")) {
@@ -283,6 +315,15 @@ namespace mtfui::ui {
         }
 
         void DrawPulseTab(App& app, model::Slot& s) {
+            if (SmallButton("Copy pulse")) {
+                app.clip.pulse = s.pulse;
+            }
+            SameLine();
+            BeginDisabled(!app.clip.pulse.has_value());
+            if (SmallButton("Paste pulse")) {
+                s.pulse = *app.clip.pulse;
+            }
+            EndDisabled();
             float rate = static_cast<float>(s.pulse.rate);
             SetNextItemWidth(240);
             if (SliderFloat("Speed", &rate, 0.0f, 5.0f, rate > 0.0f ? "%.2f per second" : "off")) {
@@ -354,8 +395,10 @@ namespace mtfui::ui {
                 if (const auto* e = app.cat.FindEffect(fx.key)) {
                     for (int p = 0; p < 5; ++p) {
                         if (e->params[p].kind != model::ParamKind::None) {
-                            fx.params[p] = e->params[p].Coerce(fx.params[p]);
-                            ParamEditor(("p" + std::to_string(p)).c_str(), e->params[p], fx.params[p], std::max(160.0f, avail * 0.55f));
+                            auto v = e->params[p].Coerce(fx.params[p]);
+                            if (ParamEditor(("p" + std::to_string(p)).c_str(), e->params[p], v, std::max(160.0f, avail * 0.55f))) {
+                                fx.params[p] = v;
+                            }
                         }
                     }
                     PushStyleColor(ImGuiCol_Text, kMuted);
@@ -395,7 +438,8 @@ namespace mtfui::ui {
             changed |= InputInt("minutes", &m, 5, 15);
             PopID();
             if (changed) {
-                minutes = std::max(0, h) * 60 + std::clamp(m, 0, 59);
+                // Minutes past 59 or below 0 carry into the hours.
+                minutes = std::max<std::int64_t>(0, static_cast<std::int64_t>(h) * 60 + m);
             }
             return changed;
         }
@@ -446,23 +490,27 @@ namespace mtfui::ui {
             Spacing();
         }
         if (BeginTabBar("##inspector_tabs")) {
-            if (BeginTabItem("Condition")) {
+            const auto requested = app.inspectorTab;
+            app.inspectorTab.reset();
+            auto flags = [&](model::LintTab t) { return requested == t ? ImGuiTabItemFlags_SetSelected : 0; };
+            if (BeginTabItem("Condition", nullptr, flags(model::LintTab::Condition))) {
                 DrawConditionTab(app, s, slot);
                 EndTabItem();
             }
-            if (BeginTabItem("Look")) {
+            if (BeginTabItem("Look", nullptr, flags(model::LintTab::Look))) {
                 DrawLookTab(app, s, slot);
                 EndTabItem();
             }
-            if (BeginTabItem("Pulse")) {
+            if (BeginTabItem("Pulse", nullptr, flags(model::LintTab::Pulse))) {
                 DrawPulseTab(app, s);
                 EndTabItem();
             }
-            if (BeginTabItem(s.effects.empty() ? "Effects" : ("Effects (" + std::to_string(s.effects.size()) + ")###fx").c_str())) {
+            const std::string fxLabel = s.effects.empty() ? "Effects###fx" : "Effects (" + std::to_string(s.effects.size()) + ")###fx";
+            if (BeginTabItem(fxLabel.c_str(), nullptr, flags(model::LintTab::Effects))) {
                 DrawEffectsTab(app, s, slot);
                 EndTabItem();
             }
-            if (BeginTabItem("Timing")) {
+            if (BeginTabItem("Timing", nullptr, flags(model::LintTab::Timing))) {
                 DrawTimingTab(s, slot);
                 EndTabItem();
             }
