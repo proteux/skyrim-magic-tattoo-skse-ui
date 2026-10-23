@@ -22,7 +22,7 @@ namespace mtfui::game {
         // Removes leftovers from a previous session (after a save is loaded).
         void Cleanup();
 
-        bool Active() const { return applied_ != 0 || pending_.has_value(); }
+        bool Active() const { return applied_ != 0 || pending_.has_value() || busy_; }
         RE::FormID Actor() const { return applied_; }
         const std::string& Status() const { return status_; }
 
@@ -38,7 +38,8 @@ namespace mtfui::game {
         std::filesystem::path file_;
         std::function<void(const std::vector<RE::FormID>&)> record_;
         std::optional<Pending> pending_;
-        nlohmann::json last_;
+        nlohmann::json last_;  // last document sent to MTF, and who it was for
+        RE::FormID lastActor_ = 0;
         RE::FormID applied_ = 0;
         bool busy_ = false;
         std::chrono::steady_clock::time_point busySince_;

@@ -52,7 +52,7 @@ namespace mtfui::game {
         if (pending_ && pending_->actor == actor && pending_->doc == p.doc) {
             return;
         }
-        if (!pending_ && applied_ == actor && last_ == p.doc) {
+        if (!pending_ && lastActor_ == actor && last_ == p.doc) {
             return;
         }
         p.due = std::chrono::steady_clock::now() + kDebounce;
@@ -83,6 +83,7 @@ namespace mtfui::game {
         busySince_ = std::chrono::steady_clock::now();
         status_ = "Updating preview...";
         last_ = job.doc;
+        lastActor_ = job.actor;
         auto& bridge = MtfBridge::Get();
         const RE::FormID previous = applied_;
         const RE::FormID actor = job.actor;

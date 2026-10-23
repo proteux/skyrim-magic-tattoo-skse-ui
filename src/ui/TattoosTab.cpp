@@ -38,10 +38,11 @@ namespace mtfui::ui {
             return io::ToLower(p.packId + "/" + e.id);
         }
 
-        bool FilterCombo(const char* label, std::string& value, const std::set<std::string>& options) {
+        bool FilterCombo(const char* label, const char* prefix, std::string& value, const std::set<std::string>& options, float width) {
             bool changed = false;
-            SetNextItemWidth(-1);
-            if (BeginCombo(label, value.empty() ? "Any" : value.c_str())) {
+            SetNextItemWidth(width);
+            const std::string preview = std::string{ prefix } + ": " + (value.empty() ? "Any" : value);
+            if (BeginCombo(label, preview.c_str())) {
                 if (Selectable("Any", value.empty())) {
                     value.clear();
                     changed = true;
@@ -164,13 +165,44 @@ namespace mtfui::ui {
             return items;
         }
 
-        void DrawSidebar(App& app, float width) {
-            if (!BeginChild("##tsidebar", ImVec2{ width, 0 }, ImGuiChildFlags_Border)) {
-                EndChild();
+        // Lays items out left to right and starts a new row when the next one would not fit.
+        struct Flow {
+            float right = GetCursorScreenPos().x + GetContentRegionAvail().x;
+            bool first = true;
+            void Next(float width) {
+                if (!first && GetItemRectMax().x + GetStyle()->ItemSpacing.x + width <= right) {
+                    SameLine();
+                }
+                first = false;
+            }
+        };
+
+        float ButtonWidth(const char* label) {
+            return CalcTextSize(label).x + GetStyle()->FramePadding.x * 2.0f;
+        }
+
+        std::string SourceLabel(App& app) {
+            switch (g.source) {
+                case Source::Favorites:
+                    return "Favorites";
+                case Source::Recent:
+                    return "Recently used";
+                case Source::Pack:
+                    if (const auto* p = app.cat.FindPack(g.pack)) {
+                        return p->label;
+                    }
+                    return g.pack;
+                default:
+                    return "All";
+            }
+        }
+
+        void DrawSourceCombo(App& app, float width) {
+            SetNextItemWidth(width);
+            const std::string preview = (g.source == Source::Pack ? "Pack: " : "Show: ") + SourceLabel(app);
+            if (!BeginCombo("##tsource", preview.c_str(), ImGuiComboFlags_HeightLarge)) {
                 return;
             }
-            SearchBox("##tsearch", g.search, -1.0f, "Search tattoos");
-            Spacing();
             std::size_t total = 0;
             for (const auto& p : app.cat.packs) {
                 total += p.entries.size();
@@ -196,41 +228,99 @@ namespace mtfui::ui {
                 }
             }
             if (app.cat.packs.empty()) {
-                TextWrapped("No visual packs found in MagicTattoosFramework/visuals.");
+                TextDisabled("No visual packs found in MagicTattoosFramework/visuals.");
             }
+            EndCombo();
+        }
 
+        void DrawToolbar(App& app) {
             const auto& filters = Filters(app);
-            const auto& areas = filters.areas;
-            const auto& subjects = filters.subjects;
-            const auto& styles = filters.styles;
-            const auto& placements = filters.placements;
-            SeparatorText("Filters");
-            TextUnformatted("Area");
-            FilterCombo("##area", g.area, areas);
-            if (!subjects.empty()) {
-                TextUnformatted("Subject");
-                FilterCombo("##subject", g.subject, subjects);
+            const float combo = 170.0f;
+            Flow flow;
+            flow.Next(220.0f);
+            SearchBox("##tsearch", g.search, 220.0f, "Search tattoos");
+            flow.Next(230.0f);
+            DrawSourceCombo(app, 230.0f);
+            flow.Next(combo);
+            FilterCombo("##area", "Area", g.area, filters.areas, combo);
+            if (!filters.subjects.empty()) {
+                flow.Next(combo);
+                FilterCombo("##subject", "Subject", g.subject, filters.subjects, combo);
             }
-            if (!styles.empty()) {
-                TextUnformatted("Style");
-                FilterCombo("##style", g.style, styles);
+            if (!filters.styles.empty()) {
+                flow.Next(combo);
+                FilterCombo("##style", "Style", g.style, filters.styles, combo);
             }
-            if (!placements.empty()) {
-                TextUnformatted("Placement");
-                FilterCombo("##placement", g.placement, placements);
+            if (!filters.placements.empty()) {
+                flow.Next(combo);
+                FilterCombo("##placement", "Placement", g.placement, filters.placements, combo);
             }
-            if (!g.area.empty() || !g.subject.empty() || !g.style.empty() || !g.placement.empty()) {
-                if (SmallButton("Clear filters")) {
-                    g.area.clear();
-                    g.subject.clear();
-                    g.style.clear();
-                    g.placement.clear();
+            flow.Next(180.0f);
+            SetNextItemWidth(180.0f);
+            SliderInt("##thumbsize", &app.settings.thumbSize, 64, 256, "Thumbnails %d px");
+            if (IsItemDeactivatedAfterEdit()) {
+                app.SaveSettings();
+            }
+            if (IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
+                SetTooltip("Ctrl+mouse wheel over the grid also zooms.");
+            }
+            const char* detailsLabel = app.settings.showDetails ? "Hide details" : "Show details";
+            flow.Next(ButtonWidth(detailsLabel));
+            if (Button(detailsLabel)) {
+                app.settings.showDetails = !app.settings.showDetails;
+                app.SaveSettings();
+            }
+        }
+
+        bool AnyFilter() {
+            return !g.search.empty() || g.source != Source::All || !g.area.empty() || !g.subject.empty() || !g.style.empty() || !g.placement.empty();
+        }
+
+        void DrawChips(App& app, std::size_t count) {
+            if (!AnyFilter()) {
+                return;
+            }
+            Flow flow;
+            auto chip = [&](const char* id, const std::string& text, auto&& clear) {
+                const std::string label = text + "  x##" + id;
+                flow.Next(ButtonWidth(label.substr(0, label.find("##")).c_str()));
+                if (SmallButton(label.c_str())) {
+                    clear();
                 }
+                if (IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
+                    SetTooltip("Remove this filter");
+                }
+            };
+            if (!g.search.empty()) {
+                chip("search", "Search: " + g.search, [] { g.search.clear(); });
             }
-            Spacing();
-            SetNextItemWidth(-1);
-            SliderInt("##thumbsize", &app.settings.thumbSize, 64, 192, "Thumbnails %d px");
-            EndChild();
+            if (g.source != Source::All) {
+                chip("source", (g.source == Source::Pack ? "Pack: " : "Show: ") + SourceLabel(app), [] { g.source = Source::All; });
+            }
+            if (!g.area.empty()) {
+                chip("area", "Area: " + g.area, [] { g.area.clear(); });
+            }
+            if (!g.subject.empty()) {
+                chip("subject", "Subject: " + g.subject, [] { g.subject.clear(); });
+            }
+            if (!g.style.empty()) {
+                chip("style", "Style: " + g.style, [] { g.style.clear(); });
+            }
+            if (!g.placement.empty()) {
+                chip("placement", "Placement: " + g.placement, [] { g.placement.clear(); });
+            }
+            flow.Next(ButtonWidth("Clear all"));
+            if (SmallButton("Clear all")) {
+                g.search.clear();
+                g.source = Source::All;
+                g.area.clear();
+                g.subject.clear();
+                g.style.clear();
+                g.placement.clear();
+            }
+            const std::string countText = std::to_string(count) + (count == 1 ? " tattoo" : " tattoos");
+            flow.Next(CalcTextSize(countText.c_str()).x);
+            TextDisabled("%s", countText.c_str());
         }
 
         void UseSelected(App& app, const Item& it) {
@@ -246,10 +336,57 @@ namespace mtfui::ui {
             }
         }
 
+        bool g_zoomUnsaved = false;
+
+        void DrawStar(ImDrawList* dl, ImVec2 c, float r, ImU32 col) {
+            ImVec2 pts[10];
+            for (int i = 0; i < 10; ++i) {
+                const float a = -1.5707963f + i * 0.6283185f;
+                const float rr = (i % 2) ? r * 0.45f : r;
+                pts[i] = ImVec2{ c.x + std::cos(a) * rr, c.y + std::sin(a) * rr };
+            }
+            for (int i = 0; i < 10; ++i) {
+                ImDrawListManager::AddTriangleFilled(dl, c, pts[i], pts[(i + 1) % 10], col);
+            }
+        }
+
+        void DrawHoverPreview(App& app, const Item& it, float thumb) {
+            BeginTooltip();
+            const float zoom = std::clamp(thumb * 2.5f, 256.0f, 512.0f);
+            const ImVec2 p = GetCursorScreenPos();
+            Dummy(ImVec2{ zoom, zoom });
+            render::DrawThumbAt(GetWindowDrawList(), p, zoom, it.entry->textures.empty() ? std::string{} : it.entry->textures.front());
+            PushTextWrapPos(GetCursorPosX() + zoom);
+            TextUnformatted(it.entry->label.c_str());
+            TextDisabled("%s  (%s)", it.pack->label.c_str(), it.pack->area.c_str());
+            std::string tags;
+            for (const auto* t : { &it.entry->subject, &it.entry->style, &it.entry->placement }) {
+                if (!t->empty()) {
+                    tags += (tags.empty() ? "" : ", ") + *t;
+                }
+            }
+            if (!tags.empty()) {
+                TextDisabled("%s", tags.c_str());
+            }
+            if (const auto* users = app.usage.Entry(it.pack->packId, it.entry->id)) {
+                TextColored(kGood, "Used by %d preset%s", static_cast<int>(users->size()), users->size() == 1 ? "" : "s");
+            }
+            PopTextWrapPos();
+            EndTooltip();
+        }
+
         void DrawGrid(App& app, const std::vector<Item>& items, float width) {
-            if (!BeginChild("##tgrid", ImVec2{ width, 0 }, ImGuiChildFlags_Border)) {
+            const auto* input = GetIO();
+            if (!BeginChild("##tgrid", ImVec2{ width, 0 }, ImGuiChildFlags_Border, input->KeyCtrl ? ImGuiWindowFlags_NoScrollWithMouse : 0)) {
                 EndChild();
                 return;
+            }
+            bool zoomed = false;
+            if (input->KeyCtrl && input->MouseWheel != 0.0f && IsWindowHovered()) {
+                const int before = app.settings.thumbSize;
+                app.settings.thumbSize = std::clamp(app.settings.thumbSize + (input->MouseWheel > 0.0f ? 16 : -16), 64, 256);
+                zoomed = app.settings.thumbSize != before;
+                g_zoomUnsaved = g_zoomUnsaved || zoomed;
             }
             if (app.picking && app.HasPreset()) {
                 TextColored(kAccent, "Choosing a tattoo for %s: double-click one, or", model::SlotLabel(app.Preset(), TargetSlot(app)).c_str());
@@ -267,13 +404,29 @@ namespace mtfui::ui {
             const float thumb = static_cast<float>(app.settings.thumbSize);
             const float cell = thumb + 8.0f;
             const int columns = std::max(1, static_cast<int>(GetContentRegionAvail().x / cell));
-            const float labelH = GetTextLineHeight();
+            const float labelH = GetTextLineHeight() * (thumb >= 128.0f ? 2.0f : 1.0f);
             const int rows = (static_cast<int>(items.size()) + columns - 1) / columns;
             const float rowH = thumb + labelH + 10.0f;
+            const float viewH = GetWindowHeight();
+
+            if (zoomed) {
+                const auto sel = std::find_if(items.begin(), items.end(), [](const Item& i) { return i.key == g.selected; });
+                if (sel != items.end()) {
+                    const float row = static_cast<float>((sel - items.begin()) / columns);
+                    SetScrollY(std::max(0.0f, row * rowH - (viewH - rowH) * 0.5f));
+                }
+            }
+
+            std::string current;
+            if (app.HasPreset()) {
+                const auto v = model::ResolveVisual(app.Preset(), TargetSlot(app));
+                if (!v.none && !v.packId.empty()) {
+                    current = io::ToLower(v.packId + "/" + v.entryId);
+                }
+            }
 
             // Only rows on screen are drawn, so only their textures get requested.
             const float scrollY = GetScrollY();
-            const float viewH = GetWindowHeight();
             const ImVec2 origin = GetCursorScreenPos();
             const int firstRow = std::max(0, static_cast<int>(scrollY / rowH) - 1);
             const int lastRow = std::min(rows, static_cast<int>((scrollY + viewH) / rowH) + 2);
@@ -289,30 +442,48 @@ namespace mtfui::ui {
                     SetCursorScreenPos(pos);
                     // By tattoo, not position: an open context menu must stay with its tattoo when filters change.
                     PushID(it.key.c_str());
+                    const ImVec2 cellEnd{ pos.x + thumb, pos.y + thumb + labelH + 4.0f };
                     if (Selectable("##cell", g.selected == it.key, ImGuiSelectableFlags_AllowDoubleClick, ImVec2{ thumb, thumb + labelH + 4.0f })) {
                         g.selected = it.key;
                         if (IsMouseDoubleClicked(0)) {
                             UseSelected(app, it);
                         }
                     }
-                    if (IsItemHovered(ImGuiHoveredFlags_DelayNormal)) {
-                        SetTooltip("%s\n%s", it.entry->label.c_str(), it.pack->label.c_str());
-                    }
+                    const bool hovered = IsItemHovered(ImGuiHoveredFlags_DelayShort);
                     if (BeginPopupContextItem("##tctx")) {
                         g.selected = it.key;
                         if (MenuItem("New preset from this tattoo...")) {
                             g.newFrom = it.key;
                             g.newName = it.entry->label;
                         }
+                        const bool fav = app.settings.IsFavorite(it.key);
+                        if (MenuItem(fav ? "Unfavorite" : "Favorite")) {
+                            app.settings.ToggleFavorite(it.key);
+                            app.SaveSettings();
+                        }
                         EndPopup();
                     }
                     render::DrawThumbAt(dl, pos, thumb, it.entry->textures.empty() ? std::string{} : it.entry->textures.front());
                     if (app.settings.IsFavorite(it.key)) {
-                        ImDrawListManager::AddText(dl, ImVec2{ pos.x + thumb - 14, pos.y + 2 }, GetColorU32(kWarn), "*");
+                        const ImVec2 c{ pos.x + thumb - 11.0f, pos.y + 11.0f };
+                        ImDrawListManager::AddCircleFilled(dl, c, 10.0f, 0xB0000000, 20);
+                        DrawStar(dl, c, 7.5f, GetColorU32(kWarn));
                     }
-                    ImDrawListManager::PushClipRect(dl, ImVec2{ pos.x, pos.y + thumb }, ImVec2{ pos.x + thumb, pos.y + thumb + labelH + 4 }, true);
-                    ImDrawListManager::AddText(dl, ImVec2{ pos.x + 2, pos.y + thumb + 2 }, GetColorU32(ImGuiCol_Text, 1.0f), it.entry->label.c_str());
+                    if (app.usage.Entry(it.pack->packId, it.entry->id)) {
+                        const ImVec2 c{ pos.x + 9.0f, pos.y + 9.0f };
+                        ImDrawListManager::AddCircleFilled(dl, c, 6.5f, 0xB0000000, 16);
+                        ImDrawListManager::AddCircleFilled(dl, c, 4.5f, GetColorU32(kGood), 16);
+                    }
+                    if (!current.empty() && it.key == current) {
+                        ImDrawListManager::AddRect(dl, ImVec2{ pos.x - 2.0f, pos.y - 2.0f }, ImVec2{ cellEnd.x + 2.0f, cellEnd.y + 2.0f }, GetColorU32(kAccent), 4.0f, 0, 2.0f);
+                    }
+                    ImDrawListManager::PushClipRect(dl, ImVec2{ pos.x, pos.y + thumb }, cellEnd, true);
+                    ImDrawListManager::AddText(dl, GetFont(), GetFontSize(), ImVec2{ pos.x + 2, pos.y + thumb + 2 }, GetColorU32(ImGuiCol_Text, 1.0f),
+                        it.entry->label.c_str(), nullptr, thumb >= 128.0f ? thumb - 4.0f : 0.0f);
                     ImDrawListManager::PopClipRect(dl);
+                    if (hovered && !IsPopupOpen("", ImGuiPopupFlags_AnyPopupId)) {
+                        DrawHoverPreview(app, it, thumb);
+                    }
                     PopID();
                 }
             }
@@ -439,14 +610,23 @@ namespace mtfui::ui {
     }
 
     void DrawTattoosTab(App& app) {
+        if (g_zoomUnsaved && !GetIO()->KeyCtrl) {
+            g_zoomUnsaved = false;
+            app.SaveSettings();
+        }
+        DrawToolbar(app);
         const auto& items = Items(app);
-        const float sidebar = 210.0f;
-        const float details = std::max(300.0f, GetContentRegionAvail().x * 0.3f);
-        DrawSidebar(app, sidebar);
-        SameLine();
-        DrawGrid(app, items, GetContentRegionAvail().x - details - GetStyle()->ItemSpacing.x);
-        SameLine();
-        DrawDetails(app, items);
+        DrawChips(app, items.size());
+        // The chips may have just cleared a filter.
+        const auto& shown = Items(app);
+        if (app.settings.showDetails) {
+            const float details = std::max(300.0f, GetContentRegionAvail().x * 0.3f);
+            DrawGrid(app, shown, GetContentRegionAvail().x - details - GetStyle()->ItemSpacing.x);
+            SameLine();
+            DrawDetails(app, shown);
+        } else {
+            DrawGrid(app, shown, 0.0f);
+        }
         DrawNewPresetPopup(app);
     }
 }

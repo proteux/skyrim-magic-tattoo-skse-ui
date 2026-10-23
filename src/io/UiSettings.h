@@ -26,6 +26,7 @@ namespace mtfui::io {
         bool livePreviewEnabled = true;
         bool holdTarget = true;  // NPC targets stand still while the editor is open
         int thumbSize = 96;
+        bool showDetails = true;  // Tattoos tab details pane
         bool splitPanels = true;  // standalone window as separate panels instead of one tabbed window
         int panelOpacity = 100;   // percent, panel backgrounds only
         std::map<std::string, PanelState> panels;

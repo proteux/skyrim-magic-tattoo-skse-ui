@@ -91,6 +91,7 @@ namespace mtfui::io {
         GetNumber(*j, "heldActor", heldActor);
         GetNumber(*j, "thumbSize", thumbSize);
         thumbSize = std::clamp(thumbSize, 48, 256);
+        GetBool(*j, "showDetails", showDetails);
         GetString(*j, "lastPreset", lastPreset);
         GetBool(*j, "splitPanels", splitPanels);
         GetNumber(*j, "panelOpacity", panelOpacity);
@@ -130,6 +131,7 @@ namespace mtfui::io {
         j["holdTarget"] = holdTarget;
         j["heldActor"] = heldActor;
         j["thumbSize"] = thumbSize;
+        j["showDetails"] = showDetails;
         j["lastPreset"] = lastPreset;
         j["splitPanels"] = splitPanels;
         j["panelOpacity"] = panelOpacity;
