@@ -204,6 +204,7 @@ namespace mtfui::ui {
             if (id != targetId) {
                 return;
             }
+            std::erase_if(names, [](const std::string& n) { return model::IEquals(n, game::kPreviewPreset); });
             applied = std::move(names);
             appliedKnown = true;
         });
