@@ -260,6 +260,76 @@ namespace mtfui::ui {
         });
     }
 
+    void App::CopyTiersFrom(const std::string& target, const std::string& source) {
+        const auto paste = [this, target, source] {
+            const auto* info = FindLibrary(source);
+            std::string error;
+            auto json = info ? io::ReadJson(info->path, &error) : std::nullopt;
+            if (!json || !json->is_object()) {
+                Toast("Could not read " + source + (error.empty() ? std::string{} : ": " + error), true);
+                return;
+            }
+            if (!ed.preset || !model::IEquals(ed.preset->name, target) || ed.isNew) {
+                LoadPresetNow(target);
+            }
+            if (!ed.preset || !model::IEquals(ed.preset->name, target)) {
+                return;
+            }
+            const auto src = model::PresetFromJson(info->name, *json);
+            model::CopyTiers(*ed.preset, src);
+            Toast("Copied the tiers of " + src.displayName + " into " + ed.preset->displayName + ". Save to keep them.");
+        };
+        if (ed.preset && model::IEquals(ed.preset->name, target) && !ed.isNew) {
+            paste();
+        } else {
+            WhenSafe(paste);
+        }
+    }
+
+    void App::SetGroup(const std::string& name, std::string group) {
+        group.erase(0, group.find_first_not_of(' '));
+        group.erase(group.find_last_not_of(' ') + 1);
+        const auto path = cat.PresetPath(name);
+        std::string error;
+        auto json = io::ReadJson(path, &error);
+        if (!json || !json->is_object()) {
+            Toast("Only your own presets can be grouped", true);
+            return;
+        }
+        if (!io::Backup(path, paths.uiDir / "backups", 10, &error)) {
+            logger::warn("No backup of {} before regrouping: {}", name, error);
+        }
+        if (group.empty()) {
+            json->erase(model::kGroupKey);
+        } else {
+            (*json)[model::kGroupKey] = group;
+        }
+        if (!io::WriteJsonStyled(path, *json, &error)) {
+            Toast("Could not move " + name + ": " + error, true);
+            return;
+        }
+        if (ed.preset && model::IEquals(ed.preset->name, name) && !ed.isNew) {
+            for (auto* p : { &*ed.preset, &ed.saved, &ed.committed }) {
+                p->group = group;
+            }
+        }
+        game::MtfBridge::Get().PresetChanged(name, false);
+        ReloadLibrary();
+        logger::info("Moved preset {} to group '{}'", name, group);
+    }
+
+    std::vector<std::string> App::Groups() const {
+        std::vector<std::string> out;
+        for (const auto& info : library) {
+            if (!info.builtin && !info.group.empty() &&
+                std::none_of(out.begin(), out.end(), [&](const std::string& g) { return model::IEquals(g, info.group); })) {
+                out.push_back(info.group);
+            }
+        }
+        std::sort(out.begin(), out.end(), [](const std::string& a, const std::string& b) { return io::ToLower(a) < io::ToLower(b); });
+        return out;
+    }
+
     void App::MoveTier(int from, int to) {
         if (ed.preset && model::MoveTier(*ed.preset, from, to)) {
             ed.slot = to;

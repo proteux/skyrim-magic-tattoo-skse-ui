@@ -6,8 +6,6 @@
 #include "ui/Tabs.h"
 #include "ui/Widgets.h"
 
-#include <set>
-
 namespace mtfui::ui {
     using namespace ImGuiMCP;
 
@@ -24,10 +22,6 @@ namespace mtfui::ui {
             Source source = Source::All;
             std::string pack;
             std::string search;
-            std::string area;  // "" = any
-            std::string subject;
-            std::string style;
-            std::string placement;
             std::string selected;  // key
             std::string newFrom;   // key of the tattoo a new preset is being named for
             std::string newName;
@@ -38,47 +32,21 @@ namespace mtfui::ui {
             return io::ToLower(p.packId + "/" + e.id);
         }
 
-        bool FilterCombo(const char* label, const char* prefix, std::string& value, const std::set<std::string>& options, float width) {
-            bool changed = false;
-            SetNextItemWidth(width);
-            const std::string preview = std::string{ prefix } + ": " + (value.empty() ? "Any" : value);
-            if (BeginCombo(label, preview.c_str())) {
-                if (Selectable("Any", value.empty())) {
-                    value.clear();
-                    changed = true;
-                }
-                for (const auto& o : options) {
-                    if (Selectable(o.c_str(), o == value)) {
-                        value = o;
-                        changed = true;
-                    }
-                }
-                EndCombo();
-            }
-            return changed;
-        }
-
         // Everything the visible list depends on. The list is rebuilt only when this changes, not every frame.
         struct CollectKey {
             int catalog = -1;
             Source source = Source::All;
-            std::string pack, search, area, subject, style, placement;
+            std::string pack, search;
             std::vector<std::string> keys;  // favorites or recents, when those are the source
             bool operator==(const CollectKey&) const = default;
         };
         CollectKey g_collectKey;
         std::vector<Item> g_items;
 
-        struct FilterOptions {
-            int catalog = -1;
-            std::set<std::string> areas, subjects, styles, placements;
-        };
-        FilterOptions g_filters;
-
         std::vector<Item> Collect(App& app);
 
         const std::vector<Item>& Items(App& app) {
-            CollectKey key{ app.cat.generation, g.source, g.pack, g.search, g.area, g.subject, g.style, g.placement, {} };
+            CollectKey key{ app.cat.generation, g.source, g.pack, g.search, {} };
             if (g.source == Source::Favorites) {
                 key.keys = app.settings.favorites;
             } else if (g.source == Source::Recent) {
@@ -91,28 +59,6 @@ namespace mtfui::ui {
             return g_items;
         }
 
-        const FilterOptions& Filters(App& app) {
-            if (g_filters.catalog != app.cat.generation) {
-                g_filters = {};
-                g_filters.catalog = app.cat.generation;
-                for (const auto& p : app.cat.packs) {
-                    g_filters.areas.insert(p.area);
-                    for (const auto& e : p.entries) {
-                        if (!e.subject.empty()) {
-                            g_filters.subjects.insert(e.subject);
-                        }
-                        if (!e.style.empty()) {
-                            g_filters.styles.insert(e.style);
-                        }
-                        if (!e.placement.empty()) {
-                            g_filters.placements.insert(e.placement);
-                        }
-                    }
-                }
-            }
-            return g_filters;
-        }
-
         // The tier the tattoo goes on: the one being picked for, or the selected one.
         int TargetSlot(App& app) {
             const int slot = app.picking ? app.pickSlot : app.ed.slot;
@@ -122,18 +68,6 @@ namespace mtfui::ui {
         std::vector<Item> Collect(App& app) {
             std::vector<Item> items;
             auto push = [&](const model::VisualPack& p, const model::VisualEntry& e) {
-                if (!g.area.empty() && p.area != g.area) {
-                    return;
-                }
-                if (!g.subject.empty() && e.subject != g.subject) {
-                    return;
-                }
-                if (!g.style.empty() && e.style != g.style) {
-                    return;
-                }
-                if (!g.placement.empty() && e.placement != g.placement) {
-                    return;
-                }
                 if (!MatchesSearch(e.label + " " + e.id + " " + p.label + " " + p.area + " " + e.subject + " " + e.style + " " + e.placement + " " + e.description, g.search)) {
                     return;
                 }
@@ -234,28 +168,18 @@ namespace mtfui::ui {
         }
 
         void DrawToolbar(App& app) {
-            const auto& filters = Filters(app);
-            const float combo = 170.0f;
             Flow flow;
             flow.Next(220.0f);
             SearchBox("##tsearch", g.search, 220.0f, "Search tattoos");
             flow.Next(230.0f);
             DrawSourceCombo(app, 230.0f);
-            flow.Next(combo);
-            FilterCombo("##area", "Area", g.area, filters.areas, combo);
-            if (!filters.subjects.empty()) {
-                flow.Next(combo);
-                FilterCombo("##subject", "Subject", g.subject, filters.subjects, combo);
-            }
-            if (!filters.styles.empty()) {
-                flow.Next(combo);
-                FilterCombo("##style", "Style", g.style, filters.styles, combo);
-            }
-            if (!filters.placements.empty()) {
-                flow.Next(combo);
-                FilterCombo("##placement", "Placement", g.placement, filters.placements, combo);
-            }
-            flow.Next(180.0f);
+        }
+
+        float FooterHeight() {
+            return GetFrameHeight() + GetStyle()->ItemSpacing.y;
+        }
+
+        void DrawFooter(App& app) {
             SetNextItemWidth(180.0f);
             SliderInt("##thumbsize", &app.settings.thumbSize, 64, 256, "Thumbnails %d px");
             if (IsItemDeactivatedAfterEdit()) {
@@ -265,7 +189,9 @@ namespace mtfui::ui {
                 SetTooltip("Ctrl+mouse wheel over the grid also zooms.");
             }
             const char* detailsLabel = app.settings.showDetails ? "Hide details" : "Show details";
-            flow.Next(ButtonWidth(detailsLabel));
+            const float right = GetWindowContentRegionMax().x - ButtonWidth(detailsLabel);
+            SameLine();
+            SetCursorPosX(std::max(GetCursorPosX(), right));
             if (Button(detailsLabel)) {
                 app.settings.showDetails = !app.settings.showDetails;
                 app.SaveSettings();
@@ -273,7 +199,7 @@ namespace mtfui::ui {
         }
 
         bool AnyFilter() {
-            return !g.search.empty() || g.source != Source::All || !g.area.empty() || !g.subject.empty() || !g.style.empty() || !g.placement.empty();
+            return !g.search.empty() || g.source != Source::All;
         }
 
         void DrawChips(App& app, std::size_t count) {
@@ -297,26 +223,10 @@ namespace mtfui::ui {
             if (g.source != Source::All) {
                 chip("source", (g.source == Source::Pack ? "Pack: " : "Show: ") + SourceLabel(app), [] { g.source = Source::All; });
             }
-            if (!g.area.empty()) {
-                chip("area", "Area: " + g.area, [] { g.area.clear(); });
-            }
-            if (!g.subject.empty()) {
-                chip("subject", "Subject: " + g.subject, [] { g.subject.clear(); });
-            }
-            if (!g.style.empty()) {
-                chip("style", "Style: " + g.style, [] { g.style.clear(); });
-            }
-            if (!g.placement.empty()) {
-                chip("placement", "Placement: " + g.placement, [] { g.placement.clear(); });
-            }
             flow.Next(ButtonWidth("Clear all"));
             if (SmallButton("Clear all")) {
                 g.search.clear();
                 g.source = Source::All;
-                g.area.clear();
-                g.subject.clear();
-                g.style.clear();
-                g.placement.clear();
             }
             const std::string countText = std::to_string(count) + (count == 1 ? " tattoo" : " tattoos");
             flow.Next(CalcTextSize(countText.c_str()).x);
@@ -377,7 +287,7 @@ namespace mtfui::ui {
 
         void DrawGrid(App& app, const std::vector<Item>& items, float width) {
             const auto* input = GetIO();
-            if (!BeginChild("##tgrid", ImVec2{ width, 0 }, ImGuiChildFlags_Border, input->KeyCtrl ? ImGuiWindowFlags_NoScrollWithMouse : 0)) {
+            if (!BeginChild("##tgrid", ImVec2{ width, -FooterHeight() }, ImGuiChildFlags_Border, input->KeyCtrl ? ImGuiWindowFlags_NoScrollWithMouse : 0)) {
                 EndChild();
                 return;
             }
@@ -493,7 +403,7 @@ namespace mtfui::ui {
         }
 
         void DrawDetails(App& app, const std::vector<Item>& items) {
-            if (!BeginChild("##tdetail", ImVec2{ 0, 0 }, ImGuiChildFlags_Border)) {
+            if (!BeginChild("##tdetail", ImVec2{ 0, -FooterHeight() }, ImGuiChildFlags_Border)) {
                 EndChild();
                 return;
             }
@@ -627,6 +537,7 @@ namespace mtfui::ui {
         } else {
             DrawGrid(app, shown, 0.0f);
         }
+        DrawFooter(app);
         DrawNewPresetPopup(app);
     }
 }

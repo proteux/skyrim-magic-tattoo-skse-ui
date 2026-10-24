@@ -159,6 +159,8 @@ namespace mtfui::ui {
             DrawTargetBar(*this);
         }
 
+        // The Tattoos tab draws its own footer where the status line would go.
+        bool ownFooter = false;
         if (BeginTabBar("##mtfui_tabs")) {
             auto tab = [&](const char* label, Tab t, void (*fn)(App&)) {
                 const int flags = requestedTab_ == t ? ImGuiTabItemFlags_SetSelected : 0;
@@ -166,7 +168,8 @@ namespace mtfui::ui {
                     if (requestedTab_ == t) {
                         requestedTab_.reset();
                     }
-                    const float footer = targetBar ? GetFrameHeight() + 8.0f : 0.0f;
+                    ownFooter = t == Tab::Tattoos;
+                    const float footer = targetBar && !ownFooter ? GetFrameHeight() + 8.0f : 0.0f;
                     if (BeginChild("##tab", ImVec2{ 0, -footer })) {
                         fn(*this);
                     }
@@ -183,7 +186,7 @@ namespace mtfui::ui {
             EndTabBar();
         }
         // While the editor windows are up, the strip at the top shows the status.
-        if (targetBar) {
+        if (targetBar && !ownFooter) {
             Separator();
             DrawStatus();
         }

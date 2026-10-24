@@ -65,6 +65,7 @@ namespace mtfui::game {
             // Papyrus never answered (script lag, or a call MTF doesn't have): let the next edit try again.
             logger::warn("Live preview got no answer from MTF within {}s", kBusyTimeout.count());
             busy_ = false;
+            lastActor_ = 0;
             ++generation_;
             status_ = "MTF did not respond to the preview";
         }
@@ -111,6 +112,7 @@ namespace mtfui::game {
                         status_ = "Previewing";
                     } else {
                         applied_ = 0;
+                        lastActor_ = 0;
                         status_ = "Preview failed: " + ApplyResultText(rc);
                     }
                 });
@@ -126,6 +128,7 @@ namespace mtfui::game {
     void LivePreview::Stop() {
         pending_.reset();
         last_ = nlohmann::json();
+        lastActor_ = 0;
         const auto actors = touched_;
         touched_.clear();
         applied_ = 0;
@@ -153,6 +156,7 @@ namespace mtfui::game {
         applied_ = 0;
         pending_.reset();
         last_ = nlohmann::json();
+        lastActor_ = 0;
         busy_ = false;
         status_.clear();
     }

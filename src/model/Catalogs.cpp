@@ -2,6 +2,7 @@
 
 #include "io/JsonStore.h"
 #include "io/UiSettings.h"
+#include "model/Preset.h"
 
 #include <algorithm>
 
@@ -151,6 +152,9 @@ namespace mtfui::model {
                 if (auto j = io::ReadJson(f); j && j->is_object()) {
                     if (auto d = j->find("displayname"); d != j->end() && d->is_string()) {
                         info.displayName = d->get<std::string>();
+                    }
+                    if (auto g = j->find(kGroupKey); g != j->end() && g->is_string()) {
+                        info.group = g->get<std::string>();
                     }
                     if (auto h = j->find("hidden"); h != j->end() && h->is_number()) {
                         info.hidden = h->get<int>();

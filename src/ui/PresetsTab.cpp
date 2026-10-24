@@ -16,8 +16,100 @@ namespace mtfui::ui {
             std::string nameDraft;
             NameAction nameAction = NameAction::None;
             std::string deleteName;
+            std::string groupTarget;  // preset waiting for a new group name
+            std::string groupDraft;
+            // Regrouping reloads app.library, so it waits until the list is drawn.
+            std::optional<std::pair<std::string, std::string>> move;  // preset name, group
         };
         PresetsTabState g;
+
+        void DrawGroupMenu(const model::PresetFileInfo& info, const std::vector<std::string>& groups) {
+            if (!BeginMenu("Move to group")) {
+                return;
+            }
+            for (const auto& group : groups) {
+                if (MenuItem(group.c_str(), nullptr, model::IEquals(group, info.group))) {
+                    g.move.emplace(info.name, group);
+                }
+            }
+            if (!groups.empty()) {
+                Separator();
+            }
+            if (MenuItem("New group...")) {
+                g.groupTarget = info.name;
+                g.groupDraft.clear();
+            }
+            if (!info.group.empty() && MenuItem("Remove from group")) {
+                g.move.emplace(info.name, std::string{});
+            }
+            ImGuiMCP::EndMenu();
+        }
+
+        void DrawLibraryItem(App& app, const model::PresetFileInfo& info, const std::vector<std::string>& groups, float onMarkerX) {
+            PushID(info.name.c_str());
+            const bool open = app.HasPreset() && model::IEquals(app.Preset().name, info.name) && !app.ed.isNew;
+            const bool applied = app.IsApplied(info.name);
+            std::string label = info.displayName;
+            if (open && app.Dirty()) {
+                label += " *";
+            }
+            if (Selectable(label.c_str(), open)) {
+                app.Open(info.name);
+            }
+            if (!info.builtin && BeginDragDropSource()) {
+                SetDragDropPayload("MTFUI_PRESET", info.name.c_str(), info.name.size() + 1);
+                Text("Move %s to a group", info.displayName.c_str());
+                EndDragDropSource();
+            }
+            if (IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
+                SetTooltip("%s.json%s", info.name.c_str(), applied ? "\nApplied to the current target" : "");
+            }
+            if (applied) {
+                SameLine(onMarkerX);
+                TextColored(kGood, "on");
+            }
+            if (BeginPopupContextItem("##ctx")) {
+                if (MenuItem("Apply to target")) {
+                    app.ApplyToTarget(info.name);
+                }
+                if (applied && MenuItem("Remove from target")) {
+                    app.RemoveFromTarget(info.name);
+                }
+                if (!info.builtin) {
+                    DrawGroupMenu(info, groups);
+                }
+                if (!info.builtin && BeginMenu("Copy tiers from")) {
+                    TextDisabled("Keeps this preset's Default tattoo");
+                    Separator();
+                    for (const auto& other : app.library) {
+                        if (model::IEquals(other.name, info.name)) {
+                            continue;
+                        }
+                        PushID(other.name.c_str());
+                        if (MenuItem(other.displayName.c_str(), other.builtin ? "built-in" : nullptr)) {
+                            app.CopyTiersFrom(info.name, other.name);
+                        }
+                        PopID();
+                    }
+                    ImGuiMCP::EndMenu();
+                }
+                if (!info.builtin && MenuItem("Delete...")) {
+                    g.deleteName = info.name;
+                }
+                EndPopup();
+            }
+            PopID();
+        }
+
+        // Drops a dragged preset into group ("" = ungrouped) when released over the last item.
+        void GroupDropTarget(const std::string& group) {
+            if (BeginDragDropTarget()) {
+                if (const auto* payload = AcceptDragDropPayload("MTFUI_PRESET")) {
+                    g.move.emplace(static_cast<const char*>(payload->Data), group);
+                }
+                EndDragDropTarget();
+            }
+        }
 
         void DrawLibrary(App& app) {
             if (app.focusSearch) {
@@ -42,51 +134,99 @@ namespace mtfui::ui {
 
             if (BeginChild("##list")) {
                 const float onMarkerX = GetContentRegionAvail().x - CalcTextSize("on").x;
-                bool builtinHeader = false;
-                for (const auto& info : app.library) {
-                    if (!MatchesSearch(info.displayName + " " + info.name, g.search)) {
+                const auto groups = app.Groups();
+                const bool searching = !g.search.empty();
+                const std::string openName = app.HasPreset() && !app.ed.isNew ? app.Preset().name : std::string{};
+                auto matches = [&](const model::PresetFileInfo& info) { return MatchesSearch(info.displayName + " " + info.name + " " + info.group, g.search); };
+
+                for (const auto& group : groups) {
+                    std::vector<const model::PresetFileInfo*> members;
+                    bool holdsOpen = false;
+                    for (const auto& info : app.library) {
+                        if (!info.builtin && model::IEquals(info.group, group) && matches(info)) {
+                            members.push_back(&info);
+                            holdsOpen |= model::IEquals(info.name, openName);
+                        }
+                    }
+                    if (members.empty()) {
                         continue;
                     }
-                    if (info.builtin && !builtinHeader) {
+                    if (searching) {
+                        SetNextItemOpen(true);
+                    } else if (holdsOpen) {
+                        SetNextItemOpen(true, ImGuiCond_Appearing);
+                    }
+                    const std::string header = group + "  (" + std::to_string(members.size()) + ")###grp_" + io::ToLower(group);
+                    const bool expanded = TreeNodeEx(header.c_str(), ImGuiTreeNodeFlags_SpanAvailWidth);
+                    GroupDropTarget(group);
+                    if (expanded) {
+                        for (const auto* info : members) {
+                            DrawLibraryItem(app, *info, groups, onMarkerX);
+                        }
+                        TreePop();
+                    }
+                }
+
+                bool ungroupedHeader = false;
+                for (const auto& info : app.library) {
+                    if (info.builtin || !info.group.empty() || !matches(info)) {
+                        continue;
+                    }
+                    if (!groups.empty() && !ungroupedHeader) {
+                        SeparatorText("Ungrouped");
+                        GroupDropTarget({});
+                        ungroupedHeader = true;
+                    }
+                    DrawLibraryItem(app, info, groups, onMarkerX);
+                }
+
+                bool builtinHeader = false;
+                for (const auto& info : app.library) {
+                    if (!info.builtin || !matches(info)) {
+                        continue;
+                    }
+                    if (!builtinHeader) {
                         SeparatorText("Built-in (read-only)");
                         builtinHeader = true;
                     }
-                    PushID(info.name.c_str());
-                    const bool open = app.HasPreset() && model::IEquals(app.Preset().name, info.name) && !app.ed.isNew;
-                    const bool applied = app.IsApplied(info.name);
-                    std::string label = info.displayName;
-                    if (open && app.Dirty()) {
-                        label += " *";
-                    }
-                    if (Selectable(label.c_str(), open)) {
-                        app.Open(info.name);
-                    }
-                    if (IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
-                        SetTooltip("%s.json%s", info.name.c_str(), applied ? "\nApplied to the current target" : "");
-                    }
-                    if (applied) {
-                        SameLine(onMarkerX);
-                        TextColored(kGood, "on");
-                    }
-                    if (BeginPopupContextItem("##ctx")) {
-                        if (MenuItem("Apply to target")) {
-                            app.ApplyToTarget(info.name);
-                        }
-                        if (applied && MenuItem("Remove from target")) {
-                            app.RemoveFromTarget(info.name);
-                        }
-                        if (!info.builtin && MenuItem("Delete...")) {
-                            g.deleteName = info.name;
-                        }
-                        EndPopup();
-                    }
-                    PopID();
+                    DrawLibraryItem(app, info, groups, onMarkerX);
                 }
                 if (app.library.empty()) {
                     TextWrapped("No presets yet. Click New to start one.");
                 }
             }
             EndChild();
+
+            if (g.move) {
+                const auto [name, group] = *g.move;
+                g.move.reset();
+                app.SetGroup(name, group);
+            }
+
+            if (!g.groupTarget.empty() && !IsPopupOpen("New group")) {
+                OpenPopup("New group");
+            }
+            if (BeginPopupModal("New group", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+                if (IsWindowAppearing()) {
+                    SetKeyboardFocusHere();
+                }
+                SetNextItemWidth(260);
+                const bool enter = InputString("##group", g.groupDraft, "Group name", ImGuiInputTextFlags_EnterReturnsTrue, 64);
+                const bool valid = g.groupDraft.find_first_not_of(' ') != std::string::npos;
+                BeginDisabled(!valid);
+                if (Button("Move", ImVec2{ 100, 0 }) || (enter && valid)) {
+                    app.SetGroup(g.groupTarget, g.groupDraft);
+                    g.groupTarget.clear();
+                    CloseCurrentPopup();
+                }
+                EndDisabled();
+                SameLine();
+                if (Button("Cancel", ImVec2{ 100, 0 }) || IsKeyPressed(ImGuiKey_Escape, false)) {
+                    g.groupTarget.clear();
+                    CloseCurrentPopup();
+                }
+                EndPopup();
+            }
 
             if (!g.deleteName.empty()) {
                 OpenPopup("Delete preset?");
@@ -290,6 +430,22 @@ namespace mtfui::ui {
             if (!app.ed.isNew && model::SanitizePresetName(p.displayName) != p.name) {
                 HelpMarker("The file name stays the same when you rename, so anything already using this preset keeps working.");
             }
+
+            SetNextItemWidth(260 - GetFrameHeight() - GetStyle()->ItemInnerSpacing.x);
+            InputString("##groupname", p.group, "No group", 0, 64);
+            SameLine(0, GetStyle()->ItemInnerSpacing.x);
+            if (BeginCombo("Group", nullptr, ImGuiComboFlags_NoPreview)) {
+                if (Selectable("No group", p.group.empty())) {
+                    p.group.clear();
+                }
+                for (const auto& group : app.Groups()) {
+                    if (Selectable(group.c_str(), model::IEquals(group, p.group))) {
+                        p.group = group;
+                    }
+                }
+                EndCombo();
+            }
+            HelpMarker("Folder for this preset in the list. Only this UI uses it; MTF ignores it.");
 
             if (CollapsingHeader("Preset options")) {
                 float duration = static_cast<float>(p.transitionDuration);

@@ -339,6 +339,7 @@ namespace mtfui::model {
         p.name = name;
         p.raw = j.is_object() ? j : Json::object();
         p.displayName = GetStr(j, "displayname", name);
+        p.group = GetStr(j, kGroupKey);
         p.hidden = static_cast<int>(GetInt(j, "hidden", 0));
         p.schemaVersion = static_cast<int>(GetInt(j, "schemaversion", 1));
         p.transitionDuration = GetFloat(Child(j, "transition"), "duration", 1.0);
@@ -384,6 +385,11 @@ namespace mtfui::model {
         Json j = preset.raw.is_object() ? preset.raw : Json::object();
         j["hidden"] = 0;
         j["displayname"] = preset.displayName;
+        if (preset.group.empty()) {
+            j.erase(kGroupKey);
+        } else {
+            j[kGroupKey] = preset.group;
+        }
         j["schemaversion"] = kSchemaVersion;
         ObjectAt(j, "transition")["duration"] = PapyrusFloat(preset.transitionDuration);
         Json& fade = ObjectAt(j, "fadeondeath");
@@ -477,5 +483,15 @@ namespace mtfui::model {
         const auto vis = ResolveVisual(preset, from);
         const Slot src = preset.slots[from];
         SetLook(preset.slots[to], to == 0, src, vis);
+    }
+
+    void CopyTiers(Preset& dst, const Preset& src) {
+        if (src.slots.empty()) {
+            return;
+        }
+        Slot base = dst.slots.empty() ? DefaultSlot() : dst.slots[0];
+        base.effects = src.slots[0].effects;
+        dst.slots = src.slots;
+        dst.slots[0] = std::move(base);
     }
 }

@@ -18,6 +18,7 @@ namespace mtfui::model {
     struct PresetFileInfo {
         std::string name;
         std::string displayName;
+        std::string group;
         fs::path path;
         bool builtin = false;
         int hidden = 0;

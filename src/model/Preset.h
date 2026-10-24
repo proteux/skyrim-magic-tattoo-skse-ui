@@ -19,6 +19,7 @@ namespace mtfui::model {
     inline constexpr int kConditionCap = 8;
     inline constexpr int kSchemaVersion = 9;
     inline constexpr const char* kNoTexture = "<none>";
+    inline constexpr const char* kGroupKey = "mtfui_group";  // ours; MTF ignores it
 
     // A catalog parameter value: sliders and colors are ints, menus and text are string ids.
     using ParamValue = std::variant<std::int64_t, std::string>;
@@ -88,6 +89,7 @@ namespace mtfui::model {
     struct Preset {
         std::string name;  // file stem; MTF's identifier
         std::string displayName;
+        std::string group;  // library folder; "" = ungrouped
         int hidden = 0;  // 1 = deleted tombstone
         int schemaVersion = kSchemaVersion;
         double transitionDuration = 1.0;
@@ -96,7 +98,7 @@ namespace mtfui::model {
         Json raw = Json::object();
 
         bool operator==(const Preset& o) const {
-            return name == o.name && displayName == o.displayName && hidden == o.hidden && transitionDuration == o.transitionDuration &&
+            return name == o.name && displayName == o.displayName && group == o.group && hidden == o.hidden && transitionDuration == o.transitionDuration &&
                    fade == o.fade && slots == o.slots;
         }
     };
@@ -132,4 +134,8 @@ namespace mtfui::model {
     // Default's tattoo still inherits when pasted onto another tier; pasted onto Default, it gets the tattoo it showed.
     void SetLook(Slot& dst, bool dstIsDefault, const Slot& src, const ResolvedVisual& srcVisual);
     void CopyLook(Preset& preset, int from, int to);
+
+    // Replaces dst's tiers with src's (conditions, timing, looks, effects) and takes Default's effects too. Default's
+    // tattoo, layers and pulse stay dst's, so tiers that inherit the base tattoo show dst's.
+    void CopyTiers(Preset& dst, const Preset& src);
 }

@@ -101,6 +101,9 @@ namespace mtfui::ui {
         void ImportFromClipboard();
         void ApplyLintFix(const model::LintIssue& issue);
         void MoveTier(int from, int to);  // keeps the moved tier selected
+        void CopyTiersFrom(const std::string& target, const std::string& source);  // opens target, unsaved and undoable
+        void SetGroup(const std::string& name, std::string group);  // writes the file now; open edits are kept
+        std::vector<std::string> Groups() const;  // sorted, user presets only
 
         void SetTarget(RE::FormID id, std::string name);
         void ApplyToTarget(const std::string& name);

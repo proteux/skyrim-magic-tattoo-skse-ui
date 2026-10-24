@@ -63,6 +63,31 @@ namespace {
         Check(count > 0, "fixtures contain presets");
     }
 
+    void Groups(const fs::path& fixtures) {
+        const auto j = *io::ReadJson(fixtures / "presets" / "riDDEN_WET.json");
+        auto preset = model::PresetFromJson("riDDEN_WET", j);
+        Check(preset.group.empty(), "fixture presets have no group");
+        Check(!model::PresetToJson(preset).contains(model::kGroupKey), "an empty group writes no key");
+        preset.group = "Combat";
+        const auto grouped = model::PresetToJson(preset);
+        Check(grouped.value(model::kGroupKey, std::string{}) == "Combat", "group is written");
+        Check(model::PresetFromJson("riDDEN_WET", grouped) == preset, "group survives a reload");
+        auto ungrouped = model::PresetFromJson("riDDEN_WET", grouped);
+        ungrouped.group.clear();
+        Check(!model::PresetToJson(ungrouped).contains(model::kGroupKey), "clearing the group removes the key");
+
+        const auto dir = fs::temp_directory_path() / "mtfui_group_test";
+        fs::remove_all(dir);
+        fs::copy(fixtures, dir, fs::copy_options::recursive);
+        io::WriteJsonStyled(dir / "presets" / "riDDEN_WET.json", grouped);
+        model::Catalogs cat;
+        cat.Load(dir);
+        const auto list = cat.ListPresets(false);
+        const auto it = std::find_if(list.begin(), list.end(), [](const model::PresetFileInfo& i) { return i.name == "riDDEN_WET"; });
+        Check(it != list.end() && it->group == "Combat", "the library reads the group");
+        fs::remove_all(dir);
+    }
+
     void Formatting() {
         Check(io::FormatDouble(1.0) == "1.0", "1.0 formats as 1.0");
         Check(io::FormatDouble(static_cast<float>(0.6)) == "0.60000002384185791", "float 0.6 widens like JsonUtil");
@@ -109,6 +134,18 @@ namespace {
         for (const auto& i : model::LintPreset(cat, fixed, {})) {
             Check(i.message.find("never activate") == std::string::npos, "no shadow once reordered: " + i.message);
         }
+
+        auto rebased = model::NewPreset("Rebased", "Rebased");
+        rebased.slots[0].packId = "other.pack";
+        rebased.slots[0].entryId = "otherentry";
+        rebased.slots[0].layers[0].tint = 0x123456;
+        model::CopyTiers(rebased, dragon);
+        Check(rebased.slots.size() == dragon.slots.size(), "copied tiers keep the source's tier count");
+        Check(std::equal(dragon.slots.begin() + 1, dragon.slots.end(), rebased.slots.begin() + 1), "copied tiers match the source");
+        Check(rebased.slots[0].packId == "other.pack" && rebased.slots[0].entryId == "otherentry" && rebased.slots[0].layers[0].tint == 0x123456,
+            "copying tiers keeps the Default look");
+        Check(rebased.slots[0].effects == dragon.slots[0].effects, "copying tiers takes Default's effects");
+        Check(model::ResolveVisual(rebased, 1).packId == "other.pack", "inheriting tiers follow the new Default tattoo");
 
         const auto presets = cat.ListPresets(false);
         Check(presets.size() == 6, "lists the fixture presets");
@@ -455,6 +492,7 @@ int main(int argc, char** argv) {
     const fs::path fixtures = argc > 1 ? argv[1] : "tests/fixtures";
     Formatting();
     RoundTripPresets(fixtures);
+    Groups(fixtures);
     Catalogs(fixtures);
     AtomicWrite();
     LintRules(fixtures);
