@@ -177,9 +177,14 @@ namespace mtfui::ui {
             bool effects = false;
             model::Slot tier;
             model::Slot base;  // Default, which the tier may inherit its tattoo from
+            std::vector<std::string> suspend;
             bool operator==(const PreviewInputs&) const = default;
         };
         std::optional<PreviewInputs> previewInputs_;
+        // Applied presets the preview takes off while it runs: the open preset, and any showing the same tattoo.
+        std::vector<std::string> PreviewSuspends(int slot);
+        // Tattoos ("pack/entry", lowercase) each applied preset can show, read once per library reload.
+        std::map<std::string, std::vector<std::string>> appliedLooks_;
         struct LintInputs {
             std::uint64_t textures = 0;
             bool fresh = false;

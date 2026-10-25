@@ -99,7 +99,9 @@ namespace mtfui::ui {
             }
         }
         HelpMarker("Shows the selected tier's tattoo, colors and pulse on the target while you edit, through MTF itself. "
-                   "Uses a temporary preset that is removed when you close this menu or load a save.");
+                   "Uses a temporary preset that is removed when you close this menu or load a save. "
+                   "Presets on the target that would draw the same tattoo again (including the one you're editing) "
+                   "are hidden while it runs and put back afterwards.");
         if (app.livePreview) {
             SameLine();
             Checkbox("with effects", &app.previewEffects);
@@ -144,6 +146,13 @@ namespace mtfui::ui {
                     TextColored(kAccent, "Live preview (temporary)");
                 } else {
                     TextUnformatted(info ? info->displayName.c_str() : name.c_str());
+                    if (game::LivePreview::Get().IsSuspended(app.targetId, name)) {
+                        SameLine();
+                        TextDisabled("(hidden by preview)");
+                        if (IsItemHovered()) {
+                            SetTooltip("Taken off while the live preview shows the same tattoo. It goes back on when the preview stops.");
+                        }
+                    }
                 }
                 SameLine(260);
                 if (!preview && SmallButton("Edit")) {

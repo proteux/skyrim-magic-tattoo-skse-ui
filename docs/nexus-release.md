@@ -85,7 +85,7 @@ Then add screenshots taken in game at 1920x1080 or larger:
 1. The editor windows open over a character wearing a glowing tattoo, with the tier ladder visible.
 2. The tier ladder with its sentence summaries and the checks panel showing a warning.
 3. The tattoo browser with filters and a large preview.
-4. The Look tab with the 2D preview, beside the live preview on the character.
+4. The Appearance tab with the 2D preview, beside the live preview on the character.
 5. The preset library with groups expanded.
 6. The General tab overlay slot map.
 

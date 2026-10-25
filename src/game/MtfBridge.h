@@ -58,6 +58,11 @@ namespace mtfui::game {
         void Remove(RE::FormID actor, const std::string& name, std::function<void()> done);
         void ListApplied(RE::FormID actor, std::function<void(std::vector<std::string>)> done);
 
+        // Presets the live preview took off an actor, stored on the actor with StorageUtil so the list lives in the
+        // save: a save made mid-preview gets them back on load, and older saves never see the list.
+        void WriteSuspended(RE::FormID actor, std::vector<std::string> names, std::function<void()> done = {});
+        void ReadSuspended(RE::FormID actor, std::function<void(std::vector<std::string>)> done);
+
         // Thread hand-off.
         static void RunOnGame(std::function<void()> fn);
         static void PostToUi(std::function<void()> fn);

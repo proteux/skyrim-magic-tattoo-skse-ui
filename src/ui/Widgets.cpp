@@ -16,19 +16,32 @@ namespace mtfui::ui {
         return changed;
     }
 
-    bool ColorEditRgb(const char* label, std::uint32_t& rgb) {
-        float c[3] = { ((rgb >> 16) & 0xFF) / 255.0f, ((rgb >> 8) & 0xFF) / 255.0f, (rgb & 0xFF) / 255.0f };
-        if (ColorEdit3(label, c, ImGuiColorEditFlags_DisplayHex)) {
-            auto to = [](float f) { return static_cast<std::uint32_t>(std::clamp(f, 0.0f, 1.0f) * 255.0f + 0.5f); };
-            rgb = (to(c[0]) << 16) | (to(c[1]) << 8) | to(c[2]);
-            return true;
+    namespace {
+        bool ColorEditFlags(const char* label, std::uint32_t& rgb, int flags) {
+            float c[3] = { ((rgb >> 16) & 0xFF) / 255.0f, ((rgb >> 8) & 0xFF) / 255.0f, (rgb & 0xFF) / 255.0f };
+            if (ColorEdit3(label, c, flags)) {
+                auto to = [](float f) { return static_cast<std::uint32_t>(std::clamp(f, 0.0f, 1.0f) * 255.0f + 0.5f); };
+                rgb = (to(c[0]) << 16) | (to(c[1]) << 8) | to(c[2]);
+                return true;
+            }
+            return false;
         }
-        return false;
     }
 
-    bool ColorEditRgb(const char* label, std::uint32_t& rgb, const std::vector<model::NamedColor>& palette) {
+    bool ColorEditRgb(const char* label, std::uint32_t& rgb) {
+        return ColorEditFlags(label, rgb, ImGuiColorEditFlags_DisplayHex);
+    }
+
+    bool ColorEditRgb(const char* label, std::uint32_t& rgb, const std::vector<model::NamedColor>& palette, float inputWidth, const char* help) {
         PushID(label);
-        bool changed = ColorEditRgb(label, rgb);
+        TextUnformatted(label);
+        if (help) {
+            HelpMarker(help);
+        }
+        SetNextItemWidth(inputWidth);
+        bool changed = ColorEditFlags("##hex", rgb, ImGuiColorEditFlags_DisplayHex | ImGuiColorEditFlags_NoSmallPreview | ImGuiColorEditFlags_NoLabel);
+        SameLine();
+        changed |= ColorEditFlags("##swatch", rgb, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
         if (!palette.empty()) {
             SameLine();
             if (SmallButton("Palette")) {

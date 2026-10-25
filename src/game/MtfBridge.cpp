@@ -31,6 +31,8 @@ namespace mtfui::game {
             return obj ? obj->GetProperty(name) : nullptr;
         }
 
+        constexpr const char* kSuspendedKey = "mtfui_suspended";
+
         const char* AreaProperty(int area) {
             static constexpr const char* names[] = { "OverlaySlot", "FaceOverlaySlot", "HandOverlaySlot", "FeetOverlaySlot" };
             return names[std::clamp(area, 0, 3)];
@@ -442,6 +444,73 @@ namespace mtfui::game {
                     }
                 },
                 std::move(a));
+        });
+    }
+
+    void MtfBridge::WriteSuspended(RE::FormID actor, std::vector<std::string> names, std::function<void()> done) {
+        done = Guarded(std::move(done));
+        RunOnGame([actor, names = std::move(names), done = std::move(done)] {
+            std::function<void()> finish = [done] {
+                if (done) {
+                    PostToUi(done);
+                }
+            };
+            RE::TESForm* form = ActorFor(actor);
+            if (!form) {
+                finish();
+                return;
+            }
+            CallStatic(
+                "StorageUtil", "StringListClear",
+                [actor, names, finish](const RE::BSScript::Variable&) {
+                    RE::TESForm* form = ActorFor(actor);
+                    if (!form || names.empty()) {
+                        finish();
+                        return;
+                    }
+                    auto remaining = std::make_shared<std::atomic<int>>(static_cast<int>(names.size()));
+                    for (const auto& n : names) {
+                        CallStatic(
+                            "StorageUtil", "StringListAdd",
+                            [remaining, finish](const RE::BSScript::Variable&) {
+                                if (--*remaining == 0) {
+                                    finish();
+                                }
+                            },
+                            form, RE::BSFixedString(kSuspendedKey), RE::BSFixedString(n), false);
+                    }
+                },
+                form, RE::BSFixedString(kSuspendedKey));
+        });
+    }
+
+    void MtfBridge::ReadSuspended(RE::FormID actor, std::function<void(std::vector<std::string>)> done) {
+        if (!done) {
+            return;
+        }
+        done = Guarded(std::move(done));
+        RunOnGame([actor, done = std::move(done)] {
+            RE::TESForm* form = ActorFor(actor);
+            if (!form) {
+                PostToUi([done] { done({}); });
+                return;
+            }
+            CallStatic(
+                "StorageUtil", "StringListToArray",
+                [done](const RE::BSScript::Variable& r) {
+                    std::vector<std::string> out;
+                    if (r.IsArray()) {
+                        if (auto arr = r.GetArray()) {
+                            for (std::uint32_t i = 0; i < arr->size(); ++i) {
+                                if ((*arr)[i].IsString() && !(*arr)[i].GetString().empty()) {
+                                    out.emplace_back((*arr)[i].GetString());
+                                }
+                            }
+                        }
+                    }
+                    PostToUi([done, out] { done(out); });
+                },
+                form, RE::BSFixedString(kSuspendedKey));
         });
     }
 

@@ -14,8 +14,8 @@ namespace mtfui::ui {
 
     bool InputString(const char* label, std::string& value, const char* hint = nullptr, int flags = 0, std::size_t capacity = 256);
     bool ColorEditRgb(const char* label, std::uint32_t& rgb);
-    // Same, with a swatch button that opens the palette, and the nearest palette name beside it.
-    bool ColorEditRgb(const char* label, std::uint32_t& rgb, const std::vector<model::NamedColor>& palette);
+    // Label and help marker on one line, then hex box (inputWidth wide), swatch, Palette button, nearest palette name.
+    bool ColorEditRgb(const char* label, std::uint32_t& rgb, const std::vector<model::NamedColor>& palette, float inputWidth, const char* help = nullptr);
     // Edits one catalog parameter, converting between the int/string storage forms.
     bool ParamEditor(const char* id, const model::ParamSpec& spec, model::ParamValue& value, float width);
     void HelpMarker(const char* text);

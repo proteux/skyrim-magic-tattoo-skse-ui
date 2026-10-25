@@ -2,6 +2,7 @@
 
 #include "ui/App.h"
 
+#include "game/LivePreview.h"
 #include "game/MtfBridge.h"
 #include "io/JsonStore.h"
 #include "ui/Widgets.h"
@@ -410,12 +411,16 @@ namespace mtfui::ui {
         ReloadLibrary();
         const std::string name = p.name;
         const std::string display = p.displayName;
-        const bool wearing = IsApplied(name);
+        // Hidden by the live preview: it goes back on, edits included, when the preview stops.
+        const bool hidden = game::LivePreview::Get().IsSuspended(targetId, name);
+        const bool wearing = IsApplied(name) && !hidden;
         // The target can change before MTF answers; refresh the one that was wearing it.
         const auto target = targetId;
         const auto who = targetName;
-        game::MtfBridge::Get().PresetChanged(name, false, [this, name, display, wearing, target, who] {
-            if (wearing) {
+        game::MtfBridge::Get().PresetChanged(name, false, [this, name, display, wearing, hidden, target, who] {
+            if (hidden) {
+                Toast("Saved " + display + ". " + who + " shows it again when the live preview stops");
+            } else if (wearing) {
                 // MTF redraws on tier changes only; re-applying shows the edit right away.
                 game::MtfBridge::Get().Remove(target, name, [this, target, name, display, who] {
                     game::MtfBridge::Get().Apply(target, name, [this, display, who](int rc) {

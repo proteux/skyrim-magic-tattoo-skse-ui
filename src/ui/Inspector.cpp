@@ -77,10 +77,6 @@ namespace mtfui::ui {
         }
 
         void DrawConditionTab(App& app, model::Slot& s, int slot) {
-            if (slot == 0) {
-                TextWrapped("Default has no conditions. It is used whenever none of the tiers above match.");
-                return;
-            }
             InputString("Tier name", s.name, "optional, e.g. Warming", 0, 33);
             HelpMarker("Only for your reference in this list and in MTF's menu.");
             Spacing();
@@ -251,16 +247,15 @@ namespace mtfui::ui {
                 TextDisabled(vis.none ? "No tattoo is shown for this tier; only its effects run." : "Tattoo not found in the installed packs.");
             }
 
-            SeparatorText("Layers");
-            for (int l = 0; l < model::kLayerCount; ++l) {
+            // Layers past the tattoo's texture count draw nothing, so they aren't offered.
+            if (usedLayers > 0) {
+                SeparatorText("Layers");
+            }
+            for (int l = 0; l < usedLayers; ++l) {
                 auto& layer = s.layers[l];
                 PushID(l);
-                const bool used = l < usedLayers;
-                std::string header = "Layer " + std::to_string(l + 1);
-                if (!used) {
-                    header += entry ? "  (this tattoo has no texture here)" : "";
-                }
-                SetNextItemOpen(used, ImGuiCond_Appearing);
+                const std::string header = "Layer " + std::to_string(l + 1);
+                SetNextItemOpen(true, ImGuiCond_Appearing);
                 const bool open = CollapsingHeader((header + "###layer").c_str());
                 if (BeginPopupContextItem("##layerctx")) {
                     if (MenuItem("Copy layer")) {
@@ -277,11 +272,8 @@ namespace mtfui::ui {
                     EndPopup();
                 }
                 if (open) {
-                    if (!used) {
-                        PushStyleColor(ImGuiCol_Text, kMuted);
-                    }
-                    ColorEditRgb("Tint", layer.tint, app.cat.colors);
-                    HelpMarker("Multiplies the tattoo's own color. White keeps the original ink.");
+                    constexpr float kFieldWidth = 220;
+                    ColorEditRgb("Tint", layer.tint, app.cat.colors, kFieldWidth, "Multiplies the tattoo's own color. White keeps the original ink.");
                     if (usedLayers > 1) {
                         SameLine();
                         if (SmallButton("To all")) {
@@ -294,20 +286,19 @@ namespace mtfui::ui {
                         }
                     }
                     int alpha = static_cast<int>(layer.alpha);
-                    SetNextItemWidth(220);
+                    SetNextItemWidth(kFieldWidth);
                     if (SliderInt("Opacity", &alpha, 0, 100, "%d%%")) {
                         layer.alpha = alpha;
                     }
-                    ColorEditRgb("Glow color", layer.emissive, app.cat.colors);
+                    HelpMarker("How solid this layer's ink is. 100% is fully opaque, 0% hides the layer.");
+                    ColorEditRgb("Glow color", layer.emissive, app.cat.colors, kFieldWidth,
+                        "Color of the light the tattoo gives off. Black means no glow whatever the strength.");
                     float mult = static_cast<float>(layer.emissiveMult);
-                    SetNextItemWidth(220);
+                    SetNextItemWidth(kFieldWidth);
                     if (SliderFloat("Glow strength", &mult, 0.0f, 10.0f, "%.2f")) {
                         layer.emissiveMult = mult;
                     }
                     HelpMarker("0 = no glow. The pulse animates this value.");
-                    if (!used) {
-                        PopStyleColor();
-                    }
                 }
                 PopID();
             }
@@ -361,7 +352,7 @@ namespace mtfui::ui {
                 glows = glows || l.emissiveMult > 0.0;
             }
             if (s.pulse.rate > 0.0 && !glows) {
-                TextColored(kWarn, "The pulse animates glow, but no layer has glow strength above 0 (Look tab).");
+                TextColored(kWarn, "The pulse animates glow, but no layer has glow strength above 0 (Appearance tab).");
             }
         }
 
@@ -492,11 +483,12 @@ namespace mtfui::ui {
             const auto requested = app.inspectorTab;
             app.inspectorTab.reset();
             auto flags = [&](model::LintTab t) { return requested == t ? ImGuiTabItemFlags_SetSelected : 0; };
-            if (BeginTabItem("Condition", nullptr, flags(model::LintTab::Condition))) {
+            // Default applies whenever no tier matches, so it has no conditions to edit.
+            if (slot > 0 && BeginTabItem("Condition", nullptr, flags(model::LintTab::Condition))) {
                 DrawConditionTab(app, s, slot);
                 EndTabItem();
             }
-            if (BeginTabItem("Look", nullptr, flags(model::LintTab::Look))) {
+            if (BeginTabItem("Appearance", nullptr, flags(model::LintTab::Look))) {
                 DrawLookTab(app, s, slot);
                 EndTabItem();
             }

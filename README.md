@@ -44,7 +44,7 @@ Open the SKSE Menu Framework menu (F1 by default) and choose **Magic Tattoos**. 
 - **The whole preset on one screen.** Tiers are listed in priority order, top wins, with Default at the bottom. Each one has a sentence summary like "When the wearer is at least 50% aroused: Dragon Coil, pulsing at 1.2/s, 2 effects", plus a thumbnail of its tattoo.
 - **Drag tiers to reorder them**, or select one and press Alt+Up / Alt+Down. Right-click a tier to move it, clear it, copy another tier's look, or copy it and paste it into another tier or preset, whole or just its look, conditions, effects, or timing.
 - **Copy and paste layers and pulses.** Right-click a layer header to copy, paste, or use its colors on every layer, and use **Copy pulse** / **Paste pulse** on the Pulse tab. Color pickers have a **Palette** button with MTF's named colors.
-- **An inspector for the selected tier** with Condition, Look, Pulse, Effects, and Timing tabs. Every condition and effect comes from the installed plugin catalogs, with its own sliders and menus, and is described in plain words as you edit it.
+- **An inspector for the selected tier** with Condition, Appearance, Pulse, Effects, and Timing tabs. Every condition and effect comes from the installed plugin catalogs, with its own sliders and menus, and is described in plain words as you edit it.
 - **Built-in checks.** The editor warns about mistakes MTF won't tell you about:
   - a tier that can never activate because a higher tier always wins first (for example "at least 50%" above "at least 80%");
   - a tier without a condition;
@@ -66,7 +66,7 @@ Open the SKSE Menu Framework menu (F1 by default) and choose **Magic Tattoos**. 
 
 ### Previews
 
-- **2D preview** on the Look tab. It shows the tattoo over the target's skin texture with each layer's tint, opacity, and glow, and animates the pulse with the chosen waveform. Scroll to zoom, drag to pan, and double-click to reset.
+- **2D preview** on the Appearance tab. It shows the tattoo over the target's skin texture with each layer's tint, opacity, and glow, and animates the pulse with the chosen waveform. Scroll to zoom, drag to pan, and double-click to reset.
 - **Live preview** shows the tier you're editing on the selected target in the game while you edit it. It updates a moment after each change. Turn on **with effects** to also run the tier's effects. The preview is removed when you close the menu, and also on the next load if the game exits first.
 
 ### Targets

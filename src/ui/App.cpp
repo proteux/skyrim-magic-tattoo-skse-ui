@@ -78,9 +78,10 @@ namespace mtfui::ui {
             overlayCapacity_["Feet"]);
 
         game::LivePreview::Get().Init(paths.mtfRoot / "presets_builtin", settings.previewActors, [this](const std::vector<RE::FormID>& ids) {
-                settings.previewActors = ids;
-                SaveSettings();
-            });
+            settings.previewActors = ids;
+            SaveSettings();
+        });
+        game::LivePreview::Get().SetListeners([this](const std::string& error) { Toast(error, true); }, [this] { RefreshApplied(); });
         ReloadAll();
         if (auto draft = io::ReadJson(DraftPath()); draft && draft->is_object()) {
             draftOffer_ = true;
@@ -114,6 +115,7 @@ namespace mtfui::ui {
         std::vector<model::PresetFileInfo> mine;
         std::copy_if(library.begin(), library.end(), std::back_inserter(mine), [](const model::PresetFileInfo& i) { return !i.builtin; });
         usage = model::BuildUsage(cat, mine);
+        appliedLooks_.clear();
     }
 
     void App::Toast(std::string text, bool error) {
@@ -205,12 +207,22 @@ namespace mtfui::ui {
                 return;
             }
             std::erase_if(names, [](const std::string& n) { return model::IEquals(n, game::kPreviewPreset); });
+            // Taken off only for the preview: still applied as far as the user is concerned.
+            for (const auto& s : game::LivePreview::Get().SuspendedOn(id)) {
+                if (std::none_of(names.begin(), names.end(), [&](const std::string& n) { return model::IEquals(n, s); })) {
+                    names.push_back(s);
+                }
+            }
             applied = std::move(names);
             appliedKnown = true;
         });
     }
 
     void App::ApplyToTarget(const std::string& name) {
+        if (game::LivePreview::Get().IsSuspended(targetId, name)) {
+            Toast(name + " is already on " + targetName + ". It's hidden until the live preview stops.");
+            return;
+        }
         game::MtfBridge::Get().Apply(targetId, name, [this, name](int rc) {
             Toast(name + ": " + game::ApplyResultText(rc) + (rc == 1 ? " to " + targetName : ""), rc < 0);
             RefreshApplied();
@@ -218,6 +230,13 @@ namespace mtfui::ui {
     }
 
     void App::RemoveFromTarget(const std::string& name) {
+        auto& lp = game::LivePreview::Get();
+        if (lp.IsSuspended(targetId, name)) {
+            lp.Forget(targetId, name);
+            Toast("Removed " + name + " from " + targetName);
+            RefreshApplied();
+            return;
+        }
         game::MtfBridge::Get().Remove(targetId, name, [this, name] {
             Toast("Removed " + name + " from " + targetName);
             RefreshApplied();
@@ -225,10 +244,57 @@ namespace mtfui::ui {
     }
 
     void App::RemoveAllFromTarget() {
+        auto& lp = game::LivePreview::Get();
         for (const auto& n : applied) {
-            game::MtfBridge::Get().Remove(targetId, n, [this] { RefreshApplied(); });
+            if (lp.IsSuspended(targetId, n)) {
+                lp.Forget(targetId, n);
+            } else {
+                game::MtfBridge::Get().Remove(targetId, n, [this] { RefreshApplied(); });
+            }
         }
         Toast("Removing " + std::to_string(applied.size()) + " preset(s) from " + targetName);
+        RefreshApplied();
+    }
+
+    std::vector<std::string> App::PreviewSuspends(int slot) {
+        const auto& lp = game::LivePreview::Get();
+        if (!appliedKnown) {
+            // Don't put anything back just because MTF hasn't answered yet.
+            return lp.SuspendedOn(targetId);
+        }
+        const auto vis = model::ResolveVisual(*ed.preset, slot);
+        const std::string look = vis.none ? std::string{} : io::ToLower(vis.packId + "/" + vis.entryId);
+        std::vector<std::string> out;
+        for (const auto& name : applied) {
+            if (!ed.isNew && model::IEquals(name, ed.preset->name)) {
+                out.push_back(name);
+                continue;
+            }
+            if (look.empty()) {
+                continue;
+            }
+            const auto key = io::ToLower(name);
+            auto it = appliedLooks_.find(key);
+            if (it == appliedLooks_.end()) {
+                std::vector<std::string> looks;
+                if (const auto* info = FindLibrary(name)) {
+                    if (auto json = io::ReadJson(info->path); json && json->is_object()) {
+                        const auto p = model::PresetFromJson(info->name, *json);
+                        for (int i = 0; i < static_cast<int>(p.slots.size()); ++i) {
+                            const auto v = model::ResolveVisual(p, i);
+                            if (!v.none && !v.packId.empty()) {
+                                looks.push_back(io::ToLower(v.packId + "/" + v.entryId));
+                            }
+                        }
+                    }
+                }
+                it = appliedLooks_.emplace(key, std::move(looks)).first;
+            }
+            if (std::find(it->second.begin(), it->second.end(), look) != it->second.end()) {
+                out.push_back(name);
+            }
+        }
+        return out;
     }
 
     void App::UpdatePreview() {
@@ -241,12 +307,12 @@ namespace mtfui::ui {
         }
         // Building the preview document every frame is wasteful; only a change to what it is built from matters.
         const int slot = std::clamp(ed.slot, 0, static_cast<int>(ed.preset->slots.size()) - 1);
-        PreviewInputs in{ targetId, slot, previewEffects, ed.preset->slots[slot], ed.preset->slots[0] };
+        PreviewInputs in{ targetId, slot, previewEffects, ed.preset->slots[slot], ed.preset->slots[0], PreviewSuspends(slot) };
         if (lp.Active() && previewInputs_ == in) {
             return;
         }
         previewInputs_ = std::move(in);
-        lp.Request(targetId, *ed.preset, slot, previewEffects);
+        lp.Request(targetId, *ed.preset, slot, previewEffects, previewInputs_->suspend);
     }
 
     void App::SaveSettings() {
