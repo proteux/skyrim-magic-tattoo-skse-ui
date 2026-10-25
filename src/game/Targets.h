@@ -25,12 +25,13 @@ namespace mtfui::game {
     std::optional<ActorInfo> Describe(RE::FormID id);
     SkinInfo SkinFor(RE::FormID id);
 
-    // Keeps at most one NPC in place by switching its AI off; 0 lets the held one go. Never touches the
-    // player, and only switches back on AI that it switched off. Returns the actor now held, or 0.
+    // Keeps at most one NPC in place by blocking its movement, and tells a follower to wait; 0 lets the held one
+    // go. AI keeps running so live previews still redraw. Never touches the player, and releasing only undoes
+    // what holding changed. Returns the actor now held, or 0.
     RE::FormID HoldStill(RE::FormID id);
-    // After a load: switches an actor held in an earlier session back on, if its AI is still off.
+    // After a load: lets an actor held in an earlier session move again.
     void ReleaseLeftover(RE::FormID id);
-    // Right before a save is written, so the save never has the NPC frozen. Returns the actor that was released, or 0.
+    // Right before a save is written, so the save never has the NPC held. Returns the actor that was released, or 0.
     RE::FormID ReleaseForSave();
 
     // Normalizes a texture path to the form BSResource expects ("textures\..." prefix, backslashes).

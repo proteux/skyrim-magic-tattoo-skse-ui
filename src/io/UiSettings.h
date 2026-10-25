@@ -18,6 +18,9 @@ namespace mtfui::io {
         bool open = false;
     };
 
+    inline constexpr int kThumbSizeMin = 64;
+    inline constexpr int kThumbSizeMax = 512;
+
     // Our own settings, stored apart from MTF's data in SKSE/Plugins/MagicTattoosUI/settings.json.
     struct UiSettings {
         std::vector<std::string> favorites;  // "packid/entryid", lowercase
@@ -25,7 +28,7 @@ namespace mtfui::io {
         bool pauseGame = true;
         bool livePreviewEnabled = true;
         bool holdTarget = true;  // NPC targets stand still while the editor is open
-        int thumbSize = 96;
+        int thumbSize = 256;
         bool showDetails = true;  // Tattoos tab details pane
         bool splitPanels = true;  // standalone window as separate panels instead of one tabbed window
         int panelOpacity = 100;   // percent, panel backgrounds only

@@ -87,8 +87,8 @@ namespace mtfui::ui {
         if (Checkbox("Hold in place", &app.settings.holdTarget)) {
             app.SaveSettings();
         }
-        HelpMarker("Switches the target's AI off while this menu is open so they stop walking away. "
-                   "It comes back on when you close the menu or pick someone else. Never applies to you.");
+        HelpMarker("Stops the target walking away while this menu is open, and tells a follower to wait. "
+                   "They can move again when you close the menu or pick someone else. Never applies to you.");
 
         SameLine(0, 20);
         BeginDisabled(!mtf);

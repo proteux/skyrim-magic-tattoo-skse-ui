@@ -263,7 +263,7 @@ namespace mtfui::ui {
 
         SeparatorText("This menu");
         SetNextItemWidth(260);
-        SliderInt("Thumbnail size", &app.settings.thumbSize, 64, 256, "%d px");
+        ThumbSizeSlider("Thumbnail size", app.settings.thumbSize);
         if (IsItemDeactivatedAfterEdit()) {
             app.SaveSettings();
         }

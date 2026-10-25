@@ -181,7 +181,7 @@ namespace mtfui::ui {
 
         void DrawFooter(App& app) {
             SetNextItemWidth(180.0f);
-            SliderInt("##thumbsize", &app.settings.thumbSize, 64, 256, "Thumbnails %d px");
+            ThumbSizeSlider("##thumbsize", app.settings.thumbSize);
             if (IsItemDeactivatedAfterEdit()) {
                 app.SaveSettings();
             }
@@ -262,7 +262,7 @@ namespace mtfui::ui {
 
         void DrawHoverPreview(App& app, const Item& it, float thumb) {
             BeginTooltip();
-            const float zoom = std::clamp(thumb * 2.5f, 256.0f, 512.0f);
+            const float zoom = std::clamp(thumb * 2.0f, 256.0f, 768.0f);
             const ImVec2 p = GetCursorScreenPos();
             Dummy(ImVec2{ zoom, zoom });
             render::DrawThumbAt(GetWindowDrawList(), p, zoom, it.entry->textures.empty() ? std::string{} : it.entry->textures.front());
@@ -294,7 +294,7 @@ namespace mtfui::ui {
             bool zoomed = false;
             if (input->KeyCtrl && input->MouseWheel != 0.0f && IsWindowHovered()) {
                 const int before = app.settings.thumbSize;
-                app.settings.thumbSize = std::clamp(app.settings.thumbSize + (input->MouseWheel > 0.0f ? 16 : -16), 64, 256);
+                app.settings.thumbSize = std::clamp(app.settings.thumbSize + (input->MouseWheel > 0.0f ? 32 : -32), io::kThumbSizeMin, io::kThumbSizeMax);
                 zoomed = app.settings.thumbSize != before;
                 g_zoomUnsaved = g_zoomUnsaved || zoomed;
             }

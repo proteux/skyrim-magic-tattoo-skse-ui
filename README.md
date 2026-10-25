@@ -4,7 +4,7 @@ A friendlier editor for Magic Tattoos Framework, with previews.
 
 ## Description
 
-[Magic Tattoos Framework](https://github.com/levchimik/magic-tattoos-framework) (MTF) makes tattoos react to what is happening to the wearer: arousal, combat, magicka, the time of day, and anything else its plugins can detect. Setting it up through MTF's own menu means scrolling through long pages of sliders and remembering which tier is which.
+[Magic Tattoos Framework](https://www.nexusmods.com/skyrimspecialedition/mods/180775) (MTF) makes tattoos react to what is happening to the wearer: arousal, combat, magicka, the time of day, and anything else its plugins can detect. Setting it up through MTF's own menu means scrolling through long pages of sliders and remembering which tier is which.
 
 Magic Tattoos UI replaces those pages with one window in the [SKSE Menu Framework](https://www.nexusmods.com/skyrimspecialedition/mods/120352) menu. You see a whole preset at once as a ladder of tiers, each described in a plain sentence. You pick tattoos from a thumbnail browser and watch the result on a 2D preview, or live on yourself or an NPC, before you save.
 
@@ -15,7 +15,7 @@ It edits the same preset files MTF uses, so everything you make works with MTF's
 - [SKSE64](https://skse.silverlock.org/)
 - [Address Library for SKSE Plugins](https://www.nexusmods.com/skyrimspecialedition/mods/32444)
 - [SKSE Menu Framework](https://www.nexusmods.com/skyrimspecialedition/mods/120352)
-- [Magic Tattoos Framework](https://github.com/levchimik/magic-tattoos-framework) and its requirements (RaceMenu, PapyrusUtil SE)
+- [Magic Tattoos Framework](https://www.nexusmods.com/skyrimspecialedition/mods/180775) and its requirements (RaceMenu, PapyrusUtil SE)
 
 Built for Skyrim SE/AE 1.6.1170 with CommonLibSSE-NG, which also supports 1.5.97.
 
@@ -115,6 +115,8 @@ See `docs/lessons.md` for how MTF applies preset changes and other notes for wor
 
 ## Credits
 
-- levchimik, for Magic Tattoos Framework
-- Thiago099, for SKSE Menu Framework
+- [levchimik](https://www.nexusmods.com/profile/levchimik/mods?gameId=1704), for Magic Tattoos Framework
+- [SkyrimThiago](https://www.nexusmods.com/profile/SkyrimThiago?gameId=1704), for SKSE Menu Framework
+- [Lyru](https://www.nexusmods.com/profile/ItsLyru/mods?gameId=1704), for the tattoo packs shown in the screenshots
+- [Caenarvon](https://www.nexusmods.com/profile/Caenarvon/mods?gameId=1704), for the clothing in the sample screenshot
 - The CommonLibSSE-NG contributors

@@ -133,48 +133,88 @@ namespace mtfui::game {
     }
 
     namespace {
-        RE::FormID g_held = 0;
+        using Flag = RE::Actor::BOOL_FLAGS;
 
-        void EnableAIOn(RE::FormID id) {
-            auto* actor = RE::TESForm::LookupByID<RE::Actor>(id);
-            if (actor && !actor->IsAIEnabled()) {
-                actor->EnableAI(true);
+        // What HoldStill changed on the held actor, so releasing undoes exactly that and nothing else.
+        struct Held {
+            RE::FormID id = 0;
+            bool blockedMovement = false;
+            bool setWaiting = false;
+            float waitingBefore = 0.0f;
+        };
+        Held g_held;
+
+        // Switching AI off would also stop the actor's updates, and with them the live preview.
+        void Hold(RE::Actor* actor) {
+            g_held = { actor->GetFormID() };
+            auto& flags = actor->GetActorRuntimeData().boolFlags;
+            if (!flags.all(Flag::kMovementBlocked)) {
+                flags.set(Flag::kMovementBlocked);
+                g_held.blockedMovement = true;
+            }
+            auto* av = actor->AsActorValueOwner();
+            if (actor->IsPlayerTeammate() && av) {
+                const float before = av->GetActorValue(RE::ActorValue::kWaitingForPlayer);
+                if (before == 0.0f) {
+                    av->SetActorValue(RE::ActorValue::kWaitingForPlayer, 1.0f);
+                    g_held.setWaiting = true;
+                    g_held.waitingBefore = before;
+                    actor->EvaluatePackage();
+                }
+            }
+        }
+
+        void Release() {
+            const Held held = std::exchange(g_held, {});
+            auto* actor = held.id != 0 ? RE::TESForm::LookupByID<RE::Actor>(held.id) : nullptr;
+            if (!actor) {
+                return;
+            }
+            if (held.blockedMovement) {
+                actor->GetActorRuntimeData().boolFlags.reset(Flag::kMovementBlocked);
+            }
+            if (held.setWaiting) {
+                if (auto* av = actor->AsActorValueOwner()) {
+                    av->SetActorValue(RE::ActorValue::kWaitingForPlayer, held.waitingBefore);
+                }
+                actor->EvaluatePackage();
             }
         }
     }
 
     RE::FormID HoldStill(RE::FormID id) {
-        if (id == g_held) {
-            return g_held;
+        if (id == g_held.id) {
+            return g_held.id;
         }
-        if (g_held != 0) {
-            EnableAIOn(g_held);
-            g_held = 0;
-        }
+        Release();
         auto* actor = id != 0 ? RE::TESForm::LookupByID<RE::Actor>(id) : nullptr;
-        if (actor && !actor->IsPlayerRef() && actor->IsAIEnabled()) {
-            actor->EnableAI(false);
-            g_held = id;
+        if (actor && !actor->IsPlayerRef()) {
+            Hold(actor);
             const char* name = actor->GetDisplayFullName();
-            logger::info("Holding {:08X} ({}) in place", id, name ? name : "");
+            logger::info("Holding {:08X} ({}) in place{}", id, name ? name : "", g_held.setWaiting ? ", told to wait" : "");
         }
-        return g_held;
+        return g_held.id;
     }
 
     void ReleaseLeftover(RE::FormID id) {
-        g_held = 0;
+        g_held = {};
         // FF ids are created at runtime and reused, so in this session the id may name an unrelated actor.
-        if (id != 0 && (id >> 24) != 0xFF) {
-            logger::info("Switching AI back on for {:08X}, held when the game last quit", id);
-            EnableAIOn(id);
+        auto* actor = id != 0 && (id >> 24) != 0xFF ? RE::TESForm::LookupByID<RE::Actor>(id) : nullptr;
+        if (!actor) {
+            return;
+        }
+        logger::info("Letting {:08X} move again, held when the game last quit", id);
+        actor->GetActorRuntimeData().boolFlags.reset(Flag::kMovementBlocked);
+        // Builds before 1.2 held actors by switching their AI off.
+        if (!actor->IsAIEnabled()) {
+            actor->EnableAI(true);
         }
     }
 
     RE::FormID ReleaseForSave() {
-        const RE::FormID id = g_held;
+        const RE::FormID id = g_held.id;
         if (id != 0) {
-            EnableAIOn(id);
-            g_held = 0;
+            Release();
             logger::info("Released {:08X} before saving", id);
         }
         return id;

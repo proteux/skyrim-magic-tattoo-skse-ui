@@ -21,6 +21,8 @@ namespace mtfui::ui {
     void HelpMarker(const char* text);
     void SeverityText(model::Severity s, const std::string& text);
     const ImGuiMCP::ImVec4& SeverityColor(model::Severity s);
+    // Thumbnail size slider labelled from small to large rather than in pixels.
+    bool ThumbSizeSlider(const char* label, int& size);
     // Filter box; returns true when text changed.
     bool SearchBox(const char* id, std::string& text, float width, const char* hint = "Search");
 

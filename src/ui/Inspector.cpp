@@ -189,7 +189,7 @@ namespace mtfui::ui {
             const auto* entry = vis.none ? nullptr : app.cat.FindEntry(vis.packId, vis.entryId);
             if (mode == Choose) {
                 const auto* pack = app.cat.FindPack(s.packId);
-                SetNextItemWidth(200);
+                SetNextItemWidth(-FLT_MIN);
                 if (BeginCombo("##pack", pack ? pack->label.c_str() : s.packId.c_str())) {
                     for (const auto& p : app.cat.packs) {
                         if (Selectable((p.label + " (" + p.area + ")##" + p.packId).c_str(), pack == &p)) {
@@ -199,8 +199,7 @@ namespace mtfui::ui {
                     }
                     EndCombo();
                 }
-                SameLine();
-                SetNextItemWidth(200);
+                SetNextItemWidth(-FLT_MIN);
                 if (BeginCombo("##entry", entry ? entry->label.c_str() : (s.entryId.empty() ? "(choose)" : s.entryId.c_str()), ImGuiComboFlags_HeightLarge)) {
                     if (pack) {
                         for (const auto& e : pack->entries) {
@@ -211,17 +210,11 @@ namespace mtfui::ui {
                     }
                     EndCombo();
                 }
-                SameLine();
             }
-            if (Button("Browse tattoos...")) {
+            if (Button("Browse tattoos...", ImVec2(-FLT_MIN, 0))) {
                 app.picking = true;
                 app.pickSlot = slot;
                 app.RequestTab(Tab::Tattoos);
-            }
-            if (entry && !entry->description.empty()) {
-                PushStyleColor(ImGuiCol_Text, kMuted);
-                TextWrapped("%s", entry->description.c_str());
-                PopStyleColor();
             }
         }
 
@@ -248,6 +241,12 @@ namespace mtfui::ui {
                 in.waveform = app.cat.FindWaveform(s.pulse.waveform);
                 const float size = std::min(GetContentRegionAvail().x, 380.0f);
                 render::DrawPreview("##preview2d", in, size);
+                if (!entry->description.empty() && TreeNodeEx("Description", ImGuiTreeNodeFlags_SpanAvailWidth)) {
+                    PushStyleColor(ImGuiCol_Text, kMuted);
+                    TextWrapped("%s", entry->description.c_str());
+                    PopStyleColor();
+                    TreePop();
+                }
             } else {
                 TextDisabled(vis.none ? "No tattoo is shown for this tier; only its effects run." : "Tattoo not found in the installed packs.");
             }

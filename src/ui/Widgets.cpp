@@ -150,6 +150,11 @@ namespace mtfui::ui {
         PopTextWrapPos();
     }
 
+    bool ThumbSizeSlider(const char* label, int& size) {
+        const char* word = size < 112 ? "Tiny" : size < 208 ? "Small" : size < 320 ? "Medium" : size < 432 ? "Large" : "Extra large";
+        return SliderInt(label, &size, io::kThumbSizeMin, io::kThumbSizeMax, word, ImGuiSliderFlags_AlwaysClamp | ImGuiSliderFlags_NoInput);
+    }
+
     bool SearchBox(const char* id, std::string& text, float width, const char* hint) {
         SetNextItemWidth(width);
         return InputString(id, text, hint, 0, 128);

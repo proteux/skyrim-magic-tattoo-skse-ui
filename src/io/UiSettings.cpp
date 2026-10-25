@@ -90,7 +90,7 @@ namespace mtfui::io {
         GetBool(*j, "holdTarget", holdTarget);
         GetNumber(*j, "heldActor", heldActor);
         GetNumber(*j, "thumbSize", thumbSize);
-        thumbSize = std::clamp(thumbSize, 48, 256);
+        thumbSize = std::clamp(thumbSize, kThumbSizeMin, kThumbSizeMax);
         GetBool(*j, "showDetails", showDetails);
         GetString(*j, "lastPreset", lastPreset);
         GetBool(*j, "splitPanels", splitPanels);

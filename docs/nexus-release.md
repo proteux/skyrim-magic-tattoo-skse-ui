@@ -19,7 +19,7 @@ The zip holds only `SKSE/Plugins/MagicTattoosUI.dll`, at the root where Vortex e
 | Author | Jack Whitehouse |
 | Version | Same as `VERSION` |
 | Category | User Interface |
-| Adult content | Yes, if MTF itself is only on adult sites, because the arousal conditions come from its plugins. Otherwise No. |
+| Adult content | No, matching MTF's own Nexus page |
 | Language | English |
 
 **Brief overview** (the short summary, 350 characters max):
@@ -40,13 +40,13 @@ Add as Nexus requirements:
 | [SKSE Menu Framework](https://www.nexusmods.com/skyrimspecialedition/mods/120352) | Hosts the editor window |
 | [RaceMenu](https://www.nexusmods.com/skyrimspecialedition/mods/19080) | Required by MTF |
 | [PapyrusUtil SE](https://www.nexusmods.com/skyrimspecialedition/mods/13048) | Required by MTF |
+| [Magic Tattoos Framework](https://www.nexusmods.com/skyrimspecialedition/mods/180775) | The framework this edits |
 
-Add as off-site requirements:
+Add as an off-site requirement:
 
 | Name | URL | Notes |
 | --- | --- | --- |
 | SKSE64 | https://skse.silverlock.org/ | |
-| Magic Tattoos Framework | https://github.com/levchimik/magic-tattoos-framework | The framework this edits |
 
 ## Files tab
 
@@ -75,9 +75,14 @@ The source is GPL-3.0 (see `LICENSE`), so the permissions should allow it:
 
 ## Images
 
-Nexus wants at least one image, and the first one is the thumbnail on listings. Take these in game at 1920x1080 or larger:
+The art matches the white-on-black glowing title of the MTF page, with a yellow glow instead of violet:
 
-1. **Thumbnail:** the editor windows open over a character wearing a glowing tattoo, with the tier ladder visible.
+- **Header banner:** `docs/assets/banner.png` (2560x736, the same shape as MTF's 1300x372 header). Upload it under Manage > Images as the header image.
+- **Cover art:** `docs/assets/cover.png` (1920x1080). Upload it first in the image gallery and set it as the primary image, so it's the thumbnail on listings.
+
+Then add screenshots taken in game at 1920x1080 or larger:
+
+1. The editor windows open over a character wearing a glowing tattoo, with the tier ladder visible.
 2. The tier ladder with its sentence summaries and the checks panel showing a warning.
 3. The tattoo browser with filters and a large preview.
 4. The Look tab with the 2D preview, beside the live preview on the character.
