@@ -15,6 +15,8 @@ namespace mtfui::ui {
             std::string search;
             std::string nameDraft;
             NameAction nameAction = NameAction::None;
+            std::string duplicateSource;  // "" = the open preset
+            bool openNamePrompt = false;  // set from a context menu, whose ID stack can't reach the prompt
             std::string deleteName;
             std::string groupTarget;  // preset waiting for a new group name
             std::string groupDraft;
@@ -43,6 +45,60 @@ namespace mtfui::ui {
                 g.move.emplace(info.name, std::string{});
             }
             ImGuiMCP::EndMenu();
+        }
+
+        // Same layout as the library: a submenu per group, then ungrouped presets, then built-ins.
+        void DrawCopyTiersMenu(App& app, const std::string& target, const std::vector<std::string>& groups) {
+            auto item = [&](const model::PresetFileInfo& other) {
+                PushID(other.name.c_str());
+                if (MenuItem(other.displayName.c_str())) {
+                    app.CopyTiersFrom(target, other.name);
+                }
+                PopID();
+            };
+            auto isSource = [&](const model::PresetFileInfo& other) { return !model::IEquals(other.name, target); };
+
+            for (const auto& group : groups) {
+                const bool any = std::any_of(app.library.begin(), app.library.end(),
+                    [&](const model::PresetFileInfo& o) { return !o.builtin && model::IEquals(o.group, group) && isSource(o); });
+                if (!any) {
+                    continue;
+                }
+                PushID(("grp_" + io::ToLower(group)).c_str());
+                if (BeginMenu(group.c_str())) {
+                    for (const auto& other : app.library) {
+                        if (!other.builtin && model::IEquals(other.group, group) && isSource(other)) {
+                            item(other);
+                        }
+                    }
+                    ImGuiMCP::EndMenu();
+                }
+                PopID();
+            }
+
+            bool separated = groups.empty();
+            for (const auto& other : app.library) {
+                if (other.builtin || !other.group.empty() || !isSource(other)) {
+                    continue;
+                }
+                if (!separated) {
+                    Separator();
+                    separated = true;
+                }
+                item(other);
+            }
+
+            if (std::any_of(app.library.begin(), app.library.end(), [](const model::PresetFileInfo& o) { return o.builtin; })) {
+                Separator();
+                if (BeginMenu("Built-in")) {
+                    for (const auto& other : app.library) {
+                        if (other.builtin) {
+                            item(other);
+                        }
+                    }
+                    ImGuiMCP::EndMenu();
+                }
+            }
         }
 
         void DrawLibraryItem(App& app, const model::PresetFileInfo& info, const std::vector<std::string>& groups, float onMarkerX) {
@@ -75,22 +131,19 @@ namespace mtfui::ui {
                 if (applied && MenuItem("Remove from target")) {
                     app.RemoveFromTarget(info.name);
                 }
+                if (MenuItem("Duplicate...")) {
+                    g.nameAction = NameAction::Duplicate;
+                    g.duplicateSource = info.name;
+                    g.nameDraft = info.displayName + " copy";
+                    g.openNamePrompt = true;
+                }
                 if (!info.builtin) {
                     DrawGroupMenu(info, groups);
                 }
                 if (!info.builtin && BeginMenu("Copy tiers from")) {
                     TextDisabled("Keeps this preset's Default tattoo");
                     Separator();
-                    for (const auto& other : app.library) {
-                        if (model::IEquals(other.name, info.name)) {
-                            continue;
-                        }
-                        PushID(other.name.c_str());
-                        if (MenuItem(other.displayName.c_str(), other.builtin ? "built-in" : nullptr)) {
-                            app.CopyTiersFrom(info.name, other.name);
-                        }
-                        PopID();
-                    }
+                    DrawCopyTiersMenu(app, info.name, groups);
                     ImGuiMCP::EndMenu();
                 }
                 if (!info.builtin && MenuItem("Delete...")) {
@@ -126,6 +179,7 @@ namespace mtfui::ui {
             BeginDisabled(!app.HasPreset());
             if (Button("Duplicate")) {
                 g.nameAction = NameAction::Duplicate;
+                g.duplicateSource.clear();
                 g.nameDraft = app.Preset().displayName + " copy";
                 OpenPopup("Preset name");
             }
@@ -247,13 +301,17 @@ namespace mtfui::ui {
                 EndPopup();
             }
 
+            if (g.openNamePrompt) {
+                g.openNamePrompt = false;
+                OpenPopup("Preset name");
+            }
             if (BeginPopupModal("Preset name", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
                 switch (NamePrompt(g.nameDraft, app.UniqueName(g.nameDraft))) {
                     case NamePromptResult::Confirmed:
                         if (g.nameAction == NameAction::New) {
                             app.CreateNew(g.nameDraft);
                         } else {
-                            app.Duplicate(g.nameDraft);
+                            app.Duplicate(g.nameDraft, g.duplicateSource);
                         }
                         CloseCurrentPopup();
                         break;

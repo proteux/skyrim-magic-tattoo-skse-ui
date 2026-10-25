@@ -88,7 +88,7 @@ namespace mtfui::ui {
         void Open(const std::string& name);  // asks to save first when dirty
         void WhenSafe(std::function<void()> then);  // runs then now, or after the unsaved-changes prompt
         void CreateNew(const std::string& displayName, const std::string& packId = {}, const std::string& entryId = {});  // tattoo goes on Default
-        void Duplicate(const std::string& displayName);
+        void Duplicate(const std::string& displayName, const std::string& source = {});  // source "" = the open preset, edits included
         void Delete(const std::string& name);
         bool Save();
         void Revert();
@@ -135,6 +135,7 @@ namespace mtfui::ui {
         void HandlePlainShortcuts();
         void LoadPresetNow(const std::string& name);
         void CreateNewNow(const std::string& displayName, const std::string& packId, const std::string& entryId);
+        void DuplicateNow(model::Preset copy, const std::string& displayName);
         void ClearEditor();
         // Unsaved edits survive a game exit in drafts/current.json.
         fs::path DraftPath() const;

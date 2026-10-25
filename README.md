@@ -40,6 +40,7 @@ Open the SKSE Menu Framework menu (F1 by default) and choose **Magic Tattoos**. 
 
 ### Presets
 
+- **Groups.** Right-click a preset and choose **Move to group** to sort your library into folders, or **Duplicate...** to copy it under a new name. **Copy tiers from** gives a preset another preset's tiers but keeps its own Default tattoo.
 - **The whole preset on one screen.** Tiers are listed in priority order, top wins, with Default at the bottom. Each one has a sentence summary like "When the wearer is at least 50% aroused: Dragon Coil, pulsing at 1.2/s, 2 effects", plus a thumbnail of its tattoo.
 - **Drag tiers to reorder them**, or select one and press Alt+Up / Alt+Down. Right-click a tier to move it, clear it, copy another tier's look, or copy it and paste it into another tier or preset, whole or just its look, conditions, effects, or timing.
 - **Copy and paste layers and pulses.** Right-click a layer header to copy, paste, or use its colors on every layer, and use **Copy pulse** / **Paste pulse** on the Pulse tab. Color pickers have a **Palette** button with MTF's named colors.

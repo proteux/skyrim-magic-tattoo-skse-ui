@@ -127,11 +127,29 @@ namespace mtfui::ui {
         Relint();
     }
 
-    void App::Duplicate(const std::string& displayName) {
-        if (!ed.preset) {
+    void App::Duplicate(const std::string& displayName, const std::string& source) {
+        const bool fromEditor = source.empty() || (ed.preset && !ed.isNew && model::IEquals(ed.preset->name, source));
+        if (fromEditor) {
+            if (ed.preset) {
+                DuplicateNow(*ed.preset, displayName);
+            }
             return;
         }
-        auto copy = *ed.preset;
+        const auto* info = FindLibrary(source);
+        if (!info) {
+            Toast("Preset '" + source + "' no longer exists", true);
+            return;
+        }
+        std::string error;
+        auto json = io::ReadJson(info->path, &error);
+        if (!json || !json->is_object()) {
+            Toast("Could not read " + io::PathText(info->path.filename()) + ": " + (json ? "not a JSON object" : error), true);
+            return;
+        }
+        WhenSafe([this, displayName, original = model::PresetFromJson(info->name, *json)] { DuplicateNow(original, displayName); });
+    }
+
+    void App::DuplicateNow(model::Preset copy, const std::string& displayName) {
         copy.displayName = displayName;
         copy.name = UniqueName(displayName);
         copy.hidden = 0;
