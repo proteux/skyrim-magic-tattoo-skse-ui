@@ -42,10 +42,16 @@ namespace mtfui::ui {
         game::MtfBridge::RunOnGame([this, id] {
             const RE::FormID held = game::HoldStill(id);
             game::MtfBridge::PostToUi([this, held] {
-                if (settings.heldActor != held) {
-                    settings.heldActor = held;
-                    SaveSettings();
+                auto& ids = settings.heldActors;
+                if (held == 0 || (!ids.empty() && ids.front() == held)) {
+                    return;
                 }
+                std::erase(ids, held);
+                ids.insert(ids.begin(), held);
+                if (ids.size() > 32) {
+                    ids.resize(32);
+                }
+                SaveSettings();
             });
         });
     }
@@ -346,6 +352,17 @@ namespace mtfui::ui {
     }
 
     void App::OnMenuClose() {
+        // Closing the main menu (F1) with the editor windows still up lets the player walk around; the target stays
+        // held and the preview keeps running until those windows close.
+        if (window_ && window_->IsOpen) {
+            SaveSettings();
+            return;
+        }
+        OnEditorClose();
+    }
+
+    void App::OnEditorClose() {
+        logger::info("Editor closed");
         HoldVanityCamera(false);
         HoldActor(0);
         game::LivePreview::Get().Stop();
@@ -363,11 +380,7 @@ namespace mtfui::ui {
         appliedKnown = false;
         game::LivePreview::Get().Cleanup();
         holdWanted_ = 0;
-        game::MtfBridge::RunOnGame([id = settings.heldActor] { game::ReleaseLeftover(id); });
-        if (settings.heldActor != 0) {
-            settings.heldActor = 0;
-            SaveSettings();
-        }
+        game::MtfBridge::RunOnGame([ids = settings.heldActors] { game::ReleaseLeftover({ ids.begin(), ids.end() }); });
         game::MtfBridge::Get().Refresh();
     }
 
@@ -467,6 +480,10 @@ namespace mtfui::ui {
         beganFrame_ = GetFrameCount();
         HoldVanityCamera(true);
         HoldActor(settings.holdTarget ? targetId : 0);
+        if (holdWanted_ != 0 && GetTime() - lastHoldCheck_ > 0.25) {
+            lastHoldCheck_ = GetTime();
+            game::MtfBridge::RunOnGame([] { game::CheckHold(); });
+        }
         game::MtfBridge::DrainUi();
         HandleShortcuts();
     }

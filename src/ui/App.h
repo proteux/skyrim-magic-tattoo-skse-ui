@@ -48,7 +48,7 @@ namespace mtfui::ui {
         void DrawSection();
         void DrawWindow();
         void OnMenuOpen();
-        void OnMenuClose();
+        void OnMenuClose();  // the framework's main menu; the editor windows may stay open without it
         void OnGameLoaded();
         void OnSaving();  // game thread, right before a save is written
 
@@ -128,6 +128,7 @@ namespace mtfui::ui {
         io::PanelState& Panel(const std::string& key);
         void HandlePanelRequests();
         void ShowEditorWindows(bool show);
+        void OnEditorClose();  // lets the target go and stops the preview
         void DrawStatus();
         void DrawModals();
         void CommitFrame();
@@ -163,6 +164,7 @@ namespace mtfui::ui {
         bool initialized_ = false;
         bool vanityHeld_ = false;
         RE::FormID holdWanted_ = 0;
+        double lastHoldCheck_ = 0.0;
         bool resetLayout_ = false;
         bool placeAlways_ = false;  // this frame, saved panel rects override wherever the user dragged them
         bool peeking_ = false;

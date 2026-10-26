@@ -36,8 +36,8 @@ namespace mtfui::io {
         std::string lastPreset;
         // Actors that have worn the live preview, newest first: every load removes it from them.
         std::vector<std::uint32_t> previewActors;
-        // NPC whose AI this menu switched off: switched back on at the next load if it's still set.
-        std::uint32_t heldActor = 0;
+        // Actors "Hold in place" has held, newest first: every load releases any the save still has held.
+        std::vector<std::uint32_t> heldActors;
 
         bool IsFavorite(const std::string& key) const;
         void ToggleFavorite(const std::string& key);

@@ -215,7 +215,7 @@ namespace mtfui::ui {
                 Panel(key).open = true;
             }
         } else {
-            OnMenuClose();
+            OnEditorClose();
         }
     }
 
@@ -334,7 +334,7 @@ namespace mtfui::ui {
                 // Drawing the editor here as well would run every edit twice.
                 if (Button("Close its own window")) {
                     window_->IsOpen = false;
-                    OnMenuClose();
+                    OnEditorClose();
                 }
                 SameLine();
                 TextDisabled("The editor is open in its own window.");
@@ -376,7 +376,7 @@ namespace mtfui::ui {
         CommitFrame();
         if (!open || (IsKeyPressed(ImGuiKey_Escape, false) && !IsPopupOpen("", ImGuiPopupFlags_AnyPopupId) && !GetIO()->WantTextInput)) {
             window_->IsOpen = false;
-            OnMenuClose();
+            OnEditorClose();
         }
     }
 }

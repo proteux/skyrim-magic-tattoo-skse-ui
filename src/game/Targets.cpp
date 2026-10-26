@@ -1,5 +1,6 @@
 #include "game/Targets.h"
 
+#include "game/Papyrus.h"
 #include "io/UiSettings.h"
 
 namespace mtfui::game {
@@ -133,89 +134,174 @@ namespace mtfui::game {
     }
 
     namespace {
-        using Flag = RE::Actor::BOOL_FLAGS;
+        // Papyrus SetDontMove is what holds the actor. The kMovementBlocked flag looked like the same thing, but the
+        // engine clears it within a fraction of a second, so it held nobody. Switching AI off would stop the actor's
+        // updates, and with them the live preview. Followers aren't told to wait either: WaitingForPlayer outlives the
+        // menu if anything goes wrong, and strands them.
+        //
+        // Papyrus calls run later, so a save can be written while the actor is still held. mtfui_dontmove marks the
+        // actor in PapyrusUtil's co-save before the hold and is cleared after the release, so the load cleanup knows
+        // which actors this plugin left unable to move.
+        constexpr const char* kHoldKey = "mtfui_dontmove";
 
-        // What HoldStill changed on the held actor, so releasing undoes exactly that and nothing else.
         struct Held {
             RE::FormID id = 0;
-            bool blockedMovement = false;
-            bool setWaiting = false;
-            float waitingBefore = 0.0f;
+            RE::NiPoint3 anchor;  // where CheckHold last saw them
+            std::chrono::steady_clock::time_point lastMoveLog;
         };
         Held g_held;
+        // SKSE tasks and Papyrus callbacks run on several threads. Recursive because a call that fails to dispatch
+        // answers at once, on the thread that holds the lock.
+        std::recursive_mutex g_heldMutex;
 
-        // Switching AI off would also stop the actor's updates, and with them the live preview.
-        void Hold(RE::Actor* actor) {
-            g_held = { actor->GetFormID() };
-            auto& flags = actor->GetActorRuntimeData().boolFlags;
-            if (!flags.all(Flag::kMovementBlocked)) {
-                flags.set(Flag::kMovementBlocked);
-                g_held.blockedMovement = true;
-            }
-            auto* av = actor->AsActorValueOwner();
-            if (actor->IsPlayerTeammate() && av) {
-                const float before = av->GetActorValue(RE::ActorValue::kWaitingForPlayer);
-                if (before == 0.0f) {
-                    av->SetActorValue(RE::ActorValue::kWaitingForPlayer, 1.0f);
-                    g_held.setWaiting = true;
-                    g_held.waitingBefore = before;
-                    actor->EvaluatePackage();
-                }
+        RE::Actor* ActorById(RE::FormID id) { return id != 0 ? RE::TESForm::LookupByID<RE::Actor>(id) : nullptr; }
+
+        bool Wanted(RE::FormID id) {
+            std::scoped_lock lock(g_heldMutex);
+            return g_held.id == id;
+        }
+
+        void SetMarker(RE::FormID id, std::function<void()> then = {}) {
+            if (auto* actor = ActorById(id)) {
+                CallStatic(
+                    "StorageUtil", "SetIntValue",
+                    [then = std::move(then)](const RE::BSScript::Variable&) {
+                        if (then) {
+                            then();
+                        }
+                    },
+                    static_cast<RE::TESForm*>(actor), RE::BSFixedString(kHoldKey), static_cast<std::int32_t>(1));
             }
         }
 
-        void Release() {
-            const Held held = std::exchange(g_held, {});
-            auto* actor = held.id != 0 ? RE::TESForm::LookupByID<RE::Actor>(held.id) : nullptr;
+        // Held again while this was in flight: the marker must stay.
+        void ClearMarker(RE::FormID id) {
+            if (auto* actor = ActorById(id)) {
+                CallStatic(
+                    "StorageUtil", "UnsetIntValue",
+                    [id](const RE::BSScript::Variable&) {
+                        if (Wanted(id)) {
+                            SetMarker(id);
+                        }
+                    },
+                    static_cast<RE::TESForm*>(actor), RE::BSFixedString(kHoldKey));
+            }
+        }
+
+        // A hold and a release dispatched close together can finish in either order, so each result is checked
+        // against what is wanted now and corrected until the two agree.
+        void SetDontMove(RE::FormID id, bool on) {
+            auto* actor = ActorById(id);
             if (!actor) {
                 return;
             }
-            if (held.blockedMovement) {
-                actor->GetActorRuntimeData().boolFlags.reset(Flag::kMovementBlocked);
+            CallMethod(
+                actor, "Actor", "SetDontMove",
+                [id, on](const RE::BSScript::Variable&) {
+                    const bool want = Wanted(id);
+                    if (want != on) {
+                        SetDontMove(id, want);
+                    } else if (!on) {
+                        ClearMarker(id);
+                    }
+                },
+                on);
+        }
+
+        void Hold(RE::Actor* actor) {
+            const RE::FormID id = actor->GetFormID();
+            g_held = { id, actor->GetPosition() };
+            SetMarker(id, [id] { SetDontMove(id, true); });
+        }
+
+        void Release() {
+            const RE::FormID id = std::exchange(g_held, {}).id;
+            if (id != 0) {
+                SetDontMove(id, false);
+                logger::info("Released {:08X}", id);
             }
-            if (held.setWaiting) {
-                if (auto* av = actor->AsActorValueOwner()) {
-                    av->SetActorValue(RE::ActorValue::kWaitingForPlayer, held.waitingBefore);
+        }
+
+        std::string ActorState(RE::Actor* actor) {
+            std::string s = "no package";
+            if (auto* pkg = actor->GetCurrentPackage()) {
+                s = std::format("package {:08X}", pkg->GetFormID());
+                const char* edid = pkg->GetFormEditorID();
+                if (edid && *edid) {
+                    s += std::format(" {}", edid);
                 }
-                actor->EvaluatePackage();
+                if (auto* file = pkg->GetFile(0)) {
+                    s += std::format(" from {}", file->GetFilename());
+                }
             }
+            if (auto* state = actor->AsActorState()) {
+                s += std::format(", sit/sleep state {}", static_cast<int>(state->GetSitSleepState()));
+            }
+            if (actor->IsInCombat()) {
+                s += ", in combat";
+            }
+            return s;
+        }
+    }
+
+    void CheckHold() {
+        std::scoped_lock lock(g_heldMutex);
+        auto* actor = ActorById(g_held.id);
+        if (!actor) {
+            return;
+        }
+        const auto pos = actor->GetPosition();
+        const auto now = std::chrono::steady_clock::now();
+        if (pos.GetDistance(g_held.anchor) > 64.0f && now - g_held.lastMoveLog > 2s) {
+            logger::warn("{:08X} moved {:.0f} units while held. {}", g_held.id, pos.GetDistance(g_held.anchor), ActorState(actor));
+            g_held.anchor = pos;
+            g_held.lastMoveLog = now;
         }
     }
 
     RE::FormID HoldStill(RE::FormID id) {
+        std::scoped_lock lock(g_heldMutex);
         if (id == g_held.id) {
             return g_held.id;
         }
         Release();
-        auto* actor = id != 0 ? RE::TESForm::LookupByID<RE::Actor>(id) : nullptr;
+        auto* actor = ActorById(id);
         if (actor && !actor->IsPlayerRef()) {
             Hold(actor);
             const char* name = actor->GetDisplayFullName();
-            logger::info("Holding {:08X} ({}) in place{}", id, name ? name : "", g_held.setWaiting ? ", told to wait" : "");
+            logger::info("Holding {:08X} ({}) in place", id, name ? name : "");
         }
         return g_held.id;
     }
 
-    void ReleaseLeftover(RE::FormID id) {
-        g_held = {};
-        // FF ids are created at runtime and reused, so in this session the id may name an unrelated actor.
-        auto* actor = id != 0 && (id >> 24) != 0xFF ? RE::TESForm::LookupByID<RE::Actor>(id) : nullptr;
-        if (!actor) {
-            return;
+    void ReleaseLeftover(const std::vector<RE::FormID>& ids) {
+        {
+            std::scoped_lock lock(g_heldMutex);
+            g_held = {};
         }
-        logger::info("Letting {:08X} move again, held when the game last quit", id);
-        actor->GetActorRuntimeData().boolFlags.reset(Flag::kMovementBlocked);
-        // Builds before 1.2 held actors by switching their AI off.
-        if (!actor->IsAIEnabled()) {
-            actor->EnableAI(true);
+        for (const auto id : ids) {
+            auto* actor = ActorById(id);
+            if (!actor || actor->IsPlayerRef()) {
+                continue;
+            }
+            CallStatic(
+                "StorageUtil", "GetIntValue",
+                [id](const RE::BSScript::Variable& r) {
+                    if (r.IsInt() && r.GetSInt() == 1) {
+                        logger::info("Letting {:08X} move again, held when this save was made", id);
+                        SetDontMove(id, false);
+                    }
+                },
+                static_cast<RE::TESForm*>(actor), RE::BSFixedString(kHoldKey), static_cast<std::int32_t>(0));
         }
     }
 
     RE::FormID ReleaseForSave() {
+        std::scoped_lock lock(g_heldMutex);
         const RE::FormID id = g_held.id;
         if (id != 0) {
+            logger::info("Releasing {:08X} before saving", id);
             Release();
-            logger::info("Released {:08X} before saving", id);
         }
         return id;
     }

@@ -88,7 +88,6 @@ namespace mtfui::io {
         GetBool(*j, "pauseGame", pauseGame);
         GetBool(*j, "livePreview", livePreviewEnabled);
         GetBool(*j, "holdTarget", holdTarget);
-        GetNumber(*j, "heldActor", heldActor);
         GetNumber(*j, "thumbSize", thumbSize);
         thumbSize = std::clamp(thumbSize, kThumbSizeMin, kThumbSizeMax);
         GetBool(*j, "showDetails", showDetails);
@@ -112,14 +111,18 @@ namespace mtfui::io {
                 panels[name] = s;
             }
         }
-        previewActors.clear();
-        if (auto it = j->find("previewActors"); it != j->end() && it->is_array()) {
-            for (const auto& v : *it) {
-                if (v.is_number_unsigned() || v.is_number_integer()) {
-                    previewActors.push_back(v.get<std::uint32_t>());
+        const auto ids = [&](const char* key, std::vector<std::uint32_t>& out) {
+            out.clear();
+            if (auto it = j->find(key); it != j->end() && it->is_array()) {
+                for (const auto& v : *it) {
+                    if (v.is_number_unsigned() || v.is_number_integer()) {
+                        out.push_back(v.get<std::uint32_t>());
+                    }
                 }
             }
-        }
+        };
+        ids("previewActors", previewActors);
+        ids("heldActors", heldActors);
     }
 
     bool UiSettings::Save(const std::filesystem::path& path) const {
@@ -129,7 +132,6 @@ namespace mtfui::io {
         j["pauseGame"] = pauseGame;
         j["livePreview"] = livePreviewEnabled;
         j["holdTarget"] = holdTarget;
-        j["heldActor"] = heldActor;
         j["thumbSize"] = thumbSize;
         j["showDetails"] = showDetails;
         j["lastPreset"] = lastPreset;
@@ -140,6 +142,7 @@ namespace mtfui::io {
             jp[name] = { { "x", s.x }, { "y", s.y }, { "w", s.w }, { "h", s.h }, { "open", s.open } };
         }
         j["previewActors"] = previewActors;
+        j["heldActors"] = heldActors;
         // Preset names are in the ANSI code page, which isn't always valid UTF-8.
         return WriteTextAtomic(path, j.dump(2, ' ', false, nlohmann::json::error_handler_t::replace));
     }
