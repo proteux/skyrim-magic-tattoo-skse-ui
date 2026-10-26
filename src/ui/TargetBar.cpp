@@ -87,7 +87,7 @@ namespace mtfui::ui {
         if (Checkbox("Hold in place", &app.settings.holdTarget)) {
             app.SaveSettings();
         }
-        HelpMarker("Stops the target walking away while this menu is open, and tells a follower to wait. "
+        HelpMarker("Stops the target walking away while this menu is open. "
                    "They can move again when you close the menu or pick someone else. Never applies to you.");
 
         SameLine(0, 20);

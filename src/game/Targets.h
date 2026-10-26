@@ -25,12 +25,13 @@ namespace mtfui::game {
     std::optional<ActorInfo> Describe(RE::FormID id);
     SkinInfo SkinFor(RE::FormID id);
 
-    // Keeps at most one NPC in place by blocking its movement, and tells a follower to wait; 0 lets the held one
-    // go. AI keeps running so live previews still redraw. Never touches the player, and releasing only undoes
-    // what holding changed. Returns the actor now held, or 0.
+    // Keeps at most one NPC in place with Papyrus SetDontMove; 0 lets the held one go. AI keeps running so live
+    // previews still redraw. Never touches the player. Returns the actor now held, or 0.
     RE::FormID HoldStill(RE::FormID id);
-    // After a load: lets an actor held in an earlier session move again.
-    void ReleaseLeftover(RE::FormID id);
+    // While holding: logs the actor moving anyway, with its current package.
+    void CheckHold();
+    // After a load: lets any of these actors that this plugin held when the save was made move again.
+    void ReleaseLeftover(const std::vector<RE::FormID>& ids);
     // Right before a save is written, so the save never has the NPC held. Returns the actor that was released, or 0.
     RE::FormID ReleaseForSave();
 

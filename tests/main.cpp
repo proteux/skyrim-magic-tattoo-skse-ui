@@ -441,12 +441,12 @@ namespace {
         s.panels["tiers"] = { 1, 2, 300, 400, true };
         s.lastPreset = "Dragon";
         s.previewActors = { 0x14, 0xABC };
-        s.heldActor = 0x1234;
+        s.heldActors = { 0x1234, 0x5678 };
         Check(s.Save(dir / "settings.json"), "settings save");
         io::UiSettings r;
         r.Load(dir / "settings.json");
         Check(r.favorites == s.favorites && r.recents == s.recents && r.pauseGame == s.pauseGame && r.thumbSize == s.thumbSize &&
-                  r.panelOpacity == s.panelOpacity && r.lastPreset == s.lastPreset && r.previewActors == s.previewActors && r.heldActor == s.heldActor,
+                  r.panelOpacity == s.panelOpacity && r.lastPreset == s.lastPreset && r.previewActors == s.previewActors && r.heldActors == s.heldActors,
             "settings round-trip");
         Check(r.panels.contains("tiers") && r.panels["tiers"].w == 300 && r.panels["tiers"].open, "panel layout round-trip");
 
