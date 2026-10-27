@@ -112,10 +112,10 @@ namespace mtfui::ui {
         void RemoveFromTarget(const std::string& name);
         void RemoveAllFromTarget();
         void RefreshApplied();
-        // The preset loaded in MTF's MCM draws on the player as a character default, outside the applied list.
-        bool HasCharacterDefault() const;
-        std::string CharacterDefaultName() const;  // empty when the MCM's setup was never saved as a preset
-        void RemoveCharacterDefault();
+        // The MTF preset: the one loaded in MTF's MCM, drawn on the player outside the applied list.
+        bool HasMtfPreset() const;
+        std::string MtfPresetName() const;  // empty when the MCM's setup was never saved as a preset
+        void RemoveMtfPreset();
         // MTF's start slot only places the player's tattoos. Refused when the MCM block and the applied presets
         // wouldn't fit from the new start, since MTF would quietly cut them off.
         void MoveOverlayStart(int area, int start);

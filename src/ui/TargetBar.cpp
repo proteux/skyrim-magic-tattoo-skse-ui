@@ -137,11 +137,11 @@ namespace mtfui::ui {
             if (onPlayer) {
                 app.WantSlotUsage();
             }
-            if (onPlayer && app.HasCharacterDefault()) {
-                const std::string name = app.CharacterDefaultName();
+            if (onPlayer && app.HasMtfPreset()) {
+                const std::string name = app.MtfPresetName();
                 TextUnformatted(name.empty() ? "Unsaved MCM setup" : name.c_str());
                 SameLine();
-                TextDisabled("(character default)");
+                TextDisabled("(MTF preset)");
                 if (IsItemHovered()) {
                     SetTooltip("The preset loaded in MTF's MCM. MTF draws it on you below the applied presets, whatever is applied.");
                 }
@@ -156,10 +156,10 @@ namespace mtfui::ui {
                     OpenPopup("##removedefault");
                 }
                 if (BeginPopup("##removedefault")) {
-                    TextUnformatted("Stop drawing it as your character default?");
+                    TextUnformatted("Clear MTF's preset?");
                     TextDisabled(name.empty() ? "MTF's MCM setup was never saved, so it is lost." : "The preset file is kept; load it in MTF's MCM to bring it back.");
                     if (Button("Remove")) {
-                        app.RemoveCharacterDefault();
+                        app.RemoveMtfPreset();
                         CloseCurrentPopup();
                     }
                     SameLine();
@@ -171,7 +171,7 @@ namespace mtfui::ui {
             }
             if (!app.appliedKnown) {
                 TextDisabled("Asking MTF...");
-            } else if (app.applied.empty() && !(onPlayer && app.HasCharacterDefault())) {
+            } else if (app.applied.empty() && !(onPlayer && app.HasMtfPreset())) {
                 TextDisabled("None");
             }
             for (const auto& name : app.applied) {

@@ -104,7 +104,7 @@ namespace mtfui::ui {
                 if (IsMouseHoveringRect(a, b)) {
                     std::string tip = "Slot " + n + ": ";
                     if (c.use == model::SlotUse::Mcm) {
-                        tip += "character default (the preset loaded in MTF's MCM)";
+                        tip += "MTF preset (the one loaded in MTF's MCM)";
                     } else if (c.use == model::SlotUse::Preset) {
                         tip += PresetLabel(c.preset);
                     } else if (!c.other) {
@@ -126,7 +126,7 @@ namespace mtfui::ui {
 
             Indent(80);
             if (!plan.fits) {
-                TextColored(kError, "%s Your character default and applied presets need %d %s slots from slot %d.",
+                TextColored(kError, "%s The MTF preset and your applied presets need %d %s slots from slot %d.",
                     planning ? "Won't move:" : "Some tattoos are cut off:", plan.needed, name.c_str(), start);
             }
             if (!plan.covered.empty()) {
@@ -283,7 +283,7 @@ namespace mtfui::ui {
         SeparatorText("Overlay slots");
         TextWrapped("Your tattoos are drawn into RaceMenu overlay slots. Pick where MTF's block starts so it does not overlap "
                     "overlays from RaceMenu or other mods (body paint, dirt, other tattoos).");
-        HelpMarker("MTF first reserves room for your character default (the preset loaded in its MCM; remove it under Applied), "
+        HelpMarker("MTF first reserves room for the MTF preset (the one loaded in its MCM; clear it under Applied), "
                    "then stacks each preset applied to you above it. "
                    "Changing the start moves all of them, keeping their tiers. NPCs aren't affected: MTF stacks their tattoos "
                    "above the highest slot already in use.\n\n"
@@ -296,7 +296,7 @@ namespace mtfui::ui {
                    "keeps it safe.");
         app.WantSlotUsage();
         if (const auto* usage = app.SlotUsage()) {
-            LegendItem(kMcmCell, "character default");
+            LegendItem(kMcmCell, "MTF preset");
             LegendItem(kPresetCell, "applied presets");
             LegendItem(kOtherCell, "not drawn by MTF");
             LegendItem(kClashCell, "MTF draws over another overlay");
