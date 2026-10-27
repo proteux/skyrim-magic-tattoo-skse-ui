@@ -187,7 +187,7 @@ namespace mtfui::game {
                     } else {
                         // Keep last_: the same request again would fail the same way, so only an edit retries.
                         applied_ = 0;
-                        status_ = "Preview failed: " + ApplyResultText(rc);
+                        status_ = "Preview failed: " + ApplyResultText(rc, actor == 0x14);
                         auto owed = std::move(suspended_[actor]);
                         suspended_.erase(actor);
                         Restore(actor, owed, true);
@@ -212,7 +212,7 @@ namespace mtfui::game {
         for (const auto& n : names) {
             MtfBridge::Get().Apply(actor, n, [this, actor, n, retry, reasons, remaining, rewriteRecord, done](int rc) {
                 if (rc != 1 && rc != 0) {
-                    reasons->push_back(n + " (" + ApplyResultText(rc) + ")");
+                    reasons->push_back(n + " (" + ApplyResultText(rc, actor == 0x14) + ")");
                     // Only a missing actor can come right later; a deleted preset or full slots would fail every load.
                     if (rc == -2) {
                         retry->push_back(n);

@@ -18,14 +18,6 @@ namespace mtfui::ui {
         int IniInt(const fs::path& ini, const wchar_t* section, const wchar_t* key, int fallback) {
             return static_cast<int>(GetPrivateProfileIntW(section, key, fallback, ini.wstring().c_str()));
         }
-
-        // Papyrus calls that each wait for the previous one to answer.
-        using Step = std::function<void(std::function<void()> next)>;
-        void RunChain(std::shared_ptr<std::vector<Step>> steps, std::size_t i) {
-            if (i < steps->size()) {
-                (*steps)[i]([steps, i] { RunChain(steps, i + 1); });
-            }
-        }
     }
 
     fs::path GameDataDir() {
@@ -88,7 +80,8 @@ namespace mtfui::ui {
             n = IniInt(custom, section, L"iNumOverlays", n);
             overlayCapacity_[area] = n;
         }
-        logger::info("Overlay slots: Body {}, Face {}, Hands {}, Feet {}", overlayCapacity_["Body"], overlayCapacity_["Face"], overlayCapacity_["Hands"],
+        // Only until RaceMenu itself answers, after a save loads.
+        logger::info("Overlay slots in the ini files: Body {}, Face {}, Hands {}, Feet {}", overlayCapacity_["Body"], overlayCapacity_["Face"], overlayCapacity_["Hands"],
             overlayCapacity_["Feet"]);
 
         game::LivePreview::Get().Init(paths.mtfRoot / "presets_builtin", settings.previewActors, [this](const std::vector<RE::FormID>& ids) {
@@ -133,10 +126,15 @@ namespace mtfui::ui {
     }
 
     void App::Toast(std::string text, bool error) {
+        Toast(std::move(text), error, {}, {});
+    }
+
+    void App::Toast(std::string text, bool error, std::string actionLabel, std::function<void()> action) {
         if (error) {
             logger::warn("{}", text);
         }
-        toasts_.push_back({ std::move(text), error, GetTime() + (error ? 8.0 : 4.0) });
+        const double shown = action ? 12.0 : (error ? 8.0 : 4.0);
+        toasts_.push_back({ std::move(text), error, GetTime() + shown, std::move(actionLabel), std::move(action) });
         if (toasts_.size() > 3) {
             toasts_.erase(toasts_.begin());
         }
@@ -190,6 +188,11 @@ namespace mtfui::ui {
             }
         }
         ctx.overlayCapacity = overlayCapacity_;
+        if (slotUsage_) {
+            for (int a = 0; a < 4; ++a) {
+                ctx.overlayCapacity[game::kAreas[a]] = slotUsage_->areas[a].total;
+            }
+        }
         return ctx;
     }
 
@@ -237,8 +240,14 @@ namespace mtfui::ui {
             Toast(name + " is already on " + targetName + ". It's hidden until the live preview stops.");
             return;
         }
-        game::MtfBridge::Get().Apply(targetId, name, [this, name](int rc) {
-            Toast(name + ": " + game::ApplyResultText(rc) + (rc == 1 ? " to " + targetName : ""), rc < 0);
+        game::MtfBridge::Get().Apply(targetId, name, [this, name, onPlayer = targetId == 0x14](int rc) {
+            const std::string text = name + ": " + game::ApplyResultText(rc, onPlayer) + (rc == 1 ? " to " + targetName : "");
+            if ((rc == -6 || rc == -7) && onPlayer) {
+                Toast(text, true, "Show overlay slots", [this] { RequestTab(Tab::General); });
+            } else {
+                Toast(text, rc < 0);
+            }
+            SlotUsageChanged();
             RefreshApplied();
         });
     }
@@ -253,6 +262,7 @@ namespace mtfui::ui {
         }
         game::MtfBridge::Get().Remove(targetId, name, [this, name] {
             Toast("Removed " + name + " from " + targetName);
+            SlotUsageChanged();
             RefreshApplied();
         });
     }
@@ -263,7 +273,10 @@ namespace mtfui::ui {
             if (lp.IsSuspended(targetId, n)) {
                 lp.Forget(targetId, n);
             } else {
-                game::MtfBridge::Get().Remove(targetId, n, [this] { RefreshApplied(); });
+                game::MtfBridge::Get().Remove(targetId, n, [this] {
+                    SlotUsageChanged();
+                    RefreshApplied();
+                });
             }
         }
         Toast("Removing " + std::to_string(applied.size()) + " preset(s) from " + targetName);
@@ -272,6 +285,20 @@ namespace mtfui::ui {
 
     void App::MoveOverlayStart(int area, int start) {
         if (overlayMoving_) {
+            return;
+        }
+        area = std::clamp(area, 0, 3);
+        if (!slotUsage_) {
+            Toast("Still reading your overlay slots. Try again in a moment", true);
+            return;
+        }
+        const auto& slots = slotUsage_->areas[area];
+        const auto plan = model::PlanStart(slots, start, game::kPreviewPreset);
+        if (!plan.fits) {
+            Toast(std::format("Not moved: from slot {}, MTF needs {} {} slots for your presets, and only {} are left. Remove a preset or pick a "
+                              "lower start",
+                      start, plan.needed, game::kAreas[area], std::max(0, slots.total - start)),
+                true);
             return;
         }
         overlayMove_ = OverlayMove{ area, start };
@@ -290,49 +317,41 @@ namespace mtfui::ui {
         }
         overlayMoving_ = true;
         const auto move = *overlayMove_;
-        constexpr RE::FormID player = 0x14;
-        game::MtfBridge::Get().ListApplied(player, [this, move](std::vector<std::string> names) {
-            std::erase_if(names, [](const std::string& n) { return model::IEquals(n, game::kPreviewPreset); });
-            auto steps = std::make_shared<std::vector<Step>>();
-            auto failed = std::make_shared<std::vector<std::string>>();
-            // Last first, so MTF's compaction after each removal has nothing left to move.
-            for (auto it = names.rbegin(); it != names.rend(); ++it) {
-                steps->push_back([n = *it](std::function<void()> next) { game::MtfBridge::Get().Remove(player, n, std::move(next)); });
-            }
-            steps->push_back([move](std::function<void()> next) { game::MtfBridge::Get().SetOverlaySlot(move.area, move.start, std::move(next)); });
-            for (const auto& n : names) {
-                steps->push_back([n, failed](std::function<void()> next) {
-                    game::MtfBridge::Get().Apply(player, n, [n, failed, next](int rc) {
-                        if (rc < 0) {
-                            failed->push_back(n + " (" + game::ApplyResultText(rc) + ")");
-                        }
-                        next();
-                    });
-                });
-            }
-            const std::string where = std::string(game::kAreas[move.area]) + " overlays now start at slot " + std::to_string(move.start);
-            const auto count = names.size();
-            steps->push_back([this, where, count, failed](std::function<void()>) {
-                overlayMove_.reset();
-                overlayMoving_ = false;
-                if (!failed->empty()) {
-                    std::string list;
-                    for (const auto& f : *failed) {
-                        list += (list.empty() ? "" : ", ") + f;
-                    }
-                    logger::warn("Overlay move: could not put back {}", list);
-                    Toast(where + ". Could not put back on you: " + list, true);
-                } else if (count > 0) {
-                    Toast(where + ". Moved " + std::to_string(count) + " applied preset(s) on you with it");
-                } else {
-                    Toast(where);
+        logger::info("Moving MTF's {} overlay start to {}", game::kAreas[move.area], move.start);
+        game::MtfBridge::Get().MoveOverlayStart(move.area, move.start, [this, move] {
+            overlayMove_.reset();
+            overlayMoving_ = false;
+            Toast(std::format("{} overlays now start at slot {}", game::kAreas[move.area], move.start));
+            SlotUsageChanged();
+            RefreshApplied();
+        });
+    }
+
+    void App::WantSlotUsage() {
+        if (!slotUsageBusy_ && GetTime() - slotUsageRead_ > 3.0) {
+            ReadSlotUsage();
+        }
+    }
+
+    void App::ReadSlotUsage() {
+        if (!game::MtfBridge::Get().Installed()) {
+            return;
+        }
+        slotUsageBusy_ = true;
+        game::MtfBridge::Get().ReadSlotUsage([this](game::SlotUsage u) {
+            slotUsageBusy_ = false;
+            slotUsageRead_ = GetTime();
+            std::string fixed;
+            for (int a = 0; a < 4; ++a) {
+                if (u.staleCounts[a] >= 0) {
+                    fixed += std::format("{}{} {} (was {})", fixed.empty() ? "" : ", ", game::kAreas[a], u.areas[a].total, u.staleCounts[a]);
                 }
-                if (targetId == player) {
-                    RefreshApplied();
-                }
-            });
-            logger::info("Moving {} overlay start to {}, re-applying {} preset(s) on the player", game::kAreas[move.area], move.start, count);
-            RunChain(steps, 0);
+            }
+            if (!fixed.empty()) {
+                Toast("MTF was still using RaceMenu's old overlay slot counts. Updated: " + fixed);
+            }
+            slotUsage_ = std::move(u);
+            Relint();
         });
     }
 
@@ -454,10 +473,14 @@ namespace mtfui::ui {
         appliedKnown = false;
         overlayMove_.reset();
         overlayMoving_ = false;
+        slotUsage_.reset();
+        slotUsageBusy_ = false;
         game::LivePreview::Get().Cleanup();
         holdWanted_ = 0;
         game::MtfBridge::RunOnGame([ids = settings.heldActors] { game::ReleaseLeftover({ ids.begin(), ids.end() }); });
         game::MtfBridge::Get().Refresh();
+        // Also corrects MTF's cached slot counts before anything is applied this session.
+        ReadSlotUsage();
     }
 
     void App::OnSaving() {

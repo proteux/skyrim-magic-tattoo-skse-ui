@@ -1,5 +1,6 @@
 #pragma once
 
+#include "game/MtfBridge.h"
 #include "io/UiSettings.h"
 #include "model/Catalogs.h"
 #include "model/Lint.h"
@@ -79,6 +80,7 @@ namespace mtfui::ui {
         void ResetPanelLayout() { resetLayout_ = true; }
 
         void Toast(std::string text, bool error = false);
+        void Toast(std::string text, bool error, std::string actionLabel, std::function<void()> action);
         void ReloadAll();
         void ReloadLibrary();
         bool Dirty() const;
@@ -110,11 +112,15 @@ namespace mtfui::ui {
         void RemoveFromTarget(const std::string& name);
         void RemoveAllFromTarget();
         void RefreshApplied();
-        // MTF's start slot only places the player's tattoos, and presets already applied stay where they were drawn,
-        // so the player's applied presets come off before the move and go back on after it, in the same order.
+        // MTF's start slot only places the player's tattoos. Refused when the MCM block and the applied presets
+        // wouldn't fit from the new start, since MTF would quietly cut them off.
         void MoveOverlayStart(int area, int start);
         bool OverlayMoveBusy() const { return overlayMove_.has_value(); }
         std::optional<int> OverlayMoveTarget(int area) const;
+        // The player's overlay slots as last read; nullptr until the first read answers.
+        const game::SlotUsage* SlotUsage() const { return slotUsage_ ? &*slotUsage_ : nullptr; }
+        void WantSlotUsage();  // rereads when the last read is a few seconds old
+        void SlotUsageChanged() { slotUsageRead_ = -100.0; }
         void UpdatePreview();
         void SaveSettings();
 
@@ -164,6 +170,8 @@ namespace mtfui::ui {
             std::string text;
             bool error;
             double until;
+            std::string actionLabel;
+            std::function<void()> action;
         };
         std::vector<ToastMsg> toasts_;
         double lastLint_ = 0.0;
@@ -206,7 +214,11 @@ namespace mtfui::ui {
             int area = 0;
             int start = 0;
         };
-        std::optional<OverlayMove> overlayMove_;  // set until the presets are back on
+        std::optional<OverlayMove> overlayMove_;  // set until MTF has repacked
         bool overlayMoving_ = false;
+        std::optional<game::SlotUsage> slotUsage_;
+        double slotUsageRead_ = -100.0;
+        bool slotUsageBusy_ = false;
+        void ReadSlotUsage();
     };
 }

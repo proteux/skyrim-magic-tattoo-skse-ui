@@ -1,5 +1,6 @@
 #include "Version.h"
 #include "game/MtfBridge.h"
+#include "game/OverlayVisibility.h"
 #include "io/UiSettings.h"
 #include "render/DdsCache.h"
 #include "ui/App.h"
@@ -70,6 +71,7 @@ namespace {
         case SKSE::MessagingInterface::kDataLoaded: {
             LogEnvironment();
             mtfui::game::MtfBridge::Get().OnDataLoaded();
+            mtfui::game::WatchOverlayVisibility();
             auto* device = reinterpret_cast<ID3D11Device*>(RE::BSGraphics::Renderer::GetDevice());
             mtfui::render::DdsCache::Get().Init(device);
             try {

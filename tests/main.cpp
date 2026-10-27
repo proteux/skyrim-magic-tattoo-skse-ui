@@ -7,6 +7,7 @@
 #include "model/Describe.h"
 #include "model/Lint.h"
 #include "model/Preset.h"
+#include "model/Slots.h"
 #include "model/Text.h"
 #include "model/Usage.h"
 
@@ -486,6 +487,47 @@ namespace {
         Check(withBroken.plugins.size() == cat.plugins.size(), "a broken catalog file doesn't stop the others loading");
         fs::remove_all(dir);
     }
+
+    void OverlaySlots() {
+        // 12 Body slots: the MCM preset wants 2 at start 0, Dragon has 3, Back has 1 but was left at an old base.
+        model::AreaSlots a;
+        a.total = 12;
+        a.start = 0;
+        a.mcmWant = 2;
+        a.presets = { { "Dragon", 2, 3 }, { "Back", 8, 1 } };
+        a.textures.assign(12, "");
+        a.textures[0] = "mtf\\a.dds";
+        a.textures[2] = "mtf\\dragon.dds";
+        a.textures[8] = "mtf\\back.dds";
+        a.textures[6] = "racemenu\\paint.dds";
+        a.textures[11] = "racemenu\\top.dds";
+
+        const auto now = model::CurrentSlots(a);
+        Check(now.size() == 12, "one cell per RaceMenu slot");
+        Check(now[0].use == model::SlotUse::Mcm && now[1].use == model::SlotUse::Mcm, "the MCM block sits at the start");
+        Check(now[4].use == model::SlotUse::Preset && now[4].preset == "Dragon", "a preset fills its stored range");
+        Check(now[8].use == model::SlotUse::Preset && now[8].preset == "Back", "a preset left at an old base shows where it is");
+        Check(now[6].other && now[11].other && !now[2].other && !now[5].other, "only textures outside MTF's blocks are someone else's");
+
+        auto plan = model::PlanStart(a, 0);
+        Check(plan.fits && plan.needed == 6, "MCM block and both presets need 6 slots");
+        Check(plan.cells[5].use == model::SlotUse::Preset && plan.cells[5].preset == "Back", "presets pack tight above the MCM block");
+        Check(plan.covered.empty() && plan.exposed.size() == 2 && plan.exposed[0] == 6, "other overlays above MTF are exposed to the next preset");
+
+        plan = model::PlanStart(a, 5);
+        Check(plan.fits, "start 5 still fits in 12 slots");
+        Check(plan.covered.size() == 1 && plan.covered[0] == 6, "moving onto another overlay reports it covered");
+        Check(plan.cells[0].use == model::SlotUse::Free && plan.cells[0].texture.empty(), "MTF's old slots are freed in the plan");
+
+        plan = model::PlanStart(a, 9);
+        Check(!plan.fits && plan.needed == 6, "start 9 doesn't leave room for 6 slots");
+        Check(model::McmLayersAt(a, 11) == 1, "the MCM block is capped to the slots left, like MTF does");
+
+        plan = model::PlanStart(a, 7, "back");
+        Check(plan.fits && plan.needed == 5, "a skipped preset (the live preview) is left out, ignoring case");
+
+        Check(model::ListSlots({ 3 }) == "3" && model::ListSlots({ 3, 5 }) == "3 and 5" && model::ListSlots({ 3, 5, 7 }) == "3, 5 and 7", "slot lists read naturally");
+    }
 }
 
 int main(int argc, char** argv) {
@@ -502,6 +544,7 @@ int main(int argc, char** argv) {
     Dds();
     Settings();
     HiddenPresets(fixtures);
+    OverlaySlots();
     if (g_failures == 0) {
         std::printf("All tests passed\n");
         return 0;

@@ -423,8 +423,8 @@ namespace mtfui::ui {
             } else if (wearing) {
                 // MTF redraws on tier changes only; re-applying shows the edit right away.
                 game::MtfBridge::Get().Remove(target, name, [this, target, name, display, who] {
-                    game::MtfBridge::Get().Apply(target, name, [this, display, who](int rc) {
-                        Toast(rc == 1 || rc == 0 ? "Saved " + display + " and refreshed it on " + who : "Saved, but re-applying failed: " + game::ApplyResultText(rc), rc < 0);
+                    game::MtfBridge::Get().Apply(target, name, [this, target, display, who](int rc) {
+                        Toast(rc == 1 || rc == 0 ? "Saved " + display + " and refreshed it on " + who : "Saved, but re-applying failed: " + game::ApplyResultText(rc, target == 0x14), rc < 0);
                         RefreshApplied();
                     });
                 });

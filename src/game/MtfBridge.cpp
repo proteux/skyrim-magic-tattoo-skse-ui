@@ -4,6 +4,7 @@
 #include "io/UiSettings.h"
 #include "model/Catalogs.h"
 
+
 namespace mtfui::game {
     namespace {
         std::mutex g_uiMutex;
@@ -37,6 +38,49 @@ namespace mtfui::game {
             static constexpr const char* names[] = { "OverlaySlot", "FaceOverlaySlot", "HandOverlaySlot", "FeetOverlaySlot" };
             return names[std::clamp(area, 0, 3)];
         }
+
+        // Where MTF last painted the MCM block. Its tick wipes every overlay it owns, applied presets included,
+        // whenever this differs from AreaProperty, and only redraws an applied preset when its tier changes.
+        const char* CurrentAreaProperty(int area) {
+            static constexpr const char* names[] = { "CurrentOverlaySlot", "CurrentFaceOverlaySlot", "CurrentHandOverlaySlot", "CurrentFeetOverlaySlot" };
+            return names[std::clamp(area, 0, 3)];
+        }
+
+        constexpr const char* kCountFns[] = { "GetNumBodyOverlays", "GetNumFaceOverlays", "GetNumHandOverlays", "GetNumFeetOverlays" };
+        constexpr const char* kCountCaches[] = { "_numOvBodyCache", "_numOvFaceCache", "_numOvHandCache", "_numOvFeetCache" };
+
+        // Runs done once Arrive has been called n times, from whichever thread arrives last.
+        class Join {
+        public:
+            Join(int n, std::function<void()> done) : left_(n), done_(std::move(done)) {}
+            static std::shared_ptr<Join> Make(int n, std::function<void()> done) {
+                auto j = std::make_shared<Join>(n, std::move(done));
+                if (n <= 0) {
+                    j->Fire();
+                }
+                return j;
+            }
+            void Arrive() {
+                if (--left_ == 0) {
+                    Fire();
+                }
+            }
+
+        private:
+            void Fire() {
+                if (auto d = std::move(done_)) {
+                    d();
+                }
+            }
+            std::atomic<int> left_;
+            std::function<void()> done_;
+        };
+
+        bool IsDefaultOverlay(std::string tex) {
+            tex = io::ToLower(tex);
+            return tex.empty() || tex.ends_with("default.dds");
+        }
+
     }
 
     MtfBridge& MtfBridge::Get() {
@@ -126,6 +170,24 @@ namespace mtfui::game {
             if (auto* v = Prop(obj, "pluginCount")) {
                 s.pluginCount = v->GetSInt();
             }
+
+            // MTF saves _transitionEndRT, but real time restarts at 0 with each game launch. A value from an earlier
+            // session makes _applyPulse fade the MCM preset's layer in over the old session's remaining time, which
+            // can be hours, so it stays invisible. 0 is MTF's own "no transition running".
+            CallStatic("Utility", "GetCurrentRealTime", [this](const RE::BSScript::Variable& r) {
+                auto obj = ScriptObject(quest_, kMainQuestScript);
+                auto* end = obj ? obj->GetVariable("_transitionEndRT") : nullptr;
+                auto* dur = obj ? obj->GetVariable("_sTransitionDuration") : nullptr;
+                if (!r.IsFloat() || !end || !end->IsFloat()) {
+                    return;
+                }
+                const float now = r.GetFloat();
+                const float longest = std::max(dur && dur->IsFloat() ? dur->GetFloat() : 0.0f, 0.0f) + 1.0f;
+                if (end->GetFloat() > now + longest) {
+                    logger::info("MTF's player tattoo was mid-fade from an earlier session ({:.0f} s left); finished it", end->GetFloat() - now);
+                    end->SetFloat(0.0f);
+                }
+            });
             s.skyrimNet = RE::TESDataHandler::GetSingleton()->LookupModByName("SkyrimNet.esp") != nullptr;
 
             // Registered plugin ids: each entry of registeredPlugins is an MTF_Plugin script.
@@ -272,21 +334,193 @@ namespace mtfui::game {
         });
     }
 
-    void MtfBridge::SetOverlaySlot(int area, int start, std::function<void()> done) {
+    void MtfBridge::MoveOverlayStart(int area, int start, std::function<void()> done) {
         area = std::clamp(area, 0, 3);
         snap_.overlayStart[area] = start;
         done = Guarded(std::move(done));
+        // SetOverlaySlot clears what MTF painted and moves only the MCM preset's block. Marking the block as already
+        // moved stops MTF's next tick from wiping everything again after _compactAppliedPresets has redrawn the
+        // applied presets packed above the new block, keeping their tier and pulse.
         RunOnGame([this, area, start, done = std::move(done)]() mutable {
             CallMethod(
                 quest_, kMainQuestScript, "SetOverlaySlot",
-                [done = std::move(done)](const RE::BSScript::Variable&) mutable {
-                    if (done) {
-                        PostToUi(std::move(done));
+                [this, area, start, done = std::move(done)](const RE::BSScript::Variable&) mutable {
+                    if (auto* v = Prop(ScriptObject(quest_, kMainQuestScript), CurrentAreaProperty(area))) {
+                        v->SetSInt(start);
                     }
+                    RE::Actor* player = RE::PlayerCharacter::GetSingleton();
+                    CallMethod(
+                        quest_, kMainQuestScript, "_compactAppliedPresets",
+                        [this, done = std::move(done)](const RE::BSScript::Variable&) mutable {
+                            CallMethod(quest_, kMainQuestScript, "setRedraw", {});
+                            if (done) {
+                                PostToUi(std::move(done));
+                            }
+                        },
+                        std::move(player));
                 },
                 RE::BSFixedString(kAreas[area]), static_cast<std::int32_t>(start));
         });
     }
+
+    void MtfBridge::ReadSlotUsage(std::function<void(SlotUsage)> done) {
+        if (!done) {
+            return;
+        }
+        done = Guarded(std::move(done));
+        if (!quest_) {
+            return;
+        }
+        struct State {
+            std::mutex m;
+            SlotUsage u;
+            std::vector<std::string> names;
+            std::vector<std::array<int, 4>> bases;
+            std::vector<std::array<int, 4>> layers;
+        };
+        auto st = std::make_shared<State>();
+
+        auto finish = [st, done] {
+            std::scoped_lock lock(st->m);
+            for (std::size_t p = 0; p < st->names.size(); ++p) {
+                for (int a = 0; a < 4; ++a) {
+                    if (st->bases[p][a] >= 0 && st->layers[p][a] > 0) {
+                        st->u.areas[a].presets.push_back({ st->names[p], st->bases[p][a], st->layers[p][a] });
+                    }
+                }
+            }
+            PostToUi([u = st->u, done] { done(u); });
+        };
+
+        // Second pass, once RaceMenu's counts are known: everything else, in parallel.
+        auto details = [this, st, finish] {
+            RunOnGame([this, st, finish] {
+                auto obj = ScriptObject(quest_, kMainQuestScript);
+                auto* player = RE::PlayerCharacter::GetSingleton();
+                if (!obj || !player) {
+                    finish();
+                    return;
+                }
+                const auto* base = player->GetActorBase();
+                const bool female = base && base->GetSex() == RE::SEX::kFemale;
+                int slots = 0;
+                for (int a = 0; a < 4; ++a) {
+                    auto& area = st->u.areas[a];
+                    if (area.total < 1) {
+                        area.total = a == 0 ? 6 : 3;  // what MTF assumes when RaceMenu doesn't answer
+                    }
+                    if (auto* v = Prop(obj, AreaProperty(a))) {
+                        area.start = v->GetSInt();
+                    }
+                    if (auto* v = obj->GetVariable(kCountCaches[a]); v && v->IsInt()) {
+                        const int cached = v->GetSInt();
+                        if (cached >= 0 && cached != area.total) {
+                            logger::info("MTF had cached {} {} overlay slots; RaceMenu has {}. Corrected", cached, kAreas[a], area.total);
+                            st->u.staleCounts[a] = cached;
+                            v->SetSInt(area.total);
+                        }
+                    }
+                    area.textures.assign(area.total, {});
+                    slots += area.total;
+                }
+
+                auto all = Join::Make(4 + slots + 1, finish);
+                for (int a = 0; a < 4; ++a) {
+                    CallMethod(
+                        quest_, kMainQuestScript, "_computePresetReservedLayers",
+                        [st, all, a](const RE::BSScript::Variable& r) {
+                            {
+                                std::scoped_lock lock(st->m);
+                                st->u.areas[a].mcmWant = r.IsInt() ? std::max(0, r.GetSInt()) : 0;
+                            }
+                            all->Arrive();
+                        },
+                        RE::BSFixedString(kAreas[a]), false);
+                    for (int i = 0; i < st->u.areas[a].total; ++i) {
+                        RE::TESObjectREFR* ref = player;
+                        CallStatic(
+                            "NiOverride", "GetNodeOverrideString",
+                            [st, all, a, i](const RE::BSScript::Variable& r) {
+                                if (r.IsString() && !IsDefaultOverlay(std::string(r.GetString()))) {
+                                    std::scoped_lock lock(st->m);
+                                    st->u.areas[a].textures[i] = std::string(r.GetString());
+                                }
+                                all->Arrive();
+                            },
+                            std::move(ref), female, RE::BSFixedString(std::format("{} [ovl{}]", kAreas[a], i)), static_cast<std::int32_t>(9),
+                            static_cast<std::int32_t>(0));
+                    }
+                }
+
+                RE::Actor* actor = player;
+                CallMethod(
+                    quest_, kMainQuestScript, "GetActorPresetCount",
+                    [this, st, all](const RE::BSScript::Variable& r) {
+                        const int n = r.IsInt() ? std::clamp(r.GetSInt(), 0, 256) : 0;
+                        {
+                            std::scoped_lock lock(st->m);
+                            st->names.assign(n, {});
+                            st->bases.assign(n, { -1, -1, -1, -1 });
+                            st->layers.assign(n, { 0, 0, 0, 0 });
+                        }
+                        auto ranges = Join::Make(n * 8, [all] { all->Arrive(); });
+                        auto named = Join::Make(n, [this, st, ranges, n] {
+                            for (int p = 0; p < n; ++p) {
+                                std::string name;
+                                {
+                                    std::scoped_lock lock(st->m);
+                                    name = st->names[p];
+                                }
+                                for (int a = 0; a < 4; ++a) {
+                                    for (const bool isBase : { true, false }) {
+                                        RE::Actor* who = RE::PlayerCharacter::GetSingleton();
+                                        CallMethod(
+                                            quest_, kMainQuestScript, isBase ? "_getActorPresetBase" : "_getActorPresetLayers",
+                                            [st, ranges, p, a, isBase](const RE::BSScript::Variable& v) {
+                                                {
+                                                    std::scoped_lock lock(st->m);
+                                                    const int x = v.IsInt() ? v.GetSInt() : (isBase ? -1 : 0);
+                                                    (isBase ? st->bases : st->layers)[p][a] = x;
+                                                }
+                                                ranges->Arrive();
+                                            },
+                                            std::move(who), RE::BSFixedString(name), RE::BSFixedString(kAreas[a]));
+                                    }
+                                }
+                            }
+                        });
+                        for (int p = 0; p < n; ++p) {
+                            RE::Actor* who = RE::PlayerCharacter::GetSingleton();
+                            CallMethod(
+                                quest_, kMainQuestScript, "GetActorPresetAt",
+                                [st, named, p](const RE::BSScript::Variable& v) {
+                                    if (v.IsString()) {
+                                        std::scoped_lock lock(st->m);
+                                        st->names[p] = std::string(v.GetString());
+                                    }
+                                    named->Arrive();
+                                },
+                                std::move(who), static_cast<std::int32_t>(p));
+                        }
+                    },
+                    std::move(actor));
+            });
+        };
+
+        RunOnGame([st, details] {
+            auto counts = Join::Make(4, details);
+            for (int a = 0; a < 4; ++a) {
+                CallStatic("NiOverride", kCountFns[a], [st, counts, a](const RE::BSScript::Variable& r) {
+                    {
+                        std::scoped_lock lock(st->m);
+                        st->u.areas[a].total = r.IsInt() ? r.GetSInt() : 0;
+                    }
+                    counts->Arrive();
+                });
+            }
+        });
+    }
+
 
     void MtfBridge::ReloadVisualPacks() {
         RunOnGame([this] {
@@ -522,7 +756,9 @@ namespace mtfui::game {
         });
     }
 
-    std::string ApplyResultText(int rc) {
+    std::string ApplyResultText(int rc, bool onPlayer) {
+        const std::string fix = onPlayer ? "Remove another preset, lower MTF's start slot on the General tab, or raise iNumOverlays in RaceMenu's ini"
+                                         : "Remove another preset or overlay from them, or raise iNumOverlays in RaceMenu's ini";
         switch (rc) {
             case 1: return "Applied";
             case 0: return "Already applied to this actor";
@@ -530,8 +766,8 @@ namespace mtfui::game {
             case -3: return "MTF is already tracking the maximum number of NPCs";
             case -4: return "Preset name is empty";
             case -5: return "MTF could not read the preset";
-            case -6: return "No free overlay slots on this actor for the preset's tattoos";
-            case -7: return "Not enough overlay slots; the tattoo would be cut off";
+            case -6: return "No free overlay slots left for its tattoos. " + fix;
+            case -7: return "Too few overlay slots left, so its tattoo would be cut off. " + fix;
             default: return "Unexpected result " + std::to_string(rc);
         }
     }

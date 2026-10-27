@@ -1,5 +1,7 @@
 #pragma once
 
+#include "model/Slots.h"
+
 namespace mtfui::game {
     inline constexpr const char* kMtfPlugin = "MagicTattoosFramework.esp";
     inline constexpr RE::FormID kMainQuestLocalId = 0x803;
@@ -26,6 +28,14 @@ namespace mtfui::game {
         std::string mcmEditing;  // preset the MCM has loaded for editing
     };
 
+    // The player's overlay slots: RaceMenu's counts, MTF's blocks and what is drawn in each slot.
+    struct SlotUsage {
+        std::array<model::AreaSlots, 4> areas;  // in kAreas order
+        // MTF caches RaceMenu's counts in its save the first time it asks and never asks again, so a raised
+        // iNumOverlays went unnoticed. Reading corrects the cache; this is what it held when it was wrong, else -1.
+        std::array<int, 4> staleCounts{ -1, -1, -1, -1 };
+    };
+
     // Everything the UI asks of MTF's Papyrus side. Calls are queued to the game thread;
     // results are handed back through PostToUi so UI state is only touched while rendering.
     class MtfBridge {
@@ -43,7 +53,9 @@ namespace mtfui::game {
         void SetModActive(bool on);
         void SetDebugMode(bool on);
         void SetUpdateInterval(float seconds);
-        void SetOverlaySlot(int area, int start, std::function<void()> done = {});
+        // Moves MTF's start slot and repacks the presets applied to the player above it, keeping their state.
+        void MoveOverlayStart(int area, int start, std::function<void()> done);
+        void ReadSlotUsage(std::function<void(SlotUsage)> done);
         void ReloadVisualPacks();
         void SetRescanOnLoad(bool on);
         void SetPluginEnabled(const std::string& pluginId, bool on);
@@ -77,5 +89,5 @@ namespace mtfui::game {
     };
 
     // Formats an AddAppliedPreset return code for the user.
-    std::string ApplyResultText(int rc);
+    std::string ApplyResultText(int rc, bool onPlayer = true);
 }
