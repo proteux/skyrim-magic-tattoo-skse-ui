@@ -133,9 +133,45 @@ namespace mtfui::ui {
         EndDisabled();
         if (BeginPopup("##applied")) {
             SeparatorText(("Presets on " + app.targetName).c_str());
+            const bool onPlayer = app.targetId == 0x14;
+            if (onPlayer) {
+                app.WantSlotUsage();
+            }
+            if (onPlayer && app.HasCharacterDefault()) {
+                const std::string name = app.CharacterDefaultName();
+                TextUnformatted(name.empty() ? "Unsaved MCM setup" : name.c_str());
+                SameLine();
+                TextDisabled("(character default)");
+                if (IsItemHovered()) {
+                    SetTooltip("The preset loaded in MTF's MCM. MTF draws it on you below the applied presets, whatever is applied.");
+                }
+                SameLine(260);
+                if (!name.empty() && SmallButton("Edit##default")) {
+                    app.Open(game::MtfBridge::Get().Snapshot().mcmEditing);
+                    app.RequestTab(Tab::Presets);
+                    CloseCurrentPopup();
+                }
+                SameLine();
+                if (SmallButton("Remove##default")) {
+                    OpenPopup("##removedefault");
+                }
+                if (BeginPopup("##removedefault")) {
+                    TextUnformatted("Stop drawing it as your character default?");
+                    TextDisabled(name.empty() ? "MTF's MCM setup was never saved, so it is lost." : "The preset file is kept; load it in MTF's MCM to bring it back.");
+                    if (Button("Remove")) {
+                        app.RemoveCharacterDefault();
+                        CloseCurrentPopup();
+                    }
+                    SameLine();
+                    if (Button("Cancel")) {
+                        CloseCurrentPopup();
+                    }
+                    EndPopup();
+                }
+            }
             if (!app.appliedKnown) {
                 TextDisabled("Asking MTF...");
-            } else if (app.applied.empty()) {
+            } else if (app.applied.empty() && !(onPlayer && app.HasCharacterDefault())) {
                 TextDisabled("None");
             }
             for (const auto& name : app.applied) {

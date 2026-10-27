@@ -27,13 +27,24 @@ namespace {
     void __stdcall RenderSection() { mtfui::ui::App::Get().DrawSection(); }
     void __stdcall RenderWindow() { mtfui::ui::App::Get().DrawWindow(); }
 
+    // The framework repeats an event many times in a row, from several threads. Only a change is acted on, and on
+    // the game thread, where the menu also renders.
     void __stdcall OnMenuEvent(SKSEMenuFramework::Model::EventType type) {
-        auto& app = mtfui::ui::App::Get();
-        if (type == SKSEMenuFramework::Model::kOpenMenu) {
-            app.OnMenuOpen();
-        } else if (type == SKSEMenuFramework::Model::kCloseMenu) {
-            app.OnMenuClose();
+        static std::atomic<int> last{ -1 };
+        if (type != SKSEMenuFramework::Model::kOpenMenu && type != SKSEMenuFramework::Model::kCloseMenu) {
+            return;
         }
+        if (last.exchange(type) == type) {
+            return;
+        }
+        mtfui::game::MtfBridge::RunOnGame([type] {
+            auto& app = mtfui::ui::App::Get();
+            if (type == SKSEMenuFramework::Model::kOpenMenu) {
+                app.OnMenuOpen();
+            } else {
+                app.OnMenuClose();
+            }
+        });
     }
 
     void RegisterMenu() {

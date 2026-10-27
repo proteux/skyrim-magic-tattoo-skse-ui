@@ -283,6 +283,33 @@ namespace mtfui::ui {
         RefreshApplied();
     }
 
+    bool App::HasCharacterDefault() const {
+        if (!game::MtfBridge::Get().Snapshot().mcmEditing.empty()) {
+            return true;
+        }
+        return slotUsage_ && std::any_of(slotUsage_->areas.begin(), slotUsage_->areas.end(), [](const model::AreaSlots& a) { return a.mcmWant > 0; });
+    }
+
+    std::string App::CharacterDefaultName() const {
+        const auto& name = game::MtfBridge::Get().Snapshot().mcmEditing;
+        const auto* info = name.empty() ? nullptr : FindLibrary(name);
+        return info ? info->displayName : name;
+    }
+
+    void App::RemoveCharacterDefault() {
+        const std::string name = CharacterDefaultName();
+        game::MtfBridge::Get().ClearMcmPreset([this, name] {
+            Toast(name.empty() ? "Removed the character default" : "Removed " + name + " as the character default");
+            if (slotUsage_) {
+                for (auto& a : slotUsage_->areas) {
+                    a.mcmWant = 0;
+                }
+            }
+            SlotUsageChanged();
+            RefreshApplied();
+        });
+    }
+
     void App::MoveOverlayStart(int area, int start) {
         if (overlayMoving_) {
             return;

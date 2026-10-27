@@ -363,6 +363,35 @@ namespace mtfui::game {
         });
     }
 
+    void MtfBridge::ClearMcmPreset(std::function<void()> done) {
+        snap_.mcmEditing.clear();
+        done = Guarded(std::move(done));
+        // ResetEditor's removeOverlay also wipes the applied presets, and MTF only notices the emptied block and
+        // repacks them for the body, so they are repacked here for every area.
+        RunOnGame([this, done = std::move(done)]() mutable {
+            logger::info("Clearing the preset loaded in MTF's MCM");
+            CallMethod(quest_, kMainQuestScript, "ResetEditor", [this, done = std::move(done)](const RE::BSScript::Variable&) mutable {
+                if (auto mcm = ScriptObject(mcmQuest_, kMcmScript)) {
+                    for (const char* name : { "_editingPresetName", "_editingPresetDisplay" }) {
+                        if (auto* v = mcm->GetVariable(name); v && v->IsString()) {
+                            v->SetString("");
+                        }
+                    }
+                }
+                RE::Actor* player = RE::PlayerCharacter::GetSingleton();
+                CallMethod(
+                    quest_, kMainQuestScript, "_compactAppliedPresets",
+                    [this, done = std::move(done)](const RE::BSScript::Variable&) mutable {
+                        CallMethod(quest_, kMainQuestScript, "setRedraw", {});
+                        if (done) {
+                            PostToUi(std::move(done));
+                        }
+                    },
+                    std::move(player));
+            });
+        });
+    }
+
     void MtfBridge::ReadSlotUsage(std::function<void(SlotUsage)> done) {
         if (!done) {
             return;

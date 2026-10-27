@@ -55,6 +55,9 @@ namespace mtfui::game {
         void SetUpdateInterval(float seconds);
         // Moves MTF's start slot and repacks the presets applied to the player above it, keeping their state.
         void MoveOverlayStart(int area, int start, std::function<void()> done);
+        // Empties the preset loaded in MTF's MCM, the player's character default, as the MCM's "New preset" does,
+        // and repacks the presets applied to the player into the slots it held. The preset's file stays on disk.
+        void ClearMcmPreset(std::function<void()> done);
         void ReadSlotUsage(std::function<void(SlotUsage)> done);
         void ReloadVisualPacks();
         void SetRescanOnLoad(bool on);
