@@ -110,6 +110,11 @@ namespace mtfui::ui {
         void RemoveFromTarget(const std::string& name);
         void RemoveAllFromTarget();
         void RefreshApplied();
+        // MTF's start slot only places the player's tattoos, and presets already applied stay where they were drawn,
+        // so the player's applied presets come off before the move and go back on after it, in the same order.
+        void MoveOverlayStart(int area, int start);
+        bool OverlayMoveBusy() const { return overlayMove_.has_value(); }
+        std::optional<int> OverlayMoveTarget(int area) const;
         void UpdatePreview();
         void SaveSettings();
 
@@ -145,6 +150,7 @@ namespace mtfui::ui {
         void RestoreDraft();
         void HoldVanityCamera(bool hold);
         void HoldActor(RE::FormID id);  // 0 releases
+        void RunOverlayMove();  // once the live preview is off the player
 
         SKSEMenuFramework::Model::WindowInterface* window_ = nullptr;
         std::optional<Tab> requestedTab_;
@@ -196,5 +202,11 @@ namespace mtfui::ui {
         };
         LintInputs lintInputs_;
         std::map<std::string, int> overlayCapacity_;
+        struct OverlayMove {
+            int area = 0;
+            int start = 0;
+        };
+        std::optional<OverlayMove> overlayMove_;  // set until the presets are back on
+        bool overlayMoving_ = false;
     };
 }

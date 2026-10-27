@@ -272,11 +272,19 @@ namespace mtfui::game {
         });
     }
 
-    void MtfBridge::SetOverlaySlot(int area, int start) {
+    void MtfBridge::SetOverlaySlot(int area, int start, std::function<void()> done) {
         area = std::clamp(area, 0, 3);
         snap_.overlayStart[area] = start;
-        RunOnGame([this, area, start] {
-            CallMethod(quest_, kMainQuestScript, "SetOverlaySlot", {}, RE::BSFixedString(kAreas[area]), static_cast<std::int32_t>(start));
+        done = Guarded(std::move(done));
+        RunOnGame([this, area, start, done = std::move(done)]() mutable {
+            CallMethod(
+                quest_, kMainQuestScript, "SetOverlaySlot",
+                [done = std::move(done)](const RE::BSScript::Variable&) mutable {
+                    if (done) {
+                        PostToUi(std::move(done));
+                    }
+                },
+                RE::BSFixedString(kAreas[area]), static_cast<std::int32_t>(start));
         });
     }
 

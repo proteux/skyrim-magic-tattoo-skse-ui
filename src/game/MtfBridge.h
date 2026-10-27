@@ -43,7 +43,7 @@ namespace mtfui::game {
         void SetModActive(bool on);
         void SetDebugMode(bool on);
         void SetUpdateInterval(float seconds);
-        void SetOverlaySlot(int area, int start);
+        void SetOverlaySlot(int area, int start, std::function<void()> done = {});
         void ReloadVisualPacks();
         void SetRescanOnLoad(bool on);
         void SetPluginEnabled(const std::string& pluginId, bool on);

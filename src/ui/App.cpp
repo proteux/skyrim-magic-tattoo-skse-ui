@@ -18,6 +18,14 @@ namespace mtfui::ui {
         int IniInt(const fs::path& ini, const wchar_t* section, const wchar_t* key, int fallback) {
             return static_cast<int>(GetPrivateProfileIntW(section, key, fallback, ini.wstring().c_str()));
         }
+
+        // Papyrus calls that each wait for the previous one to answer.
+        using Step = std::function<void(std::function<void()> next)>;
+        void RunChain(std::shared_ptr<std::vector<Step>> steps, std::size_t i) {
+            if (i < steps->size()) {
+                (*steps)[i]([steps, i] { RunChain(steps, i + 1); });
+            }
+        }
     }
 
     fs::path GameDataDir() {
@@ -262,6 +270,72 @@ namespace mtfui::ui {
         RefreshApplied();
     }
 
+    void App::MoveOverlayStart(int area, int start) {
+        if (overlayMoving_) {
+            return;
+        }
+        overlayMove_ = OverlayMove{ area, start };
+    }
+
+    std::optional<int> App::OverlayMoveTarget(int area) const {
+        if (overlayMove_ && overlayMove_->area == area) {
+            return overlayMove_->start;
+        }
+        return std::nullopt;
+    }
+
+    void App::RunOverlayMove() {
+        if (!overlayMove_ || overlayMoving_ || game::LivePreview::Get().Active()) {
+            return;
+        }
+        overlayMoving_ = true;
+        const auto move = *overlayMove_;
+        constexpr RE::FormID player = 0x14;
+        game::MtfBridge::Get().ListApplied(player, [this, move](std::vector<std::string> names) {
+            std::erase_if(names, [](const std::string& n) { return model::IEquals(n, game::kPreviewPreset); });
+            auto steps = std::make_shared<std::vector<Step>>();
+            auto failed = std::make_shared<std::vector<std::string>>();
+            // Last first, so MTF's compaction after each removal has nothing left to move.
+            for (auto it = names.rbegin(); it != names.rend(); ++it) {
+                steps->push_back([n = *it](std::function<void()> next) { game::MtfBridge::Get().Remove(player, n, std::move(next)); });
+            }
+            steps->push_back([move](std::function<void()> next) { game::MtfBridge::Get().SetOverlaySlot(move.area, move.start, std::move(next)); });
+            for (const auto& n : names) {
+                steps->push_back([n, failed](std::function<void()> next) {
+                    game::MtfBridge::Get().Apply(player, n, [n, failed, next](int rc) {
+                        if (rc < 0) {
+                            failed->push_back(n + " (" + game::ApplyResultText(rc) + ")");
+                        }
+                        next();
+                    });
+                });
+            }
+            const std::string where = std::string(game::kAreas[move.area]) + " overlays now start at slot " + std::to_string(move.start);
+            const auto count = names.size();
+            steps->push_back([this, where, count, failed](std::function<void()>) {
+                overlayMove_.reset();
+                overlayMoving_ = false;
+                if (!failed->empty()) {
+                    std::string list;
+                    for (const auto& f : *failed) {
+                        list += (list.empty() ? "" : ", ") + f;
+                    }
+                    logger::warn("Overlay move: could not put back {}", list);
+                    Toast(where + ". Could not put back on you: " + list, true);
+                } else if (count > 0) {
+                    Toast(where + ". Moved " + std::to_string(count) + " applied preset(s) on you with it");
+                } else {
+                    Toast(where);
+                }
+                if (targetId == player) {
+                    RefreshApplied();
+                }
+            });
+            logger::info("Moving {} overlay start to {}, re-applying {} preset(s) on the player", game::kAreas[move.area], move.start, count);
+            RunChain(steps, 0);
+        });
+    }
+
     std::vector<std::string> App::PreviewSuspends(int slot) {
         const auto& lp = game::LivePreview::Get();
         if (!appliedKnown) {
@@ -305,7 +379,7 @@ namespace mtfui::ui {
 
     void App::UpdatePreview() {
         auto& lp = game::LivePreview::Get();
-        if (!livePreview || !ed.preset || !game::MtfBridge::Get().Installed()) {
+        if (!livePreview || !ed.preset || !game::MtfBridge::Get().Installed() || overlayMove_) {
             if (lp.Active()) {
                 lp.Stop();
             }
@@ -378,6 +452,8 @@ namespace mtfui::ui {
         targetName = "You";
         applied.clear();
         appliedKnown = false;
+        overlayMove_.reset();
+        overlayMoving_ = false;
         game::LivePreview::Get().Cleanup();
         holdWanted_ = 0;
         game::MtfBridge::RunOnGame([ids = settings.heldActors] { game::ReleaseLeftover({ ids.begin(), ids.end() }); });
@@ -469,6 +545,7 @@ namespace mtfui::ui {
         }
         UpdatePreview();
         game::LivePreview::Get().Tick();
+        RunOverlayMove();
         render::DdsCache::Get().EndFrame();
     }
 

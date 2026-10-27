@@ -40,21 +40,23 @@ namespace mtfui::ui {
             const std::string name = game::kAreas[area];
             const int used = LayersUsedIn(app, name);
             // While dragging, only the draft moves; MTF re-applies every overlay on a change, so it hears the final value once.
-            int start = g.overlayArea == area ? g.overlayDraft : snap.overlayStart[area];
+            int start = g.overlayArea == area ? g.overlayDraft : app.OverlayMoveTarget(area).value_or(snap.overlayStart[area]);
 
             PushID(area);
             AlignTextToFramePadding();
             TextUnformatted(name.c_str());
             SameLine(80);
             SetNextItemWidth(140);
+            BeginDisabled(app.OverlayMoveBusy());
             SliderInt("##start", &start, 0, std::max(0, capacity - 1), "starts at %d");
             if (IsItemActive()) {
                 g.overlayArea = area;
                 g.overlayDraft = start;
             }
-            if (IsItemDeactivatedAfterEdit()) {
-                bridge.SetOverlaySlot(area, start);
+            if (IsItemDeactivatedAfterEdit() && start != snap.overlayStart[area]) {
+                app.MoveOverlayStart(area, start);
             }
+            EndDisabled();
             if (!IsItemActive() && g.overlayArea == area) {
                 g.overlayArea = -1;
             }
@@ -227,7 +229,9 @@ namespace mtfui::ui {
         TextWrapped("Tattoos are drawn into RaceMenu overlay slots. Pick where MTF's block starts so it does not overlap "
                     "other mods that use overlays (body paint, dirt, tattoos from RaceMenu).");
         HelpMarker("Slot counts come from skee64.ini / skee64_custom.ini ([Overlays/Body] iNumOverlays, ...). "
-                   "Highlighted cells are the slots MTF draws into, based on the most layers any installed tattoo uses.");
+                   "Highlighted cells are the slots MTF draws into, based on the most layers any installed tattoo uses. "
+                   "The start only places your own tattoos. Changing it takes the presets applied to you off and puts them back "
+                   "at the new place. A live preview pauses while that runs.");
         const auto ctx = app.LintCtx();
         for (int a = 0; a < 4; ++a) {
             const auto it = ctx.overlayCapacity.find(game::kAreas[a]);
