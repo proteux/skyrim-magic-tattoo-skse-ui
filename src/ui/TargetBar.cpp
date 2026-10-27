@@ -125,12 +125,17 @@ namespace mtfui::ui {
 
         SameLine();
         BeginDisabled(!mtf);
-        const std::string appliedLabel = app.appliedKnown ? "Applied (" + std::to_string(app.applied.size()) + ")" : "Applied";
+        const bool mtfPreset = app.targetId == 0x14 && app.HasMtfPreset();
+        const std::string star = mtfPreset ? "*" : "";
+        const std::string appliedLabel = (app.appliedKnown ? "Applied (" + std::to_string(app.applied.size()) + star + ")" : "Applied" + star) + "###applied";
         if (Button(appliedLabel.c_str())) {
             app.RefreshApplied();
             OpenPopup("##applied");
         }
         EndDisabled();
+        if (mtfPreset && IsItemHovered()) {
+            SetTooltip("* MTF's preset (the one loaded in its MCM) is also drawn on you. It isn't in the count.");
+        }
         if (BeginPopup("##applied")) {
             SeparatorText(("Presets on " + app.targetName).c_str());
             const bool onPlayer = app.targetId == 0x14;
