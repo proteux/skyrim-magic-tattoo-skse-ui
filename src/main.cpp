@@ -82,7 +82,6 @@ namespace {
         case SKSE::MessagingInterface::kDataLoaded: {
             LogEnvironment();
             mtfui::game::MtfBridge::Get().OnDataLoaded();
-            mtfui::game::WatchOverlayVisibility();
             auto* device = reinterpret_cast<ID3D11Device*>(RE::BSGraphics::Renderer::GetDevice());
             mtfui::render::DdsCache::Get().Init(device);
             try {
@@ -99,9 +98,12 @@ namespace {
                 break;
             }
             mtfui::ui::App::Get().OnGameLoaded();
+            // The body is rebuilt on load, and MTF repaints the player once its tick resumes.
+            mtfui::game::WatchOverlaysFor(std::chrono::seconds(15));
             break;
         case SKSE::MessagingInterface::kNewGame:
             mtfui::ui::App::Get().OnGameLoaded();
+            mtfui::game::WatchOverlaysFor(std::chrono::seconds(15));
             break;
         case SKSE::MessagingInterface::kSaveGame:
             mtfui::ui::App::Get().OnSaving();

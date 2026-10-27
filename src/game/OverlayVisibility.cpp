@@ -23,16 +23,29 @@ namespace mtfui::game {
         }
 
         constexpr auto kCheckEvery = std::chrono::milliseconds(500);
+
+        std::mutex g_mutex;
+        std::chrono::steady_clock::time_point g_until;
+        bool g_watching = false;
     }
 
-    // MTF draws from Papyrus at its own pace and its tick event only reaches Papyrus listeners, so the player's
-    // slots are checked on a schedule instead. A check walks the player's 3D once on the main thread.
-    void WatchOverlayVisibility() {
+    void WatchOverlaysFor(std::chrono::milliseconds window) {
+        std::scoped_lock lock(g_mutex);
+        g_until = std::max(g_until, std::chrono::steady_clock::now() + window);
+        if (g_watching) {
+            return;
+        }
+        g_watching = true;
         std::thread([] {
             for (;;) {
                 std::this_thread::sleep_for(kCheckEvery);
                 if (auto* tasks = SKSE::GetTaskInterface()) {
                     tasks->AddTask([] { ShowDrawnOverlays(RE::PlayerCharacter::GetSingleton()); });
+                }
+                std::scoped_lock lock(g_mutex);
+                if (std::chrono::steady_clock::now() >= g_until) {
+                    g_watching = false;
+                    return;
                 }
             }
         }).detach();

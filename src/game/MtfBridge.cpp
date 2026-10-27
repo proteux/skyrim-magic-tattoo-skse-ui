@@ -1,5 +1,6 @@
 #include "game/MtfBridge.h"
 
+#include "game/OverlayVisibility.h"
 #include "game/Papyrus.h"
 #include "io/UiSettings.h"
 #include "model/Catalogs.h"
@@ -75,6 +76,9 @@ namespace mtfui::game {
             std::atomic<int> left_;
             std::function<void()> done_;
         };
+
+        // MTF redraws on its next tick or two after one of these calls returns.
+        void WatchRedraw() { WatchOverlaysFor(std::chrono::seconds(5)); }
 
         bool IsDefaultOverlay(std::string tex) {
             tex = io::ToLower(tex);
@@ -311,6 +315,7 @@ namespace mtfui::game {
             if (on) {
                 CallMethod(quest_, kMainQuestScript, "setRedraw", {});
                 CallMethod(quest_, kMainQuestScript, "Rearm", {});
+                WatchRedraw();
             }
         });
     }
@@ -353,6 +358,7 @@ namespace mtfui::game {
                         quest_, kMainQuestScript, "_compactAppliedPresets",
                         [this, done = std::move(done)](const RE::BSScript::Variable&) mutable {
                             CallMethod(quest_, kMainQuestScript, "setRedraw", {});
+                            WatchRedraw();
                             if (done) {
                                 PostToUi(std::move(done));
                             }
@@ -383,6 +389,7 @@ namespace mtfui::game {
                     quest_, kMainQuestScript, "_compactAppliedPresets",
                     [this, done = std::move(done)](const RE::BSScript::Variable&) mutable {
                         CallMethod(quest_, kMainQuestScript, "setRedraw", {});
+                        WatchRedraw();
                         if (done) {
                             PostToUi(std::move(done));
                         }
@@ -555,6 +562,7 @@ namespace mtfui::game {
         RunOnGame([this] {
             CallMethod(quest_, kMainQuestScript, "ForceReloadVisualCatalogs", [this](const RE::BSScript::Variable&) {
                 CallMethod(quest_, kMainQuestScript, "setRedraw", {});
+                WatchRedraw();
                 CallMethod(quest_, kMainQuestScript, "GetVisualPackCount", [this](const RE::BSScript::Variable& r) {
                     const int n = r.IsInt() ? r.GetSInt() : 0;
                     PostToUi([this, n] { snap_.visualPackCount = n; });
@@ -613,6 +621,7 @@ namespace mtfui::game {
                                     quest_, kMainQuestScript, "LoadPreset",
                                     [this, finish = std::move(finish)](const RE::BSScript::Variable&) mutable {
                                         CallMethod(quest_, kMainQuestScript, "setRedraw", {});
+                                        WatchRedraw();
                                         finish();
                                     },
                                     RE::BSFixedString(name));
@@ -645,6 +654,7 @@ namespace mtfui::game {
                 [done, name, actor](const RE::BSScript::Variable& r) {
                     const int rc = r.IsInt() ? r.GetSInt() : -5;
                     logger::info("AddAppliedPreset({:08X}, {}) returned {}", actor, name, rc);
+                    WatchRedraw();
                     PostToUi([done, rc] {
                         if (done) {
                             done(rc);
@@ -668,6 +678,7 @@ namespace mtfui::game {
             CallMethod(
                 quest_, kMainQuestScript, "RemoveAppliedPreset",
                 [done = std::move(done)](const RE::BSScript::Variable&) mutable {
+                    WatchRedraw();
                     if (done) {
                         PostToUi(std::move(done));
                     }
