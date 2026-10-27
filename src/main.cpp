@@ -1,5 +1,6 @@
 #include "Version.h"
 #include "game/MtfBridge.h"
+#include "game/OverlayVisibility.h"
 #include "io/UiSettings.h"
 #include "render/DdsCache.h"
 #include "ui/App.h"
@@ -26,13 +27,24 @@ namespace {
     void __stdcall RenderSection() { mtfui::ui::App::Get().DrawSection(); }
     void __stdcall RenderWindow() { mtfui::ui::App::Get().DrawWindow(); }
 
+    // The framework repeats an event many times in a row, from several threads. Only a change is acted on, and on
+    // the game thread, where the menu also renders.
     void __stdcall OnMenuEvent(SKSEMenuFramework::Model::EventType type) {
-        auto& app = mtfui::ui::App::Get();
-        if (type == SKSEMenuFramework::Model::kOpenMenu) {
-            app.OnMenuOpen();
-        } else if (type == SKSEMenuFramework::Model::kCloseMenu) {
-            app.OnMenuClose();
+        static std::atomic<int> last{ -1 };
+        if (type != SKSEMenuFramework::Model::kOpenMenu && type != SKSEMenuFramework::Model::kCloseMenu) {
+            return;
         }
+        if (last.exchange(type) == type) {
+            return;
+        }
+        mtfui::game::MtfBridge::RunOnGame([type] {
+            auto& app = mtfui::ui::App::Get();
+            if (type == SKSEMenuFramework::Model::kOpenMenu) {
+                app.OnMenuOpen();
+            } else {
+                app.OnMenuClose();
+            }
+        });
     }
 
     void RegisterMenu() {
@@ -86,9 +98,12 @@ namespace {
                 break;
             }
             mtfui::ui::App::Get().OnGameLoaded();
+            // The body is rebuilt on load, and MTF repaints the player once its tick resumes.
+            mtfui::game::WatchOverlaysFor(std::chrono::seconds(15));
             break;
         case SKSE::MessagingInterface::kNewGame:
             mtfui::ui::App::Get().OnGameLoaded();
+            mtfui::game::WatchOverlaysFor(std::chrono::seconds(15));
             break;
         case SKSE::MessagingInterface::kSaveGame:
             mtfui::ui::App::Get().OnSaving();

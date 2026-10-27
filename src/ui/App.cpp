@@ -80,7 +80,8 @@ namespace mtfui::ui {
             n = IniInt(custom, section, L"iNumOverlays", n);
             overlayCapacity_[area] = n;
         }
-        logger::info("Overlay slots: Body {}, Face {}, Hands {}, Feet {}", overlayCapacity_["Body"], overlayCapacity_["Face"], overlayCapacity_["Hands"],
+        // Only until RaceMenu itself answers, after a save loads.
+        logger::info("Overlay slots in the ini files: Body {}, Face {}, Hands {}, Feet {}", overlayCapacity_["Body"], overlayCapacity_["Face"], overlayCapacity_["Hands"],
             overlayCapacity_["Feet"]);
 
         game::LivePreview::Get().Init(paths.mtfRoot / "presets_builtin", settings.previewActors, [this](const std::vector<RE::FormID>& ids) {
@@ -125,10 +126,15 @@ namespace mtfui::ui {
     }
 
     void App::Toast(std::string text, bool error) {
+        Toast(std::move(text), error, {}, {});
+    }
+
+    void App::Toast(std::string text, bool error, std::string actionLabel, std::function<void()> action) {
         if (error) {
             logger::warn("{}", text);
         }
-        toasts_.push_back({ std::move(text), error, GetTime() + (error ? 8.0 : 4.0) });
+        const double shown = action ? 12.0 : (error ? 8.0 : 4.0);
+        toasts_.push_back({ std::move(text), error, GetTime() + shown, std::move(actionLabel), std::move(action) });
         if (toasts_.size() > 3) {
             toasts_.erase(toasts_.begin());
         }
@@ -182,6 +188,11 @@ namespace mtfui::ui {
             }
         }
         ctx.overlayCapacity = overlayCapacity_;
+        if (slotUsage_) {
+            for (int a = 0; a < 4; ++a) {
+                ctx.overlayCapacity[game::kAreas[a]] = slotUsage_->areas[a].total;
+            }
+        }
         return ctx;
     }
 
@@ -229,8 +240,14 @@ namespace mtfui::ui {
             Toast(name + " is already on " + targetName + ". It's hidden until the live preview stops.");
             return;
         }
-        game::MtfBridge::Get().Apply(targetId, name, [this, name](int rc) {
-            Toast(name + ": " + game::ApplyResultText(rc) + (rc == 1 ? " to " + targetName : ""), rc < 0);
+        game::MtfBridge::Get().Apply(targetId, name, [this, name, onPlayer = targetId == 0x14](int rc) {
+            const std::string text = name + ": " + game::ApplyResultText(rc, onPlayer) + (rc == 1 ? " to " + targetName : "");
+            if ((rc == -6 || rc == -7) && onPlayer) {
+                Toast(text, true, "Show overlay slots", [this] { RequestTab(Tab::General); });
+            } else {
+                Toast(text, rc < 0);
+            }
+            SlotUsageChanged();
             RefreshApplied();
         });
     }
@@ -245,6 +262,7 @@ namespace mtfui::ui {
         }
         game::MtfBridge::Get().Remove(targetId, name, [this, name] {
             Toast("Removed " + name + " from " + targetName);
+            SlotUsageChanged();
             RefreshApplied();
         });
     }
@@ -255,11 +273,113 @@ namespace mtfui::ui {
             if (lp.IsSuspended(targetId, n)) {
                 lp.Forget(targetId, n);
             } else {
-                game::MtfBridge::Get().Remove(targetId, n, [this] { RefreshApplied(); });
+                game::MtfBridge::Get().Remove(targetId, n, [this] {
+                    SlotUsageChanged();
+                    RefreshApplied();
+                });
             }
         }
         Toast("Removing " + std::to_string(applied.size()) + " preset(s) from " + targetName);
         RefreshApplied();
+    }
+
+    bool App::HasMtfPreset() const {
+        if (!game::MtfBridge::Get().Snapshot().mcmEditing.empty()) {
+            return true;
+        }
+        return slotUsage_ && std::any_of(slotUsage_->areas.begin(), slotUsage_->areas.end(), [](const model::AreaSlots& a) { return a.mcmWant > 0; });
+    }
+
+    std::string App::MtfPresetName() const {
+        const auto& name = game::MtfBridge::Get().Snapshot().mcmEditing;
+        const auto* info = name.empty() ? nullptr : FindLibrary(name);
+        return info ? info->displayName : name;
+    }
+
+    void App::RemoveMtfPreset() {
+        const std::string name = MtfPresetName();
+        game::MtfBridge::Get().ClearMcmPreset([this, name] {
+            Toast(name.empty() ? "Cleared MTF's preset" : "Cleared " + name + " as MTF's preset");
+            if (slotUsage_) {
+                for (auto& a : slotUsage_->areas) {
+                    a.mcmWant = 0;
+                }
+            }
+            SlotUsageChanged();
+            RefreshApplied();
+        });
+    }
+
+    void App::MoveOverlayStart(int area, int start) {
+        if (overlayMoving_) {
+            return;
+        }
+        area = std::clamp(area, 0, 3);
+        if (!slotUsage_) {
+            Toast("Still reading your overlay slots. Try again in a moment", true);
+            return;
+        }
+        const auto& slots = slotUsage_->areas[area];
+        const auto plan = model::PlanStart(slots, start, game::kPreviewPreset);
+        if (!plan.fits) {
+            Toast(std::format("Not moved: from slot {}, MTF needs {} {} slots for your presets, and only {} are left. Remove a preset or pick a "
+                              "lower start",
+                      start, plan.needed, game::kAreas[area], std::max(0, slots.total - start)),
+                true);
+            return;
+        }
+        overlayMove_ = OverlayMove{ area, start };
+    }
+
+    std::optional<int> App::OverlayMoveTarget(int area) const {
+        if (overlayMove_ && overlayMove_->area == area) {
+            return overlayMove_->start;
+        }
+        return std::nullopt;
+    }
+
+    void App::RunOverlayMove() {
+        if (!overlayMove_ || overlayMoving_ || game::LivePreview::Get().Active()) {
+            return;
+        }
+        overlayMoving_ = true;
+        const auto move = *overlayMove_;
+        logger::info("Moving MTF's {} overlay start to {}", game::kAreas[move.area], move.start);
+        game::MtfBridge::Get().MoveOverlayStart(move.area, move.start, [this, move] {
+            overlayMove_.reset();
+            overlayMoving_ = false;
+            Toast(std::format("{} overlays now start at slot {}", game::kAreas[move.area], move.start));
+            SlotUsageChanged();
+            RefreshApplied();
+        });
+    }
+
+    void App::WantSlotUsage() {
+        if (!slotUsageBusy_ && GetTime() - slotUsageRead_ > 3.0) {
+            ReadSlotUsage();
+        }
+    }
+
+    void App::ReadSlotUsage() {
+        if (!game::MtfBridge::Get().Installed()) {
+            return;
+        }
+        slotUsageBusy_ = true;
+        game::MtfBridge::Get().ReadSlotUsage([this](game::SlotUsage u) {
+            slotUsageBusy_ = false;
+            slotUsageRead_ = GetTime();
+            std::string fixed;
+            for (int a = 0; a < 4; ++a) {
+                if (u.staleCounts[a] >= 0) {
+                    fixed += std::format("{}{} {} (was {})", fixed.empty() ? "" : ", ", game::kAreas[a], u.areas[a].total, u.staleCounts[a]);
+                }
+            }
+            if (!fixed.empty()) {
+                Toast("MTF was still using RaceMenu's old overlay slot counts. Updated: " + fixed);
+            }
+            slotUsage_ = std::move(u);
+            Relint();
+        });
     }
 
     std::vector<std::string> App::PreviewSuspends(int slot) {
@@ -305,7 +425,7 @@ namespace mtfui::ui {
 
     void App::UpdatePreview() {
         auto& lp = game::LivePreview::Get();
-        if (!livePreview || !ed.preset || !game::MtfBridge::Get().Installed()) {
+        if (!livePreview || !ed.preset || !game::MtfBridge::Get().Installed() || overlayMove_) {
             if (lp.Active()) {
                 lp.Stop();
             }
@@ -378,10 +498,16 @@ namespace mtfui::ui {
         targetName = "You";
         applied.clear();
         appliedKnown = false;
+        overlayMove_.reset();
+        overlayMoving_ = false;
+        slotUsage_.reset();
+        slotUsageBusy_ = false;
         game::LivePreview::Get().Cleanup();
         holdWanted_ = 0;
         game::MtfBridge::RunOnGame([ids = settings.heldActors] { game::ReleaseLeftover({ ids.begin(), ids.end() }); });
         game::MtfBridge::Get().Refresh();
+        // Also corrects MTF's cached slot counts before anything is applied this session.
+        ReadSlotUsage();
     }
 
     void App::OnSaving() {
@@ -469,6 +595,7 @@ namespace mtfui::ui {
         }
         UpdatePreview();
         game::LivePreview::Get().Tick();
+        RunOverlayMove();
         render::DdsCache::Get().EndFrame();
     }
 

@@ -122,6 +122,14 @@ namespace mtfui::ui {
         if (!toasts_.empty()) {
             const auto& t = toasts_.back();
             TextColored(t.error ? kError : kGood, "%s", t.text.c_str());
+            if (t.action) {
+                SameLine();
+                if (SmallButton(t.actionLabel.c_str())) {
+                    auto action = t.action;
+                    toasts_.pop_back();
+                    action();
+                }
+            }
             return;
         }
         const auto& bridge = game::MtfBridge::Get();

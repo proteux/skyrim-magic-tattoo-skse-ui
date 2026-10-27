@@ -1,5 +1,7 @@
+#include "game/LivePreview.h"
 #include "game/MtfBridge.h"
 #include "io/JsonStore.h"
+#include "model/Slots.h"
 #include "render/DdsCache.h"
 #include "render/Preview2D.h"
 #include "ui/App.h"
@@ -21,65 +23,120 @@ namespace mtfui::ui {
         };
         GeneralTabState g;
 
-        int LayersUsedIn(const App& app, const std::string& area) {
-            std::size_t most = 0;
-            for (const auto& p : app.cat.packs) {
-                if (p.area != area) {
-                    continue;
-                }
-                for (const auto& e : p.entries) {
-                    most = std::max(most, e.textures.size());
-                }
-            }
-            return static_cast<int>(std::min<std::size_t>(most, model::kLayerCount));
+        constexpr ImVec4 kMcmCell{ 0.45f, 0.85f, 0.45f, 0.85f };
+        constexpr ImVec4 kPresetCell = kAccent;
+        constexpr ImVec4 kPresetCellAlt{ 0.38f, 0.58f, 0.92f, 1.0f };
+        constexpr ImVec4 kOtherCell = kWarn;
+        constexpr ImVec4 kClashCell = kError;
+
+        std::string Holds(const std::vector<int>& slots) {
+            return slots.size() == 1 ? "Slot " + model::ListSlots(slots) + " holds an overlay MTF didn't draw"
+                                     : "Slots " + model::ListSlots(slots) + " hold overlays MTF didn't draw";
         }
 
-        void DrawSlotMap(App& app, int area, int capacity) {
-            auto& bridge = game::MtfBridge::Get();
-            const auto& snap = bridge.Snapshot();
+        std::string PresetLabel(const std::string& name) {
+            return model::IEquals(name, game::kPreviewPreset) ? "Live preview" : name;
+        }
+
+        void LegendItem(const ImVec4& color, const char* label) {
+            auto* dl = GetWindowDrawList();
+            const ImVec2 p = GetCursorScreenPos();
+            const float s = GetTextLineHeight();
+            ImDrawListManager::AddRectFilled(dl, p, ImVec2{ p.x + s, p.y + s }, GetColorU32(color), 2.0f, 0);
+            Dummy(ImVec2{ s, s });
+            SameLine();
+            TextDisabled("%s", label);
+            SameLine(0, 16);
+        }
+
+        // One row per area: the start slider, then one cell per RaceMenu slot. While the slider is dragged the
+        // cells show where MTF would put everything from the new start.
+        void DrawSlotMap(App& app, int area, const game::SlotUsage& usage) {
+            const auto& snap = game::MtfBridge::Get().Snapshot();
+            const auto& slots = usage.areas[area];
             const std::string name = game::kAreas[area];
-            const int used = LayersUsedIn(app, name);
-            // While dragging, only the draft moves; MTF re-applies every overlay on a change, so it hears the final value once.
-            int start = g.overlayArea == area ? g.overlayDraft : snap.overlayStart[area];
+            int start = g.overlayArea == area ? g.overlayDraft : app.OverlayMoveTarget(area).value_or(snap.overlayStart[area]);
+            const bool planning = start != slots.start;
 
             PushID(area);
             AlignTextToFramePadding();
             TextUnformatted(name.c_str());
             SameLine(80);
             SetNextItemWidth(140);
-            SliderInt("##start", &start, 0, std::max(0, capacity - 1), "starts at %d");
+            BeginDisabled(app.OverlayMoveBusy());
+            SliderInt("##start", &start, 0, std::max(0, slots.total - 1), "starts at %d");
             if (IsItemActive()) {
                 g.overlayArea = area;
                 g.overlayDraft = start;
             }
-            if (IsItemDeactivatedAfterEdit()) {
-                bridge.SetOverlaySlot(area, start);
+            if (IsItemDeactivatedAfterEdit() && start != snap.overlayStart[area]) {
+                app.MoveOverlayStart(area, start);
             }
+            EndDisabled();
             if (!IsItemActive() && g.overlayArea == area) {
                 g.overlayArea = -1;
             }
             SameLine();
 
+            const auto plan = model::PlanStart(slots, start, game::kPreviewPreset);
+            const auto cells = planning ? plan.cells : model::CurrentSlots(slots);
             auto* dl = GetWindowDrawList();
             const ImVec2 p = GetCursorScreenPos();
             const float cell = GetFrameHeight();
-            for (int i = 0; i < capacity; ++i) {
-                const bool mine = used > 0 && i >= start && i < start + used;
+            int mine = 0;
+            for (int i = 0; i < static_cast<int>(cells.size()); ++i) {
+                const auto& c = cells[i];
                 const ImVec2 a{ p.x + i * (cell + 3), p.y };
                 const ImVec2 b{ a.x + cell, a.y + cell };
-                ImDrawListManager::AddRectFilled(dl, a, b, mine ? GetColorU32(kAccent) : GetColorU32(ImGuiCol_FrameBg, 1.0f), 3.0f, 0);
+                ImVec4 color{};
+                bool filled = true;
+                if (c.use != model::SlotUse::Free) {
+                    ++mine;
+                    color = c.other ? kClashCell : c.use == model::SlotUse::Mcm ? kMcmCell : (c.presetIndex % 2 ? kPresetCellAlt : kPresetCell);
+                } else if (c.other) {
+                    color = kOtherCell;
+                } else {
+                    filled = false;
+                }
+                ImDrawListManager::AddRectFilled(dl, a, b, filled ? GetColorU32(color) : GetColorU32(ImGuiCol_FrameBg, 1.0f), 3.0f, 0);
                 const std::string n = std::to_string(i);
-                ImDrawListManager::AddText(dl, ImVec2{ a.x + 6, a.y + 3 }, mine ? 0xFF000000 : GetColorU32(ImGuiCol_TextDisabled, 1.0f), n.c_str());
+                ImDrawListManager::AddText(dl, ImVec2{ a.x + 6, a.y + 3 }, filled ? 0xFF000000 : GetColorU32(ImGuiCol_TextDisabled, 1.0f), n.c_str());
+                if (IsMouseHoveringRect(a, b)) {
+                    std::string tip = "Slot " + n + ": ";
+                    if (c.use == model::SlotUse::Mcm) {
+                        tip += "MTF preset (the one loaded in MTF's MCM)";
+                    } else if (c.use == model::SlotUse::Preset) {
+                        tip += PresetLabel(c.preset);
+                    } else if (!c.other) {
+                        tip += "free";
+                    }
+                    if (c.other) {
+                        tip += std::string(c.use == model::SlotUse::Free ? "" : "\nMTF would draw over ") + "an overlay MTF didn't draw\n" + c.texture;
+                    }
+                    SetTooltip("%s", tip.c_str());
+                }
             }
-            Dummy(ImVec2{ capacity * (cell + 3), cell });
+            Dummy(ImVec2{ cells.size() * (cell + 3), cell });
             SameLine();
-            if (used == 0) {
-                TextDisabled("no packs for this area");
-            } else if (start + used > capacity) {
-                TextColored(kError, "needs %d slots, only %d left", used, capacity - start);
+            if (!plan.fits) {
+                TextColored(kError, "needs %d from slot %d, only %d left", plan.needed, start, std::max(0, slots.total - start));
             } else {
-                TextDisabled("%d used", used);
+                TextDisabled("%d of %d used by MTF", mine, slots.total);
             }
+
+            Indent(80);
+            if (!plan.fits) {
+                TextColored(kError, "%s The MTF preset and your applied presets need %d %s slots from slot %d.",
+                    planning ? "Won't move:" : "Some tattoos are cut off:", plan.needed, name.c_str(), start);
+            }
+            if (!plan.covered.empty()) {
+                TextColored(kWarn, "%s. From slot %d, MTF would draw over %s.", Holds(plan.covered).c_str(), start, plan.covered.size() == 1 ? "it" : "them");
+            }
+            if (!plan.exposed.empty()) {
+                TextColored(kWarn, "%s. The next preset applied to you goes in from slot %d and can draw over %s.", Holds(plan.exposed).c_str(),
+                    start + plan.needed, plan.exposed.size() == 1 ? "it" : "them");
+            }
+            Unindent(80);
             PopID();
         }
 
@@ -224,14 +281,31 @@ namespace mtfui::ui {
         }
 
         SeparatorText("Overlay slots");
-        TextWrapped("Tattoos are drawn into RaceMenu overlay slots. Pick where MTF's block starts so it does not overlap "
-                    "other mods that use overlays (body paint, dirt, tattoos from RaceMenu).");
-        HelpMarker("Slot counts come from skee64.ini / skee64_custom.ini ([Overlays/Body] iNumOverlays, ...). "
-                   "Highlighted cells are the slots MTF draws into, based on the most layers any installed tattoo uses.");
-        const auto ctx = app.LintCtx();
-        for (int a = 0; a < 4; ++a) {
-            const auto it = ctx.overlayCapacity.find(game::kAreas[a]);
-            DrawSlotMap(app, a, it == ctx.overlayCapacity.end() ? 3 : it->second);
+        TextWrapped("Your tattoos are drawn into RaceMenu overlay slots. Pick where MTF's block starts so it does not overlap "
+                    "overlays from RaceMenu or other mods (body paint, dirt, other tattoos).");
+        HelpMarker("MTF first reserves room for the MTF preset (the one loaded in its MCM; clear it under Applied), "
+                   "then stacks each preset applied to you above it. "
+                   "Changing the start moves all of them, keeping their tiers. NPCs aren't affected: MTF stacks their tattoos "
+                   "above the highest slot already in use.\n\n"
+                   "More slots: the counts are RaceMenu's. Open Data/SKSE/Plugins/skee64_custom.ini in a text editor (MTF ships "
+                   "one; create it if it's missing) and add or change these lines, keeping bPlayerOnly=0 under [Overlays]:\n\n"
+                   "[Overlays/Body]\niNumOverlays=12\n[Overlays/Face]\niNumOverlays=6\n[Overlays/Hands]\niNumOverlays=6\n"
+                   "[Overlays/Feet]\niNumOverlays=6\n\n"
+                   "Restart the game afterwards; RaceMenu only reads it at startup. The file comes with MTF, so a mod manager may "
+                   "flag the edit or an MTF update may replace it. Putting your copy in its own small mod that wins the conflict "
+                   "keeps it safe.");
+        app.WantSlotUsage();
+        if (const auto* usage = app.SlotUsage()) {
+            LegendItem(kMcmCell, "MTF preset");
+            LegendItem(kPresetCell, "applied presets");
+            LegendItem(kOtherCell, "not drawn by MTF");
+            LegendItem(kClashCell, "MTF draws over another overlay");
+            NewLine();
+            for (int a = 0; a < 4; ++a) {
+                DrawSlotMap(app, a, *usage);
+            }
+        } else {
+            TextDisabled("Reading your overlay slots...");
         }
 
         SeparatorText("Visual packs");

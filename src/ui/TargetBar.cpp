@@ -125,17 +125,58 @@ namespace mtfui::ui {
 
         SameLine();
         BeginDisabled(!mtf);
-        const std::string appliedLabel = app.appliedKnown ? "Applied (" + std::to_string(app.applied.size()) + ")" : "Applied";
+        const bool mtfPreset = app.targetId == 0x14 && app.HasMtfPreset();
+        const std::string star = mtfPreset ? "*" : "";
+        const std::string appliedLabel = (app.appliedKnown ? "Applied (" + std::to_string(app.applied.size()) + star + ")" : "Applied" + star) + "###applied";
         if (Button(appliedLabel.c_str())) {
             app.RefreshApplied();
             OpenPopup("##applied");
         }
         EndDisabled();
+        if (mtfPreset && IsItemHovered()) {
+            SetTooltip("* MTF's preset (the one loaded in its MCM) is also drawn on you. It isn't in the count.");
+        }
         if (BeginPopup("##applied")) {
             SeparatorText(("Presets on " + app.targetName).c_str());
+            const bool onPlayer = app.targetId == 0x14;
+            if (onPlayer) {
+                app.WantSlotUsage();
+            }
+            if (onPlayer && app.HasMtfPreset()) {
+                const std::string name = app.MtfPresetName();
+                TextUnformatted(name.empty() ? "Unsaved MCM setup" : name.c_str());
+                SameLine();
+                TextDisabled("(MTF preset)");
+                if (IsItemHovered()) {
+                    SetTooltip("The preset loaded in MTF's MCM. MTF draws it on you below the applied presets, whatever is applied.");
+                }
+                SameLine(260);
+                if (!name.empty() && SmallButton("Edit##default")) {
+                    app.Open(game::MtfBridge::Get().Snapshot().mcmEditing);
+                    app.RequestTab(Tab::Presets);
+                    CloseCurrentPopup();
+                }
+                SameLine();
+                if (SmallButton("Remove##default")) {
+                    OpenPopup("##removedefault");
+                }
+                if (BeginPopup("##removedefault")) {
+                    TextUnformatted("Clear MTF's preset?");
+                    TextDisabled(name.empty() ? "MTF's MCM setup was never saved, so it is lost." : "The preset file is kept; load it in MTF's MCM to bring it back.");
+                    if (Button("Remove")) {
+                        app.RemoveMtfPreset();
+                        CloseCurrentPopup();
+                    }
+                    SameLine();
+                    if (Button("Cancel")) {
+                        CloseCurrentPopup();
+                    }
+                    EndPopup();
+                }
+            }
             if (!app.appliedKnown) {
                 TextDisabled("Asking MTF...");
-            } else if (app.applied.empty()) {
+            } else if (app.applied.empty() && !(onPlayer && app.HasMtfPreset())) {
                 TextDisabled("None");
             }
             for (const auto& name : app.applied) {
