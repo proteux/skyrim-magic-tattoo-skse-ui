@@ -117,7 +117,27 @@ namespace mtfui::model {
             out.push_back({ Severity::Info, -1, T("$MTFUI_Lint_NoDisplayName") });
         }
 
-        const int slotCount = std::min<int>(kSlotCount, static_cast<int>(preset.slots.size()));
+        const int slotCount = static_cast<int>(preset.slots.size());
+        // MTF reserves overlay layers for the MCM-loaded preset by scanning only the tiers its menu shows.
+        std::map<std::string, std::size_t> reservedLayers;
+        bool extraTiers = false;
+        for (int i = 0; i < slotCount; ++i) {
+            if (i >= kSlotCount) {
+                extraTiers = extraTiers || preset.slots[i].Configured();
+                continue;
+            }
+            const auto vis = ResolveVisual(preset, i);
+            const auto* pack = vis.none ? nullptr : cat.FindPack(vis.packId);
+            const auto* e = pack ? pack->Find(vis.entryId) : nullptr;
+            if (e) {
+                auto& n = reservedLayers[pack->area];
+                n = std::max(n, e->textures.size());
+            }
+        }
+        if (extraTiers) {
+            out.push_back({ Severity::Info, -1, TF("$MTFUI_Lint_ExtraTiers", kSlotCount - 1) });
+        }
+
         std::set<std::string> overflowReported;
         for (int i = 0; i < slotCount; ++i) {
             const Slot& s = preset.slots[i];
@@ -127,6 +147,10 @@ namespace mtfui::model {
                 if (HasContent(s)) {
                     out.push_back({ Severity::Warning, i, TF("$MTFUI_Lint_NoCondition", label), LintTab::Condition });
                 }
+                continue;
+            }
+            if (ctx.maxSlots > 0 && i >= ctx.maxSlots) {
+                out.push_back({ Severity::Warning, i, TF("$MTFUI_Lint_PastLimit", label, ctx.maxSlots - 1) });
                 continue;
             }
 
@@ -185,6 +209,13 @@ namespace mtfui::model {
                         overflowReported.insert(pack->area);
                         out.push_back({ Severity::Warning, i,
                             TF("$MTFUI_Lint_Overflow", e->label, e->textures.size(), AreaLabel(pack->area), start->second, cap->second) });
+                    }
+                    if (i >= kSlotCount) {
+                        const auto reserved = reservedLayers.find(pack->area);
+                        const std::size_t have = reserved == reservedLayers.end() ? 0 : reserved->second;
+                        if (e->textures.size() > have) {
+                            out.push_back({ Severity::Warning, i, TF("$MTFUI_Lint_ExtraTierLayers", e->label, e->textures.size(), kSlotCount - 1, have) });
+                        }
                     }
                 }
             }

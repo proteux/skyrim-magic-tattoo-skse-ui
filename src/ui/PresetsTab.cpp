@@ -1,4 +1,5 @@
 #include "model/Describe.h"
+#include "model/Gradient.h"
 #include "render/DdsCache.h"
 #include "render/Preview2D.h"
 #include "ui/App.h"
@@ -24,6 +25,25 @@ namespace mtfui::ui {
             std::optional<std::pair<std::string, std::string>> move;  // preset name, group
         };
         PresetsTabState g;
+
+        struct GradientState {
+            std::string conditionId;
+            bool below = true;
+            int lo = 0;
+            int hi = 100;
+            int steps = 10;
+            std::vector<std::uint32_t> colors;  // low end of the range first
+            bool tint = true;
+            bool emissive = true;
+            bool glow = true;
+            float glowLow = 3.0f;
+            float glowHigh = 1.0f;
+            bool fade = false;
+            int alphaLow = 100;
+            int alphaHigh = 100;
+        };
+        GradientState grad;
+        const std::vector<std::uint32_t> kHealthBar{ 0xE02020, 0xF0D020, 0x30C040 };
 
         void DrawGroupMenu(const model::PresetFileInfo& info, const std::vector<std::string>& groups) {
             if (!BeginMenu(T("$MTFUI_Library_MoveToGroup"))) {
@@ -338,6 +358,8 @@ namespace mtfui::ui {
             }
             if (i > 0 && MenuItem(T("$MTFUI_TierMenu_Clear"))) {
                 p.slots[i] = model::DefaultSlot();
+                model::TrimTrailingEmptySlots(p);
+                app.ed.slot = std::min(app.ed.slot, static_cast<int>(p.slots.size()) - 1);
             }
             Separator();
             if (MenuItem(T("$MTFUI_TierMenu_Copy"))) {
@@ -450,6 +472,219 @@ namespace mtfui::ui {
             PopID();
         }
 
+        void SetGradientCondition(const model::GradientCondition& c) {
+            grad.conditionId = c.key;
+            grad.below = model::IsBelowCondition(*c.entry);
+            grad.lo = static_cast<int>(c.entry->params[0].min);
+            grad.hi = static_cast<int>(c.entry->params[0].max);
+        }
+
+        // Starts from the open preset's first tier when it already uses a threshold condition.
+        void InitGradient(App& app, const std::vector<model::GradientCondition>& conditions) {
+            const auto& p = app.Preset();
+            const model::GradientCondition* pick = nullptr;
+            for (const auto& c : conditions) {
+                if (p.slots.size() > 1 && p.slots[1].Configured() && model::IEquals(p.slots[1].conditions.front().pluginId, c.key)) {
+                    pick = &c;
+                    break;
+                }
+            }
+            for (const auto& c : conditions) {
+                if (!pick && model::IEquals(c.key, "mtf.attributes:health.below")) {
+                    pick = &c;
+                }
+            }
+            if (!pick && !conditions.empty()) {
+                pick = &conditions.front();
+            }
+            if (pick) {
+                SetGradientCondition(*pick);
+            }
+            if (grad.colors.empty()) {
+                grad.colors = kHealthBar;
+            }
+        }
+
+        model::GradientSpec GradientSpecFromState() {
+            model::GradientSpec spec;
+            spec.conditionId = grad.conditionId;
+            spec.below = grad.below;
+            spec.lo = std::min(grad.lo, grad.hi);
+            spec.hi = std::max(grad.lo, grad.hi);
+            spec.steps = grad.steps;
+            const auto n = grad.colors.size();
+            for (std::size_t i = 0; i < n; ++i) {
+                spec.stops.push_back({ n == 1 ? 0.0 : static_cast<double>(i) / (n - 1), grad.colors[i] });
+            }
+            spec.tint = grad.tint;
+            spec.emissive = grad.emissive;
+            if (grad.glow) {
+                spec.emissiveMult = model::Ramp{ grad.glowLow, grad.glowHigh };
+            }
+            if (grad.fade) {
+                spec.alpha = model::Ramp{ static_cast<double>(grad.alphaLow), static_cast<double>(grad.alphaHigh) };
+            }
+            return spec;
+        }
+
+        void DrawGradientStrip(const model::GradientSpec& spec, float width) {
+            const auto plan = model::PlanGradient(spec);
+            const int bands = static_cast<int>(plan.tiers.size()) + 1;
+            const float h = GetFrameHeight();
+            const ImVec2 at = GetCursorScreenPos();
+            auto* dl = GetWindowDrawList();
+            const float cell = width / static_cast<float>(bands);
+            for (int j = 0; j < bands; ++j) {
+                const double t = bands == 1 ? 0.0 : static_cast<double>(j) / (bands - 1);
+                ImDrawListManager::AddRectFilled(dl, ImVec2{ at.x + cell * j, at.y }, ImVec2{ at.x + cell * (j + 1), at.y + h },
+                    render::ToImColor(model::SampleGradient(spec.stops, t), 1.0f), 0.0f, 0);
+            }
+            ImDrawListManager::AddRect(dl, at, ImVec2{ at.x + width, at.y + h }, GetColorU32(ImGuiCol_Border, 1.0f), 0.0f, 0, 1.0f);
+            Dummy(ImVec2{ width, h });
+            TextDisabled("%s", std::to_string(spec.lo).c_str());
+            const std::string high = std::to_string(spec.hi);
+            SameLine(width - CalcTextSize(high.c_str()).x);
+            TextDisabled("%s", high.c_str());
+        }
+
+        void DrawGradientModal(App& app, const char* title, const std::vector<model::GradientCondition>& conditions) {
+            if (!BeginPopupModal(title, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+                return;
+            }
+            auto& p = app.Preset();
+            const float width = 380.0f;
+            TextWrapped("%s", T("$MTFUI_Gradient_Intro"));
+            Spacing();
+
+            const model::GradientCondition* current = nullptr;
+            for (const auto& c : conditions) {
+                if (model::IEquals(c.key, grad.conditionId)) {
+                    current = &c;
+                }
+            }
+            auto conditionName = [](const model::GradientCondition& c) { return c.plugin->label + ": " + c.entry->label; };
+            SetNextItemWidth(width);
+            if (BeginCombo(T("$MTFUI_Gradient_Condition"), current ? conditionName(*current).c_str() : grad.conditionId.c_str())) {
+                for (std::size_t i = 0; i < conditions.size(); ++i) {
+                    PushID(static_cast<int>(i));
+                    if (Selectable(conditionName(conditions[i]).c_str(), &conditions[i] == current)) {
+                        SetGradientCondition(conditions[i]);
+                        current = &conditions[i];
+                    }
+                    PopID();
+                }
+                EndCombo();
+            }
+            if (!current) {
+                TextColored(kWarn, "%s", T("$MTFUI_Gradient_NoCondition"));
+            } else {
+                const auto& spec = current->entry->params[0];
+                int dir = grad.below ? 0 : 1;
+                RadioButton(T("$MTFUI_Gradient_Below"), &dir, 0);
+                SameLine();
+                RadioButton(T("$MTFUI_Gradient_Above"), &dir, 1);
+                grad.below = dir == 0;
+                HelpMarker(T("$MTFUI_Gradient_DirectionHelp"));
+
+                SetNextItemWidth(width * 0.5f - GetStyle()->ItemInnerSpacing.x);
+                SliderInt("##lo", &grad.lo, static_cast<int>(spec.min), static_cast<int>(spec.max), T("$MTFUI_Gradient_From_Fmt"), ImGuiSliderFlags_AlwaysClamp);
+                SameLine(0, GetStyle()->ItemInnerSpacing.x);
+                SetNextItemWidth(width * 0.5f);
+                SliderInt(T("$MTFUI_Gradient_Range"), &grad.hi, static_cast<int>(spec.min), static_cast<int>(spec.max), T("$MTFUI_Gradient_To_Fmt"),
+                    ImGuiSliderFlags_AlwaysClamp);
+
+                const int maxSteps = std::max(1, std::min(app.maxSlots - 1, std::abs(grad.hi - grad.lo)));
+                grad.steps = std::clamp(grad.steps, 1, maxSteps);
+                SetNextItemWidth(width);
+                SliderInt(T("$MTFUI_Gradient_Steps"), &grad.steps, 1, maxSteps, "%d", ImGuiSliderFlags_AlwaysClamp);
+                const auto planned = model::PlanGradient(GradientSpecFromState()).tiers.size();
+                TextDisabled("%s", TF("$MTFUI_Gradient_StepsInfo", planned, std::format("{:.1f}", std::abs(grad.hi - grad.lo) / (planned + 1.0))).c_str());
+                if (static_cast<int>(planned) > model::kSlotCount - 1) {
+                    TextColored(kWarn, "%s", TF("$MTFUI_Gradient_PastMenu", model::kSlotCount - 1).c_str());
+                }
+            }
+
+            SeparatorText(T("$MTFUI_Gradient_Colors"));
+            HelpMarker(T("$MTFUI_Gradient_ColorsHelp"));
+            int remove = -1;
+            for (std::size_t i = 0; i < grad.colors.size(); ++i) {
+                PushID(static_cast<int>(i));
+                SetNextItemWidth(width * 0.6f);
+                ColorEditRgb("##color", grad.colors[i]);
+                if (grad.colors.size() > 2) {
+                    SameLine();
+                    if (SmallButton(T("$MTFUI_Gradient_RemoveColor"))) {
+                        remove = static_cast<int>(i);
+                    }
+                }
+                PopID();
+            }
+            if (remove >= 0) {
+                grad.colors.erase(grad.colors.begin() + remove);
+            }
+            BeginDisabled(grad.colors.size() >= 4);
+            if (SmallButton(T("$MTFUI_Gradient_AddColor"))) {
+                grad.colors.push_back(grad.colors.back());
+            }
+            EndDisabled();
+            SameLine();
+            if (SmallButton(T("$MTFUI_Gradient_Reverse"))) {
+                std::reverse(grad.colors.begin(), grad.colors.end());
+            }
+            SameLine();
+            if (SmallButton(T("$MTFUI_Gradient_HealthBar"))) {
+                grad.colors = kHealthBar;
+            }
+            const auto spec = GradientSpecFromState();
+            DrawGradientStrip(spec, width);
+
+            SeparatorText(T("$MTFUI_Gradient_Apply"));
+            Checkbox(T("$MTFUI_Gradient_Tint"), &grad.tint);
+            SameLine();
+            Checkbox(T("$MTFUI_Gradient_Emissive"), &grad.emissive);
+            Checkbox(T("$MTFUI_Gradient_Glow"), &grad.glow);
+            HelpMarker(T("$MTFUI_Gradient_GlowHelp"));
+            if (grad.glow) {
+                SetNextItemWidth(width * 0.5f - GetStyle()->ItemInnerSpacing.x);
+                SliderFloat("##glowlo", &grad.glowLow, 0.0f, 10.0f, T("$MTFUI_Gradient_LowEnd_Fmt"));
+                SameLine(0, GetStyle()->ItemInnerSpacing.x);
+                SetNextItemWidth(width * 0.5f);
+                SliderFloat("##glowhi", &grad.glowHigh, 0.0f, 10.0f, T("$MTFUI_Gradient_HighEnd_Fmt"));
+            }
+            Checkbox(T("$MTFUI_Gradient_Opacity"), &grad.fade);
+            if (grad.fade) {
+                SetNextItemWidth(width * 0.5f - GetStyle()->ItemInnerSpacing.x);
+                SliderInt("##alphalo", &grad.alphaLow, 0, 100, T("$MTFUI_Gradient_LowEndPct_Fmt"));
+                SameLine(0, GetStyle()->ItemInnerSpacing.x);
+                SetNextItemWidth(width * 0.5f);
+                SliderInt("##alphahi", &grad.alphaHigh, 0, 100, T("$MTFUI_Gradient_HighEndPct_Fmt"));
+            }
+
+            if (p.transitionDuration < 0.5) {
+                Spacing();
+                TextWrapped("%s", T("$MTFUI_Gradient_TransitionHint"));
+                if (SmallButton(T("$MTFUI_Gradient_SetTransition"))) {
+                    p.transitionDuration = 1.0;
+                }
+            }
+
+            Spacing();
+            TextColored(kWarn, "%s", T("$MTFUI_Gradient_Replaces"));
+            BeginDisabled(!current);
+            if (Button(T("$MTFUI_Gradient_Create"), ImVec2{ 120, 0 })) {
+                model::ApplyGradient(app.cat, p, spec, app.maxSlots);
+                app.ed.slot = p.slots.size() > 1 ? 1 : 0;
+                app.Toast(TF("$MTFUI_Toast_GradientMade", static_cast<int>(p.slots.size()) - 1));
+                CloseCurrentPopup();
+            }
+            EndDisabled();
+            SameLine();
+            if (Button(T("$MTFUI_Common_Cancel"), ImVec2{ 100, 0 }) || IsKeyPressed(ImGuiKey_Escape, false)) {
+                CloseCurrentPopup();
+            }
+            EndPopup();
+        }
+
         void DrawPresetHeader(App& app) {
             auto& p = app.Preset();
             const bool dirty = app.Dirty();
@@ -509,6 +744,15 @@ namespace mtfui::ui {
                 EndCombo();
             }
             HelpMarker(T("$MTFUI_Header_GroupHelp"));
+
+            const char* gradientTitle = T("$MTFUI_Gradient_Title");
+            const auto conditions = model::GradientConditions(app.cat);
+            if (Button(T("$MTFUI_Gradient_Open"))) {
+                InitGradient(app, conditions);
+                OpenPopup(gradientTitle);
+            }
+            HelpMarker(T("$MTFUI_Gradient_OpenHelp"));
+            DrawGradientModal(app, gradientTitle, conditions);
 
             if (CollapsingHeader((std::string(T("$MTFUI_Options_Title")) + "###presetoptions").c_str())) {
                 float duration = static_cast<float>(p.transitionDuration);
@@ -594,9 +838,22 @@ namespace mtfui::ui {
         DrawTierRow(app, 0, rowWidth);
         SeparatorText(T("$MTFUI_Tiers_Header"));
         HelpMarker(T("$MTFUI_Tiers_HeaderHelp"));
-        for (int i = 1; i < model::kSlotCount && i < static_cast<int>(app.Preset().slots.size()); ++i) {
+        for (int i = 1; i < static_cast<int>(app.Preset().slots.size()); ++i) {
+            if (i == model::kSlotCount) {
+                SeparatorText(T("$MTFUI_Tiers_Extra"));
+                HelpMarker(TF("$MTFUI_Tiers_ExtraHelp", model::kSlotCount - 1).c_str());
+            }
             DrawTierRow(app, i, rowWidth);
         }
+        auto& p = app.Preset();
+        const bool full = static_cast<int>(p.slots.size()) >= app.maxSlots;
+        BeginDisabled(full);
+        if (Button(T("$MTFUI_Tiers_Add"))) {
+            p.slots.push_back(model::DefaultSlot());
+            app.ed.slot = static_cast<int>(p.slots.size()) - 1;
+        }
+        EndDisabled();
+        HelpMarker(full ? TF("$MTFUI_Tiers_AddFull", app.maxSlots - 1).c_str() : TF("$MTFUI_Tiers_AddHelp", model::kSlotCount - 1, app.maxSlots - 1).c_str());
         SeparatorText(T("$MTFUI_Checks_Title"));
         DrawIssues(app);
     }

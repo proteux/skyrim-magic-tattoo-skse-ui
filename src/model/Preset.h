@@ -14,6 +14,7 @@ namespace mtfui::model {
     using Json = nlohmann::json;
 
     inline constexpr int kSlotCount = 8;  // Default + the 7 tiers MTF's MCM shows
+    inline constexpr int kMaxSlotsFallback = 32;  // MTF's iMaxConditions default; Default counts as one
     inline constexpr int kLayerCount = 4;
     inline constexpr int kEffectCap = 8;
     inline constexpr int kConditionCap = 8;
@@ -116,6 +117,8 @@ namespace mtfui::model {
     Json PresetToJson(const Preset& preset);
 
     Slot DefaultSlot();
+    // Drops untouched tiers off the end, never going below kSlotCount slots.
+    void TrimTrailingEmptySlots(Preset& preset);
     Preset NewPreset(const std::string& name, const std::string& displayName);
 
     // Effective pack/entry after the Default slot's inheritance is applied.

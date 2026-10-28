@@ -6,6 +6,7 @@
 #include "io/UiSettings.h"
 #include "model/Catalogs.h"
 #include "model/Describe.h"
+#include "model/Gradient.h"
 #include "model/Lint.h"
 #include "model/Preset.h"
 #include "model/Slots.h"
@@ -157,6 +158,84 @@ namespace {
         Check(!usage.entries.empty(), "usage index finds tattoo entries");
         const auto* ostim = usage.Plugin("mtf.ostim");
         Check(ostim && !ostim->empty(), "usage index finds plugin users");
+    }
+
+    void Gradients(const fs::path& fixtures) {
+        model::Catalogs cat;
+        cat.Load(fixtures);
+        const auto* below = cat.FindCondition("mtf.attributes:health.below");
+        const auto* above = cat.FindCondition("mtf.attributes:health");
+        Check(below && model::IsBelowCondition(*below), "health.below reads as a below condition");
+        Check(above && !model::IsBelowCondition(*above), "health reads as an at-or-above condition");
+        const auto conditions = model::GradientConditions(cat);
+        Check(!conditions.empty() && model::IEquals(conditions.front().plugin->pluginId, "mtf.attributes"), "attribute conditions are listed first");
+
+        model::GradientSpec spec;
+        spec.conditionId = "mtf.attributes:health.below";
+        spec.steps = 4;
+        spec.stops = { { 0.0, 0xFF0000 }, { 1.0, 0x00FF00 } };
+        auto plan = model::PlanGradient(spec);
+        Check(plan.tiers.size() == 4, "4 steps make 4 tiers");
+        if (plan.tiers.size() == 4) {
+            Check(plan.tiers[0].threshold == 20 && plan.tiers[3].threshold == 80, "below: thresholds rise from tier 1");
+            Check(plan.tiers[0].t == 0.0 && plan.tiers[3].t == 0.75 && plan.defaultT == 1.0, "below: Default holds the top band");
+        }
+        spec.below = false;
+        plan = model::PlanGradient(spec);
+        if (plan.tiers.size() == 4) {
+            Check(plan.tiers[0].threshold == 80 && plan.tiers[3].threshold == 20, "above: thresholds fall from tier 1");
+            Check(plan.tiers[0].t == 1.0 && plan.tiers[3].t == 0.25 && plan.defaultT == 0.0, "above: Default holds the bottom band");
+        }
+        spec.steps = 500;
+        plan = model::PlanGradient(spec);
+        bool rising = true;
+        for (std::size_t i = 1; i < plan.tiers.size(); ++i) {
+            rising = rising && plan.tiers[i].threshold < plan.tiers[i - 1].threshold;
+        }
+        Check(plan.tiers.size() <= 100 && rising, "more steps than values merge equal thresholds");
+
+        Check(model::SampleGradient(spec.stops, 0.0) == 0xFF0000 && model::SampleGradient(spec.stops, 1.0) == 0x00FF00, "gradient ends are the stops");
+        const auto mid = model::SampleGradient(spec.stops, 0.5);
+        Check(((mid >> 16) & 0xFF) > 0x80 && ((mid >> 8) & 0xFF) > 0x80 && (mid & 0xFF) < 0x50, "red to green passes through yellow");
+
+        const auto dragon = model::PresetFromJson("B_H_-_DRAGON", *io::ReadJson(fixtures / "presets" / "B_H_-_DRAGON.json"));
+        auto p = dragon;
+        spec.below = true;
+        spec.steps = 20;
+        spec.emissiveMult = model::Ramp{ 0.5, 2.0 };
+        model::ApplyGradient(cat, p, spec, model::kMaxSlotsFallback);
+        Check(p.slots.size() == 21, "20 steps make Default plus 20 tiers");
+        Check(p.slots[0].packId == dragon.slots[0].packId && p.slots[0].effects == dragon.slots[0].effects, "Default keeps its tattoo and effects");
+        Check(p.slots[0].layers[0].tint == 0x00FF00 && p.slots[1].layers[0].emissive == 0xFF0000, "Default and tier 1 take the end colors");
+        Check(std::abs(p.slots[1].layers[0].emissiveMult - 0.5) < 1e-9 && std::abs(p.slots[0].layers[0].emissiveMult - 2.0) < 1e-9, "glow ramp");
+        bool inherit = true;
+        for (std::size_t i = 1; i < p.slots.size(); ++i) {
+            inherit = inherit && p.slots[i].packId.empty() && p.slots[i].effects.empty() && p.slots[i].Configured();
+        }
+        Check(inherit, "generated tiers inherit Default's tattoo");
+        for (const auto& issue : model::LintPreset(cat, p, {})) {
+            Check(issue.severity == model::Severity::Info, "no warnings on a generated gradient: " + issue.message);
+        }
+        Check(model::PresetFromJson(p.name, nlohmann::json::parse(io::WriteStyled(model::PresetToJson(p)))) == p, "20-tier preset round-trips");
+
+        auto capped = dragon;
+        model::ApplyGradient(cat, capped, spec, model::kSlotCount);
+        Check(capped.slots.size() == model::kSlotCount, "the tier cap limits the steps");
+
+        auto lint = p;
+        lint.slots.resize(12);
+        model::LintContext ctx;
+        ctx.maxSlots = 10;
+        bool past = false;
+        for (const auto& issue : model::LintPreset(cat, lint, ctx)) {
+            past = past || (issue.slot == 10 && issue.severity == model::Severity::Warning);
+        }
+        Check(past, "lint flags tiers past iMaxConditions");
+
+        auto trimmed = dragon;
+        trimmed.slots.resize(11, model::DefaultSlot());
+        model::TrimTrailingEmptySlots(trimmed);
+        Check(trimmed.slots.size() == model::kSlotCount, "empty trailing tiers are trimmed down to the MCM's count");
     }
 
     void AtomicWrite() {
@@ -648,6 +727,7 @@ int main(int argc, char** argv) {
     RoundTripPresets(fixtures);
     Groups(fixtures);
     Catalogs(fixtures);
+    Gradients(fixtures);
     AtomicWrite();
     LintRules(fixtures);
     LookAndDescribe(fixtures);

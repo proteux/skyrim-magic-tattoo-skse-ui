@@ -32,6 +32,7 @@ add_library(mtfui_core STATIC
     src/model/Waveform.cpp
     src/model/Colors.cpp
     src/model/Describe.cpp
+    src/model/Gradient.cpp
     src/model/Lint.cpp
     src/model/Catalogs.cpp
     src/model/Usage.cpp

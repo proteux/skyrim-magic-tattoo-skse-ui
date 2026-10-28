@@ -420,6 +420,13 @@ namespace mtfui::model {
         return s;
     }
 
+    void TrimTrailingEmptySlots(Preset& preset) {
+        const Slot empty = DefaultSlot();
+        while (static_cast<int>(preset.slots.size()) > kSlotCount && preset.slots.back() == empty) {
+            preset.slots.pop_back();
+        }
+    }
+
     Preset NewPreset(const std::string& name, const std::string& displayName) {
         Preset p;
         p.name = name;
