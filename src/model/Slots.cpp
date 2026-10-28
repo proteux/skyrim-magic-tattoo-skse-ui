@@ -1,5 +1,6 @@
 #include "model/Slots.h"
 
+#include "io/Translations.h"
 #include "model/Catalogs.h"
 
 #include <algorithm>
@@ -80,10 +81,8 @@ namespace mtfui::model {
     std::string ListSlots(const std::vector<int>& slots) {
         std::string out;
         for (std::size_t i = 0; i < slots.size(); ++i) {
-            if (i > 0) {
-                out += i + 1 == slots.size() ? " and " : ", ";
-            }
-            out += std::to_string(slots[i]);
+            const auto n = std::to_string(slots[i]);
+            out = i == 0 ? n : TF(i + 1 == slots.size() ? "$MTFUI_List_And" : "$MTFUI_List_Comma", out, n);
         }
         return out;
     }

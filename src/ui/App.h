@@ -161,6 +161,7 @@ namespace mtfui::ui {
         void HoldVanityCamera(bool hold);
         void HoldActor(RE::FormID id);  // 0 releases
         void RunOverlayMove();  // once the live preview is off the player
+        void CheckTranslationFont();  // needs a frame, for the menu font
 
         SKSEMenuFramework::Model::WindowInterface* window_ = nullptr;
         std::optional<Tab> requestedTab_;
@@ -189,6 +190,10 @@ namespace mtfui::ui {
         bool pickHintShown_ = false;
         int lastSectionFrame_ = -100;
         int beganFrame_ = -1;
+        std::string language_;  // sLanguage, upper case
+        bool fontChecked_ = false;
+        std::string fontNotice_;  // the menu font can't draw the translation, so it's in English
+        std::string fontFix_;
         int committedFrame_ = -1;
         int modalsFrame_ = -1;
         struct PreviewInputs {

@@ -1,5 +1,7 @@
 #include "model/Preset.h"
 
+#include "io/Translations.h"
+
 #include <algorithm>
 #include <cstdio>
 
@@ -373,10 +375,10 @@ namespace mtfui::model {
         };
         Json j = Json::parse(text, nullptr, false);
         if (j.is_discarded()) {
-            return fail("the clipboard does not hold JSON");
+            return fail(T("$MTFUI_Import_NotJson"));
         }
         if (!j.is_object() || !j.contains("slot") || !j["slot"].is_array()) {
-            return fail("the clipboard JSON is not a Magic Tattoos preset");
+            return fail(T("$MTFUI_Import_NotPreset"));
         }
         return j;
     }

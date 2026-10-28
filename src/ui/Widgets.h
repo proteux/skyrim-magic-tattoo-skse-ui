@@ -1,5 +1,6 @@
 #pragma once
 
+#include "io/Translations.h"
 #include "model/Colors.h"
 #include "model/Lint.h"
 #include "model/PluginCatalog.h"
@@ -24,11 +25,11 @@ namespace mtfui::ui {
     // Thumbnail size slider labelled from small to large rather than in pixels.
     bool ThumbSizeSlider(const char* label, int& size);
     // Filter box; returns true when text changed.
-    bool SearchBox(const char* id, std::string& text, float width, const char* hint = "Search");
+    bool SearchBox(const char* id, std::string& text, float width, const char* hint = nullptr);  // nullptr: "Search"
 
     enum class NamePromptResult { Open, Confirmed, Cancelled };
     // Body of a "name this preset" modal: the display name box, the file it will get, and Create/Cancel. Call
     // between BeginPopupModal and EndPopup; close the popup on Confirmed or Cancelled.
-    NamePromptResult NamePrompt(std::string& displayName, const std::string& fileName, bool canConfirm = true, const char* confirmLabel = "Create");
+    NamePromptResult NamePrompt(std::string& displayName, const std::string& fileName, bool canConfirm = true, const char* confirmLabel = nullptr);  // nullptr: "Create"
     using model::MatchesSearch;
 }

@@ -1,13 +1,13 @@
 #include "model/Describe.h"
 
-#include <cstdio>
+#include "io/Translations.h"
 
 namespace mtfui::model {
     std::string SlotLabel(const Preset& preset, int slot) {
         if (slot >= 0 && slot < static_cast<int>(preset.slots.size()) && !preset.slots[slot].name.empty()) {
             return preset.slots[slot].name;
         }
-        return slot == 0 ? "Default" : "Tier " + std::to_string(slot);
+        return slot == 0 ? std::string(T("$MTFUI_Tier_Default")) : TF("$MTFUI_Tier_Numbered", slot);
     }
 
     std::array<ParamValue, 5> ConditionParams(const ConditionItem& item) {
@@ -18,7 +18,7 @@ namespace mtfui::model {
         const PluginCatalog* owner = nullptr;
         const auto* entry = cat.FindCondition(item.pluginId, &owner);
         if (!entry) {
-            return item.pluginId + " (plugin not installed)";
+            return TF("$MTFUI_Describe_NotInstalled", item.pluginId);
         }
         if (entry->description.empty()) {
             std::string s = entry->label;
@@ -33,7 +33,7 @@ namespace mtfui::model {
     std::string DescribeEffect(const Catalogs& cat, const Effect& effect) {
         const auto* entry = cat.FindEffect(effect.key);
         if (!entry) {
-            return effect.key + " (plugin not installed)";
+            return TF("$MTFUI_Describe_NotInstalled", effect.key);
         }
         if (entry->description.empty()) {
             return entry->label;
@@ -44,50 +44,47 @@ namespace mtfui::model {
     std::string DescribeVisual(const Catalogs& cat, const Preset& preset, int slot) {
         const auto r = ResolveVisual(preset, slot);
         if (r.none) {
-            return "no tattoo";
+            return T("$MTFUI_Describe_NoTattoo");
         }
         std::string label = r.entryId;
         if (const auto* e = cat.FindEntry(r.packId, r.entryId)) {
             label = e->label;
         } else {
-            label += " (missing)";
+            label = TF("$MTFUI_Describe_Missing", label);
         }
-        return r.inherited ? label + " (from Default)" : label;
+        return r.inherited ? TF("$MTFUI_Describe_FromDefault", label) : label;
     }
 
     std::string DescribeSlot(const Catalogs& cat, const Preset& preset, int slot) {
         const Slot& s = preset.slots[slot];
-        std::string out;
+        std::string when;
         if (slot == 0) {
-            out = "Otherwise";
+            when = T("$MTFUI_Describe_Otherwise");
         } else if (!s.Configured()) {
-            return "Unused";
+            return T("$MTFUI_Describe_Unused");
         } else {
-            out = "When the wearer ";
+            std::string conditions;
             for (std::size_t i = 0; i < s.conditions.size(); ++i) {
-                if (i > 0) {
-                    out += s.op == 1 ? ", or " : ", and ";
-                }
-                out += DescribeCondition(cat, s.conditions[i]);
+                const auto c = DescribeCondition(cat, s.conditions[i]);
+                conditions = i == 0 ? c : TF(s.op == 1 ? "$MTFUI_Describe_JoinOr" : "$MTFUI_Describe_JoinAnd", conditions, c);
             }
+            when = TF("$MTFUI_Describe_When", conditions);
         }
-        out += ": " + DescribeVisual(cat, preset, slot);
+        std::string out = TF("$MTFUI_Describe_Slot", when, DescribeVisual(cat, preset, slot));
         if (!ResolveVisual(preset, slot).none) {
             const Layer& layer = s.layers[0];
             if ((layer.tint & 0xFFFFFF) != 0xFFFFFF) {
-                out += ", tinted " + NearestColorName(cat.colors, layer.tint);
+                out = TF("$MTFUI_Describe_Tinted", out, NearestColorName(cat.colors, layer.tint));
             }
             if (layer.emissiveMult > 0.0) {
-                out += ", glowing " + NearestColorName(cat.colors, layer.emissive);
+                out = TF("$MTFUI_Describe_Glowing", out, NearestColorName(cat.colors, layer.emissive));
             }
         }
         if (s.pulse.Enabled() && s.pulse.rate > 0.0 && s.pulse.depth > 0) {
-            char buf[64];
-            std::snprintf(buf, sizeof(buf), ", pulsing %.2g/s at %lld%%", s.pulse.rate, static_cast<long long>(s.pulse.depth));
-            out += buf;
+            out = TF("$MTFUI_Describe_Pulsing", out, s.pulse.rate, s.pulse.depth);
         }
         if (!s.effects.empty()) {
-            out += ", " + std::to_string(s.effects.size()) + (s.effects.size() == 1 ? " effect" : " effects");
+            out = s.effects.size() == 1 ? TF("$MTFUI_Describe_EffectOne", out, s.effects.size()) : TF("$MTFUI_Describe_EffectMany", out, s.effects.size());
         }
         return out;
     }

@@ -88,6 +88,7 @@ Open the SKSE Menu Framework menu (F1 by default) and choose **Magic Tattoos**. 
 - Deleting a preset works like MTF's own delete: the file is kept but hidden, and General > Deleted presets brings it back. A backup also goes to `Data/SKSE/Plugins/MagicTattoosUI/backups`.
 - The UI keeps its own settings in `Data/SKSE/Plugins/MagicTattoosUI/settings.json` and unsaved drafts in `drafts/` next to it. It never changes MTF's files except the presets you save, delete, or restore.
 - Saving the game while an NPC is held in place releases them first, so a frozen NPC is never written into the save.
+- The UI follows the game's language. It ships in English, French, German, Italian, Spanish and Russian. Russian needs `EnableCyrillic = true` under `[Fonts]` in `Data/SKSE/Plugins/SKSEMenuFramework.ini`; until then the menu stays in English and its status line says what to change. To translate it, copy `Data/Interface/Translations/MagicTattoosUI_ENGLISH.txt` to `MagicTattoosUI_<LANGUAGE>.txt` (for example `MagicTattoosUI_FRENCH.txt`, matching `sLanguage` in `Skyrim.ini`) and translate the text after each tab. Keep the `{}` placeholders and the key before the tab. Any line you leave out stays English. The log lists keys it couldn't use.
 
 ## Troubleshooting
 
@@ -120,3 +121,11 @@ See `docs/lessons.md` for how MTF applies preset changes and other notes for wor
 - [Lyru](https://www.nexusmods.com/profile/ItsLyru/mods?gameId=1704), for the tattoo packs shown in the screenshots
 - [Caenarvon](https://www.nexusmods.com/profile/Caenarvon/mods?gameId=1704), for the clothing in the sample screenshot
 - The CommonLibSSE-NG contributors
+
+## License
+
+Copyright (C) 2026 Jack Whitehouse (proteux)
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. It is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See [`LICENSE`](LICENSE) for the full text of the GPL-3.0.
+
+The release zip includes the license and this notice as `SKSE/Plugins/MagicTattoosUI/LICENSE.txt` and `README.txt`.

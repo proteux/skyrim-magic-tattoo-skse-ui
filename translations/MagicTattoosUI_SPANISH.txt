@@ -1,0 +1,499 @@
+$MTFUI_Common_Cancel	Cancelar
+$MTFUI_Common_Choose	(elegir)
+$MTFUI_Common_ClearStuckEffects	Quitar efectos atascados
+$MTFUI_Common_Create	Crear
+$MTFUI_Common_Edit	Editar
+$MTFUI_Common_None	Ninguno
+$MTFUI_Common_Remove	Quitar
+$MTFUI_Common_Restore	Restaurar
+$MTFUI_Common_Save	Guardar
+$MTFUI_Common_Search	Buscar
+$MTFUI_Common_UsedBy	Usado por
+$MTFUI_List_And	{} y {}
+$MTFUI_List_Comma	{}, {}
+$MTFUI_Area_Body	Cuerpo
+$MTFUI_Area_Face	Cara
+$MTFUI_Area_Hands	Manos
+$MTFUI_Area_Feet	Pies
+$MTFUI_Tier_Default	Predeterminado
+$MTFUI_Tier_Numbered	Nivel {}
+$MTFUI_Format_Seconds1_Fmt	%.1f s
+$MTFUI_Format_Milliseconds_Fmt	%d ms
+$MTFUI_Color_Palette	Paleta
+$MTFUI_Param_TextHint	separado por comas, vacío = cualquiera
+$MTFUI_Severity_Error	Error
+$MTFUI_Severity_Warning	Advertencia
+$MTFUI_Severity_Note	Nota
+$MTFUI_Thumb_Tiny_Fmt	Diminutas
+$MTFUI_Thumb_Small_Fmt	Pequeñas
+$MTFUI_Thumb_Medium_Fmt	Medianas
+$MTFUI_Thumb_Large_Fmt	Grandes
+$MTFUI_Thumb_ExtraLarge_Fmt	Muy grandes
+$MTFUI_NamePrompt_Hint	Nombre visible
+$MTFUI_NamePrompt_File	Archivo: {}.json
+$MTFUI_Preset_NewName	Nuevo preset
+$MTFUI_Preset_CopyName	{} (copia)
+$MTFUI_Preset_ImportedName	Preset importado
+$MTFUI_Draft_Title	¿Restaurar los cambios sin guardar?
+$MTFUI_Draft_Text	El juego se cerró mientras '{}' tenía cambios sin guardar.
+$MTFUI_Draft_SaveFirst	Guarda o descarta primero el preset abierto
+$MTFUI_Draft_ThrowAway	Tirar
+$MTFUI_Unsaved_Title	Cambios sin guardar
+$MTFUI_Unsaved_NeverSaved	'{}' nunca se ha guardado.
+$MTFUI_Unsaved_Builtin	'{}' es un preset integrado y no se puede cambiar, pero lo has editado. ¿Guardar tus cambios como tu propia copia?
+$MTFUI_Unsaved_Changes	'{}' tiene cambios sin guardar.
+$MTFUI_Unsaved_SaveAsCopy	Guardar como copia
+$MTFUI_Unsaved_Discard	Descartar
+$MTFUI_Status_NoMtf	Magic Tattoos Framework no está cargado. Aun así puedes editar archivos de presets.
+$MTFUI_Status_MtfDisabled	MTF está desactivado en sus ajustes. Los tatuajes no se actualizarán.
+$MTFUI_Status_PreviewOn	{} en {}
+$MTFUI_Status_LoadingTextures	Cargando {} textura(s)...
+$MTFUI_Status_Shortcuts	Atajos\nCtrl+S  guardar\nCtrl+Z / Ctrl+Y  deshacer / rehacer\nCtrl+N  nuevo preset\nCtrl+D  duplicar\nCtrl+F  buscar presets\nF5  aplicar al objetivo\nAlt+Arriba / Alt+Abajo  mover el nivel seleccionado
+$MTFUI_Status_ShortcutHint	|  Ctrl+S guardar, Ctrl+Z deshacer, F5 aplicar (pasa el ratón para ver más)
+$MTFUI_Tab_Presets	Presets
+$MTFUI_Tab_Tattoos	Tatuajes
+$MTFUI_Tab_TattoosChoosing	Tatuajes (eligiendo)
+$MTFUI_Tab_General	General
+$MTFUI_Tab_Plugins	Plugins
+$MTFUI_Panels_PickHint	Elige el tatuaje en la pestaña Tatuajes de Magic Tattoos > Editor en el menú
+$MTFUI_Panels_Peek	Mantener para ver
+$MTFUI_Panels_PeekTip	Oculta los demás paneles mientras mantienes pulsado el botón del ratón. Arrastra los paneles por su barra de título para moverlos; la disposición se recuerda.
+$MTFUI_Panel_Presets	Presets
+$MTFUI_Panel_Tiers	Niveles
+$MTFUI_Panel_TierEditor	Editor de nivel
+$MTFUI_Section_CloseWindows	Cerrar las ventanas del editor
+$MTFUI_Section_OpenWindows	Abrir las ventanas del editor
+$MTFUI_Section_WindowsHelp	Presets, Niveles y Editor de nivel se abren como paneles separados sobre el juego, con el objetivo y la vista previa en directo en una barra arriba. Colócalos alrededor del objetivo; la disposición se recuerda. Esc o la X de la barra los cierra.
+$MTFUI_Section_CloseWindow	Cerrar su ventana
+$MTFUI_Section_WindowOpen	El editor está abierto en su propia ventana.
+$MTFUI_Section_OpenWindow	Abrir en su propia ventana
+$MTFUI_Section_WindowHelp	Una ventana más grande y movible con el mismo editor. Esc o la X la cierra.
+$MTFUI_Toast_AlreadyOnHidden	{} ya está en {}. Está oculto hasta que termine la vista previa en directo.
+$MTFUI_Toast_AppliedTo	{}: aplicado a {}
+$MTFUI_Toast_ApplyResult	{}: {}
+$MTFUI_Toast_ShowOverlaySlots	Mostrar ranuras de overlay
+$MTFUI_Toast_RemovedFrom	{} quitado de {}
+$MTFUI_Toast_RemovingAll	Quitando {} preset(s) de {}
+$MTFUI_Toast_ClearedMtfPreset	Preset de MTF vaciado
+$MTFUI_Toast_ClearedNamedMtfPreset	{} ya no es el preset de MTF
+$MTFUI_Toast_StillReadingSlots	Aún leyendo tus ranuras de overlay. Inténtalo de nuevo en un momento
+$MTFUI_Toast_StartNotMoved	No se movió: desde la ranura {}, MTF necesita {} ranuras de {} para tus presets y solo quedan {}. Quita un preset o elige un inicio más bajo
+$MTFUI_Toast_StartMoved	Los overlays de {} ahora empiezan en la ranura {}
+$MTFUI_Toast_SlotCountFixed	{} {} (antes {})
+$MTFUI_Toast_SlotCountsFixed	MTF aún usaba los antiguos números de ranuras de overlay de RaceMenu. Actualizado: {}
+$MTFUI_Toast_SaveBeforeApply	Guarda el preset antes de aplicarlo
+$MTFUI_Toast_DraftRestored	Cambios sin guardar restaurados en {}
+$MTFUI_Toast_PresetGone	El preset '{}' ya no existe
+$MTFUI_Toast_CouldNotRead	No se pudo leer {}: {}
+$MTFUI_Error_NotJsonObject	no es un objeto JSON
+$MTFUI_Toast_OnlyOwnDelete	Solo se pueden borrar tus propios presets
+$MTFUI_Toast_DeleteFailed	Error al borrar: {}
+$MTFUI_Toast_Deleted	{} borrado. Recupéralo en General > Presets borrados.
+$MTFUI_Toast_CouldNotRestore	No se pudo restaurar {}: {}
+$MTFUI_Toast_Undeleted	{} restaurado
+$MTFUI_Toast_BuiltinNameRestore	'{}' es un nombre integrado de MTF; no se puede restaurar encima
+$MTFUI_Toast_CouldNotReadBackup	No se pudo leer la copia de seguridad: {}
+$MTFUI_Toast_RestoreFailed	Error al restaurar: {}
+$MTFUI_Toast_RestoredKeptEdits	{} restaurado. Tus cambios abiertos no se tocaron; Revertir muestra la versión restaurada.
+$MTFUI_Toast_RestoredBackup	{} restaurado desde la copia de seguridad
+$MTFUI_Toast_Exported	{} copiado al portapapeles como JSON
+$MTFUI_Toast_NothingToImport	Nada que importar: {}
+$MTFUI_Toast_Imported	{} importado. Guárdalo para conservarlo.
+$MTFUI_Toast_CouldNotReadName	No se pudo leer {}
+$MTFUI_Toast_TiersCopied	Niveles de {} copiados en {}. Guarda para conservarlos.
+$MTFUI_Toast_OnlyOwnGroup	Solo se pueden agrupar tus propios presets
+$MTFUI_Toast_CouldNotMove	No se pudo mover {}: {}
+$MTFUI_Toast_EnablingPlugin	Activando {} en MTF
+$MTFUI_Toast_BuiltinReadOnly	Los presets integrados son de solo lectura. Usa Duplicar para hacer tu propia copia.
+$MTFUI_Toast_BuiltinNameSave	'{}' está reservado por un preset integrado de MTF. Duplícalo con otro nombre.
+$MTFUI_Toast_BackupFailed	No se pudo hacer copia de seguridad de la versión anterior: {}
+$MTFUI_Toast_SaveFailed	Error al guardar: {}
+$MTFUI_Toast_SavedHidden	{} guardado. {} lo mostrará de nuevo cuando termine la vista previa en directo
+$MTFUI_Toast_SavedRefreshed	{} guardado y actualizado en {}
+$MTFUI_Toast_SavedReapplyFailed	Guardado, pero falló al volver a aplicarlo: {}
+$MTFUI_Toast_Saved	{} guardado
+$MTFUI_Toast_ShadersCleared	Shaders de efecto de MTF quitados de {}
+$MTFUI_Toast_ReloadingPacks	Recargando paquetes visuales
+$MTFUI_Toast_ShadersStopped	Efectos de shader de MTF detenidos en {}
+$MTFUI_Toast_AfterRestart	Surte efecto tras reiniciar el juego
+$MTFUI_Toast_TattooSet	{} asignado a {}
+$MTFUI_Import_NotJson	el portapapeles no contiene JSON
+$MTFUI_Import_NotPreset	el JSON del portapapeles no es un preset de Magic Tattoos
+$MTFUI_File_Locked	No se puede abrir el archivo (¿lo está usando otro programa?)
+$MTFUI_File_NotFound	Archivo no encontrado
+$MTFUI_File_BadJson	JSON no válido (byte {})
+$MTFUI_File_CannotWrite	No se puede abrir {} para escribir: {}
+$MTFUI_File_WriteFailed	Error de escritura en {}
+$MTFUI_File_FlushFailed	Error al vaciar el búfer de {}
+$MTFUI_File_CannotReplace	No se puede reemplazar {}
+$MTFUI_File_BadBackupName	El nombre de archivo no sirve para una copia de seguridad
+$MTFUI_File_CopyFailed	No se pudo copiar a {}: {}
+$MTFUI_Target_You	Tú
+$MTFUI_Target_YouNamed	Tú ({})
+$MTFUI_Target_Unnamed	Sin nombre
+$MTFUI_Target_Distance	{}  ({:.0f} m)
+$MTFUI_Target_Label	Objetivo
+$MTFUI_Target_Crosshair	Punto de mira: {}
+$MTFUI_Target_Console	Selección de consola: {}
+$MTFUI_Target_Nearby	Cerca
+$MTFUI_Target_Looking	Buscando alrededor...
+$MTFUI_Target_NobodyNearby	No hay nadie cerca
+$MTFUI_Target_Help	Sobre quién actúan la vista previa en directo y Aplicar. Punto de mira es a quien mirabas al abrir el menú; selección de consola es el actor en el que hiciste clic en la consola.
+$MTFUI_Target_Hold	Mantener en el sitio
+$MTFUI_Target_HoldHelp	Impide que el objetivo se aleje mientras este menú está abierto. Puede volver a moverse cuando cierras el menú o eliges a otra persona. Nunca se aplica a ti.
+$MTFUI_Target_LivePreview	Vista previa en directo
+$MTFUI_Target_LivePreviewHelp	Muestra en el objetivo el tatuaje, los colores y el pulso del nivel seleccionado mientras editas, a través del propio MTF. Usa un preset temporal que se quita al cerrar este menú o cargar una partida. Los presets del objetivo que volverían a dibujar el mismo tatuaje (incluido el que estás editando) se ocultan mientras dura y se vuelven a poner después.
+$MTFUI_Target_WithEffects	con efectos
+$MTFUI_Target_WithEffectsHelp	Ejecuta también los efectos del nivel (luces, sonidos, hechizos) en la vista previa.
+$MTFUI_Target_Apply	Aplicar al objetivo
+$MTFUI_Target_ApplyTip	Guarda si hace falta y luego aplica este preset al objetivo. MTF lo mantiene hasta que se quite.
+$MTFUI_Target_ApplyDisabledTip	Abre primero un preset guardado
+$MTFUI_Target_StopPreview	Detener vista previa
+$MTFUI_Applied_Count	Aplicados ({})
+$MTFUI_Applied_Button	Aplicados
+$MTFUI_Applied_StarTip	* El preset de MTF (el cargado en su MCM) también se dibuja sobre ti. No entra en la cuenta.
+$MTFUI_Applied_Title	Presets en {}
+$MTFUI_Applied_UnsavedMcm	Configuración del MCM sin guardar
+$MTFUI_Applied_MtfPresetTag	(preset de MTF)
+$MTFUI_Applied_MtfPresetTip	El preset cargado en el MCM de MTF. MTF lo dibuja sobre ti por debajo de los presets aplicados, sea cual sea lo aplicado.
+$MTFUI_Applied_ClearMtfPreset	¿Vaciar el preset de MTF?
+$MTFUI_Applied_ClearUnsavedMcm	La configuración del MCM de MTF nunca se guardó, así que se perderá.
+$MTFUI_Applied_ClearKeepsFile	El archivo del preset se conserva; cárgalo en el MCM de MTF para recuperarlo.
+$MTFUI_Applied_Asking	Preguntando a MTF...
+$MTFUI_Applied_LivePreview	Vista previa en directo (temporal)
+$MTFUI_Applied_HiddenByPreview	(oculto por la vista previa)
+$MTFUI_Applied_HiddenByPreviewTip	Quitado mientras la vista previa en directo muestra el mismo tatuaje. Vuelve cuando termina la vista previa.
+$MTFUI_Applied_RemoveAll	Quitar todos
+$MTFUI_Applied_ClearEffectsHelp	Detiene en el objetivo todos los shaders de efecto que MTF puede reproducir (invisibilidad, fantasma, llamas...) y restablece su transparencia.
+$MTFUI_Apply_Applied	Aplicado
+$MTFUI_Apply_Already	Ya aplicado a este actor
+$MTFUI_Apply_NoTarget	No hay actor objetivo
+$MTFUI_Apply_TooManyNpcs	MTF ya sigue el número máximo de PNJ
+$MTFUI_Apply_EmptyName	El nombre del preset está vacío
+$MTFUI_Apply_Unreadable	MTF no pudo leer el preset
+$MTFUI_Apply_NoSlots	No quedan ranuras de overlay libres para sus tatuajes. {}
+$MTFUI_Apply_Truncated	Quedan muy pocas ranuras de overlay, así que su tatuaje se cortaría. {}
+$MTFUI_Apply_FixPlayer	Quita otro preset, baja la ranura inicial de MTF en la pestaña General o sube iNumOverlays en el ini de RaceMenu
+$MTFUI_Apply_FixNpc	Quítale otro preset u overlay, o sube iNumOverlays en el ini de RaceMenu
+$MTFUI_Apply_Unexpected	Resultado inesperado {}
+$MTFUI_Preview_NoResponse	MTF no respondió a la vista previa
+$MTFUI_Preview_WriteFailed	No se pudo escribir el preset de vista previa: {}
+$MTFUI_Preview_Updating	Actualizando vista previa...
+$MTFUI_Preview_Previewing	Vista previa activa
+$MTFUI_Preview_HidingOne	Vista previa activa ({} preset aplicado oculto)
+$MTFUI_Preview_HidingMany	Vista previa activa ({} presets aplicados ocultos)
+$MTFUI_Preview_Failed	Falló la vista previa: {}
+$MTFUI_Preview_PutBackFailed	No se pudo volver a poner {} tras la vista previa en directo
+$MTFUI_Preview_PutBackReason	{} ({})
+$MTFUI_Plugins_Intro	Los plugins añaden las condiciones y efectos que eliges en los presets. Desactivar uno hace que MTF deje de evaluar sus condiciones y de ejecutar sus efectos; los presets que lo usan conservan sus ajustes.
+$MTFUI_Plugins_Search	Buscar plugins, condiciones, efectos
+$MTFUI_Plugins_NoMtf	MTF no cargado: interruptores no disponibles
+$MTFUI_Plugins_ColOn	Activo
+$MTFUI_Plugins_ColPlugin	Plugin
+$MTFUI_Plugins_ColProvides	Aporta
+$MTFUI_Plugins_CatalogOnly	Solo catálogo: ningún script registrado
+$MTFUI_Plugins_CatalogOnlyTip	MTF tiene un archivo de catálogo para este plugin, pero su script no se registró.\nPuede que falte el .esp del plugin o que esté desactivado.
+$MTFUI_Plugins_Conditions	Condiciones
+$MTFUI_Plugins_Effects	Efectos
+$MTFUI_Plugins_PresetCount	{} preset(s)
+$MTFUI_Plugins_DisabledInUse	Desactivado pero en uso
+$MTFUI_Plugins_Unused	sin usar
+$MTFUI_Plugins_NoCatalogs	No se encontraron catálogos de plugins en MagicTattoosFramework/plugins.
+$MTFUI_Slots_LivePreview	Vista previa en directo
+$MTFUI_Slots_StartsAt_Fmt	empieza en %d
+$MTFUI_Slots_TipMcm	Preset de MTF (el cargado en el MCM de MTF)
+$MTFUI_Slots_TipFree	libre
+$MTFUI_Slots_Tip	Ranura {}: {}
+$MTFUI_Slots_TipOther	Ranura {}: un overlay que no dibujó MTF\n{}
+$MTFUI_Slots_TipClash	Ranura {}: {}\nMTF dibujaría encima de un overlay que no dibujó MTF\n{}
+$MTFUI_Slots_Needs	necesita {} desde la ranura {}, solo quedan {}
+$MTFUI_Slots_Used	{} de {} usadas por MTF
+$MTFUI_Slots_WontMove	No se mueve: el preset de MTF y tus presets aplicados necesitan {} ranuras de {} desde la ranura {}.
+$MTFUI_Slots_CutOff	Algunos tatuajes quedan cortados: el preset de MTF y tus presets aplicados necesitan {} ranuras de {} desde la ranura {}.
+$MTFUI_Slots_CoveredOne	La ranura {} tiene un overlay que no dibujó MTF. Desde la ranura {}, MTF dibujaría encima.
+$MTFUI_Slots_CoveredMany	Las ranuras {} tienen overlays que no dibujó MTF. Desde la ranura {}, MTF dibujaría encima.
+$MTFUI_Slots_ExposedOne	La ranura {} tiene un overlay que no dibujó MTF. El próximo preset que te apliques entra desde la ranura {} y puede dibujar encima.
+$MTFUI_Slots_ExposedMany	Las ranuras {} tienen overlays que no dibujó MTF. El próximo preset que te apliques entra desde la ranura {} y puede dibujar encima.
+$MTFUI_Slots_LegendMcm	preset de MTF
+$MTFUI_Slots_LegendPresets	presets aplicados
+$MTFUI_Slots_LegendOther	no dibujado por MTF
+$MTFUI_Slots_LegendClash	MTF dibuja encima de otro overlay
+$MTFUI_Recovery_Deleted	Presets borrados
+$MTFUI_Recovery_Backups	Copias de seguridad
+$MTFUI_Recovery_BackupsIntro	Cada guardado, borrado y restauración conserva el archivo que reemplaza, los últimos 10 por preset.
+$MTFUI_Recovery_Paste	Pegar un preset desde el portapapeles
+$MTFUI_Recovery_PasteHelp	Abre el JSON de un preset desde el portapapeles (por ejemplo de Copiar como JSON en Opciones del preset) como un preset nuevo sin guardar.
+$MTFUI_Recovery_OpenFolder	Abrir la carpeta de copias
+$MTFUI_Recovery_RestoreBackup	Restaurar una copia de seguridad
+$MTFUI_Recovery_NoBackups	Aún no hay copias de seguridad.
+$MTFUI_Recovery_Filter	Filtrar por preset
+$MTFUI_Recovery_ColPreset	Preset
+$MTFUI_Recovery_ColSaved	Guardado
+$MTFUI_Recovery_DeletedTag	(borrado)
+$MTFUI_Recovery_RestoreTip	Reemplazar {}.json por esta versión. Antes se hace copia del archivo actual.
+$MTFUI_General_NoMtf	MagicTattoosFramework.esp no está cargado, así que estos ajustes no están disponibles.
+$MTFUI_General_NoMtfPresets	Los presets se pueden seguir editando; son archivos normales en Data/SKSE/Plugins/StorageUtilData/MagicTattoosFramework/presets.
+$MTFUI_General_Reading	Leyendo los ajustes de MTF...
+$MTFUI_General_Framework	Framework
+$MTFUI_General_Enabled	Activado
+$MTFUI_General_EnabledHelp	Interruptor general. Mientras está apagado, MTF deja de evaluar condiciones y de dibujar tatuajes.
+$MTFUI_General_Debug	Mensajes de depuración
+$MTFUI_General_DebugHelp	Escribe líneas extra en el registro de Papyrus y muestra notificaciones. Déjalo apagado para jugar normalmente.
+$MTFUI_General_Interval	Intervalo de actualización
+$MTFUI_General_IntervalHelp	Cada cuánto vuelve MTF a comprobar las condiciones. Más bajo reacciona antes pero cuesta más tiempo de script.
+$MTFUI_General_SkyrimNet	SkyrimNet: recordar cambios visuales
+$MTFUI_General_SkyrimNetHelp	Permite que los cambios visuales hechos por SkyrimNet se mantengan entre cambios de nivel.
+$MTFUI_General_OverlaySlots	Ranuras de overlay
+$MTFUI_General_OverlaySlotsIntro	Tus tatuajes se dibujan en ranuras de overlay de RaceMenu. Elige dónde empieza el bloque de MTF para que no se solape con overlays de RaceMenu u otros mods (pintura corporal, suciedad, otros tatuajes).
+$MTFUI_General_OverlaySlotsHelp	MTF reserva primero espacio para el preset de MTF (el cargado en su MCM; vacíalo en Aplicados) y luego apila encima cada preset que se te aplica. Cambiar el inicio los mueve todos y conserva sus niveles. Los PNJ no se ven afectados: MTF apila sus tatuajes por encima de la ranura más alta ya en uso.\n\nMás ranuras: los números son de RaceMenu. Abre Data/SKSE/Plugins/skee64_custom.ini en un editor de texto (MTF incluye uno; créalo si falta) y añade o cambia estas líneas, manteniendo bPlayerOnly=0 bajo [Overlays]:\n\n[Overlays/Body]\niNumOverlays=12\n[Overlays/Face]\niNumOverlays=6\n[Overlays/Hands]\niNumOverlays=6\n[Overlays/Feet]\niNumOverlays=6\n\nDespués reinicia el juego; RaceMenu solo lo lee al arrancar. El archivo viene con MTF, así que un gestor de mods puede marcar el cambio o una actualización de MTF puede reemplazarlo. Pon tu copia en un pequeño mod propio que gane el conflicto para mantenerla a salvo.
+$MTFUI_General_ReadingSlots	Leyendo tus ranuras de overlay...
+$MTFUI_General_VisualPacks	Paquetes visuales
+$MTFUI_General_PackCount	{} paquete(s) cargados por MTF, {} encontrados en disco
+$MTFUI_General_ReloadPacks	Recargar paquetes
+$MTFUI_General_ReloadPacksHelp	Úsalo tras instalar o editar el JSON de un paquete visual sin reiniciar.
+$MTFUI_General_Rescan	Volver a escanear en cada carga
+$MTFUI_General_Target	Objetivo
+$MTFUI_General_CurrentTarget	Objetivo actual: {}
+$MTFUI_General_RemoveAll	Quitar todos los presets
+$MTFUI_General_ClearEffectsHelp	Detiene cualquier brillo o efecto de shader de MTF que siguiera activo después de terminar su nivel.
+$MTFUI_General_ThisMenu	Este menú
+$MTFUI_General_ThumbSize	Tamaño de miniaturas
+$MTFUI_General_Pause	Pausar el juego mientras la ventana está abierta
+$MTFUI_General_SplitPanels	Paneles separados en la ventana independiente
+$MTFUI_General_SplitPanelsHelp	Muestra Presets, Niveles y Editor de nivel como ventanas propias que puedes colocar alrededor del objetivo, en lugar de una gran ventana con pestañas.
+$MTFUI_General_ResetLayout	Restablecer disposición de paneles
+$MTFUI_General_Opacity	Opacidad de la ventana
+$MTFUI_General_OpacityHelp	Opacidad del fondo de la ventana independiente y de sus paneles, para que se vea el objetivo a través.
+$MTFUI_General_ClearCache	Vaciar caché de texturas
+$MTFUI_General_ClearCacheHelp	Vuelve a cargar del disco las miniaturas de tatuajes, después de reemplazar un archivo de textura.
+$MTFUI_Picker_NotInstalled	{} (no instalado)
+$MTFUI_Picker_PluginDisabled	{} (desactivado en MTF)
+$MTFUI_Condition_TierName	Nombre del nivel
+$MTFUI_Condition_TierNameHint	opcional, p. ej. Calentando
+$MTFUI_Condition_TierNameHelp	Solo como referencia para ti en esta lista y en el menú de MTF.
+$MTFUI_Condition_All	Todas estas
+$MTFUI_Condition_Any	Cualquiera de estas
+$MTFUI_Condition_Or	o
+$MTFUI_Condition_And	y
+$MTFUI_Condition_Sentence	El portador {}
+$MTFUI_Condition_Add	Añadir una condición
+$MTFUI_Condition_AddAnother	Añadir otra condición
+$MTFUI_Condition_NoneHint	Sin ninguna, este nivel nunca se activa.
+$MTFUI_Look_SameAsDefault	Igual que Predeterminado
+$MTFUI_Look_NoTattoo	Sin tatuaje
+$MTFUI_Look_Choose	Elegir
+$MTFUI_Look_PackOption	{} ({})
+$MTFUI_Look_Browse	Explorar tatuajes...
+$MTFUI_Look_Description	Descripción
+$MTFUI_Look_NoneShown	Este nivel no muestra ningún tatuaje; solo se ejecutan sus efectos.
+$MTFUI_Look_NotFound	Tatuaje no encontrado en los paquetes instalados.
+$MTFUI_Look_Layers	Capas
+$MTFUI_Look_Layer	Capa {}
+$MTFUI_Look_CopyLayer	Copiar capa
+$MTFUI_Look_PasteLayer	Pegar capa
+$MTFUI_Look_ColorsToAll	Usar los colores de esta capa en todas las capas
+$MTFUI_Look_Tint	Tinte
+$MTFUI_Look_TintHelp	Multiplica el color propio del tatuaje. El blanco conserva la tinta original.
+$MTFUI_Look_ToAll	A todas
+$MTFUI_Look_ToAllTip	Aplica este tinte a todas las capas. Haz clic derecho en la cabecera de una capa para copiar o pegar la capa entera.
+$MTFUI_Look_Opacity	Opacidad
+$MTFUI_Look_OpacityHelp	Lo sólida que es la tinta de esta capa. 100% es totalmente opaca, 0% oculta la capa.
+$MTFUI_Look_GlowColor	Color del brillo
+$MTFUI_Look_GlowColorHelp	Color de la luz que emite el tatuaje. Negro significa sin brillo, sea cual sea la intensidad.
+$MTFUI_Look_GlowStrength	Intensidad del brillo
+$MTFUI_Look_GlowStrengthHelp	0 = sin brillo. El pulso anima este valor.
+$MTFUI_Pulse_Copy	Copiar pulso
+$MTFUI_Pulse_Paste	Pegar pulso
+$MTFUI_Pulse_Speed	Velocidad
+$MTFUI_Pulse_PerSecond_Fmt	%.2f por segundo
+$MTFUI_Pulse_Off_Fmt	apagado
+$MTFUI_Pulse_SpeedHelp	Ciclos de pulso por segundo. 0 apaga el pulso.
+$MTFUI_Pulse_Depth	Profundidad
+$MTFUI_Pulse_DepthHelp	Cuánto se atenúa el brillo desde su máximo. Al 100% se apaga del todo en el punto más bajo.
+$MTFUI_Pulse_Pause	Pausa
+$MTFUI_Pulse_NoPause_Fmt	ninguna
+$MTFUI_Pulse_PauseHelp	Segundos de reposo en el punto más bajo entre ciclos.
+$MTFUI_Pulse_Shape	Forma
+$MTFUI_Pulse_Smooth	Suave (integrada)
+$MTFUI_Pulse_ShapeHelp	Las curvas vienen de MagicTattoosFramework/waveforms/*.json.
+$MTFUI_Pulse_NoGlow	El pulso anima el brillo, pero ninguna capa tiene intensidad de brillo mayor que 0 (pestaña Apariencia).
+$MTFUI_Effects_DefaultIntro	Los efectos se ejecutan mientras ningún nivel coincide.
+$MTFUI_Effects_TierIntro	Los efectos se ejecutan mientras este nivel está activo.
+$MTFUI_Effects_Burst	Una vez al activarse: {}
+$MTFUI_Effects_Add	Añadir efecto
+$MTFUI_Effects_OverCap	El menú propio de MTF solo muestra los primeros {}.
+$MTFUI_Timing_Hours	horas
+$MTFUI_Timing_Minutes	minutos
+$MTFUI_Timing_DefaultNone	Predeterminado no tiene activación, así que no tiene temporización.
+$MTFUI_Timing_Stay	Seguir activo durante
+$MTFUI_Timing_StayHelp	Una vez activado, el nivel sigue encendido este tiempo (tiempo de juego) aunque sus condiciones dejen de cumplirse. 0 = solo mientras se cumplan.
+$MTFUI_Timing_Interrupt	Los niveles superiores pueden interrumpirlo
+$MTFUI_Timing_InterruptHelp	Mientras este nivel sigue activo por tiempo, deja que lo sustituya un nivel superior cuyas condiciones pasen a cumplirse.
+$MTFUI_Timing_Cooldown	Enfriamiento
+$MTFUI_Timing_CooldownHelp	Cuando el nivel termina, no puede volver a activarse durante este tiempo. 0 = sin enfriamiento.
+$MTFUI_Inspector_NoPreset	Abre un preset para editar sus niveles.
+$MTFUI_Inspector_TierTitle	Nivel {}: {}
+$MTFUI_Inspector_Priority	prioridad {} de {}
+$MTFUI_Inspector_TabCondition	Condición
+$MTFUI_Inspector_TabLook	Apariencia
+$MTFUI_Inspector_TabPulse	Pulso
+$MTFUI_Inspector_TabEffects	Efectos
+$MTFUI_Inspector_TabEffectsCount	Efectos ({})
+$MTFUI_Inspector_TabTiming	Temporización
+$MTFUI_Library_MoveToGroup	Mover al grupo
+$MTFUI_Library_NewGroupItem	Nuevo grupo...
+$MTFUI_Library_RemoveFromGroup	Quitar del grupo
+$MTFUI_Library_BuiltinMenu	Integrado
+$MTFUI_Library_DragToGroup	Mover {} a un grupo
+$MTFUI_Library_FileTip	{}.json
+$MTFUI_Library_FileTipApplied	{}.json\nAplicado al objetivo actual
+$MTFUI_Library_OnMarker	activo
+$MTFUI_Library_RemoveFromTarget	Quitar del objetivo
+$MTFUI_Library_DuplicateItem	Duplicar...
+$MTFUI_Library_CopyTiersFrom	Copiar niveles de
+$MTFUI_Library_CopyTiersNote	Conserva el tatuaje Predeterminado de este preset
+$MTFUI_Library_DeleteItem	Borrar...
+$MTFUI_Library_NameTitle	Nombre del preset
+$MTFUI_Library_Search	Buscar presets
+$MTFUI_Library_New	Nuevo
+$MTFUI_Library_DefaultName	Mi preset
+$MTFUI_Library_Duplicate	Duplicar
+$MTFUI_Library_Ungrouped	Sin grupo
+$MTFUI_Library_BuiltinHeader	Integrados (solo lectura)
+$MTFUI_Library_Empty	Aún no hay presets. Haz clic en Nuevo para empezar uno.
+$MTFUI_Library_NewGroupTitle	Nuevo grupo
+$MTFUI_Library_GroupHint	Nombre del grupo
+$MTFUI_Library_Move	Mover
+$MTFUI_Library_DeleteTitle	¿Borrar el preset?
+$MTFUI_Library_DeleteQuestion	¿Borrar '{}'?
+$MTFUI_Library_DeleteNote	Puedes recuperarlo en General > Presets borrados.
+$MTFUI_Library_Delete	Borrar
+$MTFUI_TierMenu_MoveUp	Subir
+$MTFUI_TierMenu_MoveDown	Bajar
+$MTFUI_TierMenu_Clear	Vaciar nivel
+$MTFUI_TierMenu_Copy	Copiar nivel
+$MTFUI_TierMenu_Paste	Pegar
+$MTFUI_TierMenu_PasteWhole	Nivel completo
+$MTFUI_TierMenu_PasteLook	Solo apariencia (tatuaje, capas, pulso)
+$MTFUI_TierMenu_PasteConditions	Solo condiciones
+$MTFUI_TierMenu_PasteEffects	Solo efectos
+$MTFUI_TierMenu_PasteTiming	Solo temporización
+$MTFUI_TierMenu_CopyLookFrom	Copiar apariencia de
+$MTFUI_Tiers_DragMove	Mover {}
+$MTFUI_Tiers_RowTitle	#{}  {}
+$MTFUI_Tiers_ErrorOne	{} error
+$MTFUI_Tiers_ErrorMany	{} errores
+$MTFUI_Tiers_WarningOne	{} advertencia
+$MTFUI_Tiers_WarningMany	{} advertencias
+$MTFUI_Tiers_UnusedSummary	Sin usar. Selecciónalo y añade una condición para crear un nivel nuevo.
+$MTFUI_Tiers_PickPreset	Elige un preset de la lista o haz clic en Nuevo.
+$MTFUI_Tiers_Explainer	Un preset es una apariencia Predeterminada más una escalera de niveles que la modifican. MTF comprueba los niveles desde arriba; el primero cuyas condiciones se cumplen decide la apariencia y los efectos del tatuaje. Si no se cumple ninguno, se usa Predeterminado.
+$MTFUI_Tiers_Base	Base
+$MTFUI_Tiers_BaseHelp	Predeterminado define la apariencia base. Los niveles que dejan su tatuaje en "Igual que Predeterminado" parten de ella, y se muestra cuando ningún nivel coincide.
+$MTFUI_Tiers_Header	Niveles (gana el de arriba)
+$MTFUI_Tiers_HeaderHelp	Arrastra los niveles para cambiar la prioridad, o selecciona uno y pulsa Alt+Arriba / Alt+Abajo. Haz clic derecho en un nivel para copiarlo, pegarlo o vaciarlo. Se muestra el primer nivel cuyas condiciones se cumplen; Predeterminado se aplica cuando no se cumple ninguno.
+$MTFUI_Header_Revert	Revertir
+$MTFUI_Header_Undo	Deshacer
+$MTFUI_Header_Redo	Rehacer
+$MTFUI_Header_Builtin	Preset integrado: duplícalo para hacer cambios que puedas guardar.
+$MTFUI_Header_Name	Nombre
+$MTFUI_Header_RenameHelp	El nombre del archivo no cambia al renombrar, así que todo lo que ya usa este preset sigue funcionando.
+$MTFUI_Header_NoGroup	Sin grupo
+$MTFUI_Header_Group	Grupo
+$MTFUI_Header_GroupHelp	Carpeta de este preset en la lista. Solo esta interfaz la usa; MTF la ignora.
+$MTFUI_Options_Title	Opciones del preset
+$MTFUI_Options_Transition	Transición
+$MTFUI_Options_TransitionHelp	Segundos para fundir la opacidad, los colores y el brillo del tatuaje cuando cambia el nivel activo. 0 = instantáneo.
+$MTFUI_Options_DeathOff	Desactivado
+$MTFUI_Options_DeathOverlay	Overlay (desvanecer)
+$MTFUI_Options_DeathEmissive	Emisivo (dejar de brillar)
+$MTFUI_Options_DeathInverted	Invertido (bajar y recuperarse)
+$MTFUI_Options_OnDeath	Al morir
+$MTFUI_Options_OnDeathHelp	Qué le pasa al tatuaje cuando muere el portador.
+$MTFUI_Options_DeathFade	Desvanecido al morir
+$MTFUI_Options_CopyJson	Copiar como JSON
+$MTFUI_Options_CopyJsonHelp	Pone el preset entero en el portapapeles, para compartirlo o guardarlo en otro sitio. General > Copias de seguridad puede pegarlo de nuevo como un preset nuevo.
+$MTFUI_Checks_Title	Comprobaciones
+$MTFUI_Checks_None	No se encontraron problemas
+$MTFUI_Checks_JumpTip	Selecciona este nivel y muestra dónde corregirlo
+$MTFUI_Checks_MoveUp	Subirlo
+$MTFUI_Checks_Enable	Activarlo
+$MTFUI_Describe_NotInstalled	{} (plugin no instalado)
+$MTFUI_Describe_NoTattoo	sin tatuaje
+$MTFUI_Describe_Missing	{} (falta)
+$MTFUI_Describe_FromDefault	{} (de Predeterminado)
+$MTFUI_Describe_Otherwise	Si no
+$MTFUI_Describe_Unused	Sin usar
+$MTFUI_Describe_When	Cuando el portador {}
+$MTFUI_Describe_JoinAnd	{} y {}
+$MTFUI_Describe_JoinOr	{} o {}
+$MTFUI_Describe_Slot	{}: {}
+$MTFUI_Describe_Tinted	{}, teñido {}
+$MTFUI_Describe_Glowing	{}, brillando {}
+$MTFUI_Describe_Pulsing	{}, pulsando {:.2g}/s al {}%
+$MTFUI_Describe_EffectOne	{}, {} efecto
+$MTFUI_Describe_EffectMany	{}, {} efectos
+$MTFUI_Lint_Value	valor
+$MTFUI_Lint_OutOfRange	{}: {} es {}, fuera de {} a {}
+$MTFUI_Lint_NotAnOption	{}: '{}' no es una opción de {}
+$MTFUI_Lint_BadFileName	El nombre de archivo debe tener de 1 a 32 caracteres: letras, dígitos, '_' o '-'
+$MTFUI_Lint_NoDisplayName	El nombre visible está vacío; MTF mostrará el nombre del archivo
+$MTFUI_Lint_NoCondition	{} tiene apariencia o efectos pero ninguna condición, así que nunca se activa
+$MTFUI_Lint_Shadowed	{} nunca puede activarse: {} está más arriba en la lista y siempre coincide antes. Súbelo.
+$MTFUI_Lint_ConditionMissing	La condición '{}' no está instalada; este nivel no se activará
+$MTFUI_Lint_ConditionDisabled	{} está desactivado en MTF; '{}' nunca se cumplirá
+$MTFUI_Lint_EmptyText	{}: el texto está vacío, lo que normalmente coincide con cualquier cosa
+$MTFUI_Lint_PackMissing	El paquete de tatuajes '{}' no está instalado
+$MTFUI_Lint_NoEntry	Hay un paquete elegido pero ningún tatuaje; no se mostrará nada
+$MTFUI_Lint_EntryMissing	Falta el tatuaje '{}' en {}
+$MTFUI_Lint_TextureMissing	Textura no encontrada: {} (puede que esté en un BSA)
+$MTFUI_Lint_Overflow	{} necesita {} ranura(s) de overlay de {} desde la ranura {}, pero RaceMenu solo tiene {}. Sube el número de overlays en skee64.ini o baja la ranura inicial de MTF.
+$MTFUI_Lint_LayerTransparent	La capa del tatuaje es totalmente transparente
+$MTFUI_Lint_AllTransparent	Todas las capas del tatuaje son totalmente transparentes
+$MTFUI_Lint_NoPulseRate	La profundidad del pulso está puesta pero la velocidad es 0, así que no pulsará
+$MTFUI_Lint_WaveformMissing	La forma de onda '{}' no está instalada; MTF usará un pulso suave
+$MTFUI_Lint_EffectMissing	El efecto '{}' no está instalado
+$MTFUI_Lint_EffectDisabled	{} está desactivado en MTF; '{}' no se ejecutará
+$MTFUI_Lint_TooManyEffects	Más de {0} efectos; el MCM de MTF solo mostrará los primeros {0}
+$MTFUI_Tattoos_Favorites	Favoritos
+$MTFUI_Tattoos_Recent	Usados recientemente
+$MTFUI_Tattoos_All	Todos
+$MTFUI_Tattoos_PackFilter	Paquete: {}
+$MTFUI_Tattoos_ShowFilter	Mostrar: {}
+$MTFUI_Tattoos_AllCount	Todos ({})
+$MTFUI_Tattoos_FavoritesCount	Favoritos ({})
+$MTFUI_Tattoos_Packs	Paquetes
+$MTFUI_Tattoos_PackCount	{} ({})
+$MTFUI_Tattoos_PackTip	{}\nZona: {}\n{}
+$MTFUI_Tattoos_NoPacks	No se encontraron paquetes visuales en MagicTattoosFramework/visuals.
+$MTFUI_Tattoos_Search	Buscar tatuajes
+$MTFUI_Tattoos_ZoomTip	Ctrl+rueda del ratón sobre la cuadrícula también hace zoom.
+$MTFUI_Tattoos_HideDetails	Ocultar detalles
+$MTFUI_Tattoos_ShowDetails	Mostrar detalles
+$MTFUI_Tattoos_RemoveFilter	Quitar este filtro
+$MTFUI_Tattoos_SearchChip	Búsqueda: {}
+$MTFUI_Tattoos_ClearAll	Quitar todo
+$MTFUI_Tattoos_CountOne	{} tatuaje
+$MTFUI_Tattoos_CountMany	{} tatuajes
+$MTFUI_Tattoos_UsedByOne	Usado por {} preset
+$MTFUI_Tattoos_UsedByMany	Usado por {} presets
+$MTFUI_Tattoos_Choosing	Eligiendo un tatuaje para {}: haz doble clic en uno, o
+$MTFUI_Tattoos_CancelChoosing	cancelar
+$MTFUI_Tattoos_NoFavorites	Aún no hay favoritos. Selecciona un tatuaje y haz clic en la estrella.
+$MTFUI_Tattoos_NoMatch	No hay coincidencias.
+$MTFUI_Tattoos_NewPresetItem	Nuevo preset con este tatuaje...
+$MTFUI_Tattoos_Unfavorite	Quitar de favoritos
+$MTFUI_Tattoos_Favorite	Añadir a favoritos
+$MTFUI_Tattoos_SelectHint	Selecciona un tatuaje para verlo más grande, ver qué presets lo usan o ponerlo en un nivel.
+$MTFUI_Tattoos_ShownWith	Mostrado con los colores de {}.
+$MTFUI_Tattoos_UseFor	Usar para {}
+$MTFUI_Tattoos_OpenPresetFirst	Abre un preset para usar este tatuaje.
+$MTFUI_Tattoos_Subject	Motivo
+$MTFUI_Tattoos_Style	Estilo
+$MTFUI_Tattoos_Placement	Ubicación
+$MTFUI_Tattoos_Layers	Capas
+$MTFUI_Tattoos_UnusedByPresets	Ninguno de tus presets
+$MTFUI_Tattoos_TextureFiles	Archivos de textura
+$MTFUI_Tattoos_NewPresetTitle	Nuevo preset con un tatuaje
+$MTFUI_Tattoos_DefaultLook	Apariencia predeterminada: {} ({})
+$MTFUI_Tattoos_UnsavedWarning	Se te preguntará qué hacer con los cambios sin guardar del preset abierto.

@@ -82,20 +82,20 @@ namespace mtfui::ui {
         }
         ed.committed = *ed.preset;
         Relint();
-        Toast("Restored unsaved edits to " + ed.preset->displayName);
+        Toast(TF("$MTFUI_Toast_DraftRestored", ed.preset->displayName));
         logger::info("Restored draft of {}", name);
     }
 
     void App::LoadPresetNow(const std::string& name) {
         const auto* it = FindLibrary(name);
         if (!it) {
-            Toast("Preset '" + name + "' no longer exists", true);
+            Toast(TF("$MTFUI_Toast_PresetGone", name), true);
             return;
         }
         std::string error;
         auto json = io::ReadJson(it->path, &error);
         if (!json || !json->is_object()) {
-            Toast("Could not read " + io::PathText(it->path.filename()) + ": " + (json ? "not a JSON object" : error), true);
+            Toast(TF("$MTFUI_Toast_CouldNotRead", io::PathText(it->path.filename()), json ? T("$MTFUI_Error_NotJsonObject") : error), true);
             return;
         }
         ClearEditor();
@@ -138,13 +138,13 @@ namespace mtfui::ui {
         }
         const auto* info = FindLibrary(source);
         if (!info) {
-            Toast("Preset '" + source + "' no longer exists", true);
+            Toast(TF("$MTFUI_Toast_PresetGone", source), true);
             return;
         }
         std::string error;
         auto json = io::ReadJson(info->path, &error);
         if (!json || !json->is_object()) {
-            Toast("Could not read " + io::PathText(info->path.filename()) + ": " + (json ? "not a JSON object" : error), true);
+            Toast(TF("$MTFUI_Toast_CouldNotRead", io::PathText(info->path.filename()), json ? T("$MTFUI_Error_NotJsonObject") : error), true);
             return;
         }
         WhenSafe([this, displayName, original = model::PresetFromJson(info->name, *json)] { DuplicateNow(original, displayName); });
@@ -167,7 +167,7 @@ namespace mtfui::ui {
         const auto path = cat.PresetPath(name);
         auto json = io::ReadJson(path);
         if (!json) {
-            Toast("Only your own presets can be deleted", true);
+            Toast(T("$MTFUI_Toast_OnlyOwnDelete"), true);
             return;
         }
         std::string error;
@@ -178,7 +178,7 @@ namespace mtfui::ui {
         // Same soft delete as MTF: a hidden=1 tombstone that MTF skips and a later save can reclaim.
         (*json)["hidden"] = 1;
         if (!io::WriteJsonStyled(path, *json, &error)) {
-            Toast("Delete failed: " + error, true);
+            Toast(TF("$MTFUI_Toast_DeleteFailed", error), true);
             return;
         }
         if (ed.preset && model::IEquals(ed.preset->name, name)) {
@@ -187,7 +187,7 @@ namespace mtfui::ui {
         game::MtfBridge::Get().PresetChanged(name, false);
         ReloadLibrary();
         logger::info("Deleted preset {}", name);
-        Toast("Deleted " + name + ". Bring it back from General > Deleted presets.");
+        Toast(TF("$MTFUI_Toast_Deleted", name));
     }
 
     bool App::Undelete(const std::string& name) {
@@ -195,30 +195,30 @@ namespace mtfui::ui {
         std::string error;
         auto json = io::ReadJson(path, &error);
         if (!json || !json->is_object()) {
-            Toast("Could not read " + name + ": " + (json ? "not a JSON object" : error), true);
+            Toast(TF("$MTFUI_Toast_CouldNotRead", name, json ? T("$MTFUI_Error_NotJsonObject") : error), true);
             return false;
         }
         (*json)["hidden"] = 0;
         if (!io::WriteJsonStyled(path, *json, &error)) {
-            Toast("Could not restore " + name + ": " + error, true);
+            Toast(TF("$MTFUI_Toast_CouldNotRestore", name, error), true);
             return false;
         }
         game::MtfBridge::Get().PresetChanged(name, false);
         ReloadLibrary();
         logger::info("Undeleted preset {}", name);
-        Toast("Restored " + json->value("displayname", name));
+        Toast(TF("$MTFUI_Toast_Undeleted", json->value("displayname", name)));
         return true;
     }
 
     bool App::RestoreBackup(const fs::path& backup, const std::string& name) {
         if (BuiltinNameTaken(name)) {
-            Toast("'" + name + "' is an MTF built-in name; it can't be restored over", true);
+            Toast(TF("$MTFUI_Toast_BuiltinNameRestore", name), true);
             return false;
         }
         std::string error;
         auto json = io::ReadJson(backup, &error);
         if (!json || !json->is_object()) {
-            Toast("Could not read the backup: " + (json ? std::string("not a JSON object") : error), true);
+            Toast(TF("$MTFUI_Toast_CouldNotReadBackup", json ? T("$MTFUI_Error_NotJsonObject") : error), true);
             return false;
         }
         const auto path = cat.PresetPath(name);
@@ -229,7 +229,7 @@ namespace mtfui::ui {
         }
         (*json)["hidden"] = 0;
         if (!io::WriteJsonStyled(path, *json, &error)) {
-            Toast("Restore failed: " + error, true);
+            Toast(TF("$MTFUI_Toast_RestoreFailed", error), true);
             return false;
         }
         game::MtfBridge::Get().PresetChanged(name, false);
@@ -238,13 +238,13 @@ namespace mtfui::ui {
             if (Dirty()) {
                 // Keep the unsaved edits; saving them would overwrite the restored file.
                 ed.saved = model::PresetFromJson(name, *json);
-                Toast("Restored " + name + ". Your open edits weren't touched; Revert shows the restored version.");
+                Toast(TF("$MTFUI_Toast_RestoredKeptEdits", name));
                 return true;
             }
             LoadPresetNow(name);
         }
         logger::info("Restored {} from {}", name, io::PathText(backup.filename()));
-        Toast("Restored " + json->value("displayname", name) + " from the backup");
+        Toast(TF("$MTFUI_Toast_RestoredBackup", json->value("displayname", name)));
         return true;
     }
 
@@ -254,7 +254,7 @@ namespace mtfui::ui {
         }
         const auto text = model::PresetToJson(*ed.preset).dump(1, '\t', false, nlohmann::json::error_handler_t::replace);
         SetClipboardText(text.c_str());
-        Toast("Copied " + ed.preset->displayName + " to the clipboard as JSON");
+        Toast(TF("$MTFUI_Toast_Exported", ed.preset->displayName));
     }
 
     void App::ImportFromClipboard() {
@@ -262,11 +262,11 @@ namespace mtfui::ui {
         std::string error;
         auto json = model::ParsePresetText(raw ? raw : "", &error);
         if (!json) {
-            Toast("Nothing to import: " + error, true);
+            Toast(TF("$MTFUI_Toast_NothingToImport", error), true);
             return;
         }
         WhenSafe([this, j = std::move(*json)] {
-            const std::string display = j.value("displayname", std::string("Imported preset"));
+            const std::string display = j.value("displayname", std::string(T("$MTFUI_Preset_ImportedName")));
             ClearEditor();
             ed.preset = model::PresetFromJson(UniqueName(display), j);
             ed.preset->hidden = 0;
@@ -275,7 +275,7 @@ namespace mtfui::ui {
             ed.isNew = true;
             draftPending_ = true;
             Relint();
-            Toast("Imported " + display + ". Save it to keep it.");
+            Toast(TF("$MTFUI_Toast_Imported", display));
         });
     }
 
@@ -285,7 +285,7 @@ namespace mtfui::ui {
             std::string error;
             auto json = info ? io::ReadJson(info->path, &error) : std::nullopt;
             if (!json || !json->is_object()) {
-                Toast("Could not read " + source + (error.empty() ? std::string{} : ": " + error), true);
+                Toast(error.empty() ? TF("$MTFUI_Toast_CouldNotReadName", source) : TF("$MTFUI_Toast_CouldNotRead", source, error), true);
                 return;
             }
             if (!ed.preset || !model::IEquals(ed.preset->name, target) || ed.isNew) {
@@ -296,7 +296,7 @@ namespace mtfui::ui {
             }
             const auto src = model::PresetFromJson(info->name, *json);
             model::CopyTiers(*ed.preset, src);
-            Toast("Copied the tiers of " + src.displayName + " into " + ed.preset->displayName + ". Save to keep them.");
+            Toast(TF("$MTFUI_Toast_TiersCopied", src.displayName, ed.preset->displayName));
         };
         if (ed.preset && model::IEquals(ed.preset->name, target) && !ed.isNew) {
             paste();
@@ -312,7 +312,7 @@ namespace mtfui::ui {
         std::string error;
         auto json = io::ReadJson(path, &error);
         if (!json || !json->is_object()) {
-            Toast("Only your own presets can be grouped", true);
+            Toast(T("$MTFUI_Toast_OnlyOwnGroup"), true);
             return;
         }
         if (!io::Backup(path, paths.uiDir / "backups", 10, &error)) {
@@ -324,7 +324,7 @@ namespace mtfui::ui {
             (*json)[model::kGroupKey] = group;
         }
         if (!io::WriteJsonStyled(path, *json, &error)) {
-            Toast("Could not move " + name + ": " + error, true);
+            Toast(TF("$MTFUI_Toast_CouldNotMove", name, error), true);
             return;
         }
         if (ed.preset && model::IEquals(ed.preset->name, name) && !ed.isNew) {
@@ -364,7 +364,7 @@ namespace mtfui::ui {
                 break;
             case model::LintFix::Kind::EnablePlugin:
                 game::MtfBridge::Get().SetPluginEnabled(issue.fix.pluginId, true);
-                Toast("Enabling " + issue.fix.pluginId + " in MTF");
+                Toast(TF("$MTFUI_Toast_EnablingPlugin", issue.fix.pluginId));
                 break;
             default:
                 break;
@@ -377,14 +377,14 @@ namespace mtfui::ui {
         }
         auto& p = *ed.preset;
         if (ed.builtin) {
-            Toast("Built-in presets are read-only. Use Duplicate to make your own copy.", true);
+            Toast(T("$MTFUI_Toast_BuiltinReadOnly"), true);
             return false;
         }
         if (p.name.empty()) {
             p.name = UniqueName(p.displayName);
         }
         if (BuiltinNameTaken(p.name)) {
-            Toast("'" + p.name + "' is reserved by an MTF built-in preset. Duplicate it under another name.", true);
+            Toast(TF("$MTFUI_Toast_BuiltinNameSave", p.name), true);
             return false;
         }
         const auto path = cat.PresetPath(p.name);
@@ -392,11 +392,11 @@ namespace mtfui::ui {
         if (!io::Backup(path, paths.uiDir / "backups", 10, &error)) {
             // The edit is still worth saving; the user just can't roll this one back.
             logger::warn("No backup of {} before save: {}", p.name, error);
-            Toast("Could not back up the previous version: " + error, true);
+            Toast(TF("$MTFUI_Toast_BackupFailed", error), true);
         }
         const auto json = model::PresetToJson(p);
         if (!io::WriteJsonStyled(path, json, &error)) {
-            Toast("Save failed: " + error, true);
+            Toast(TF("$MTFUI_Toast_SaveFailed", error), true);
             return false;
         }
         p.raw = json;
@@ -419,17 +419,17 @@ namespace mtfui::ui {
         const auto who = targetName;
         game::MtfBridge::Get().PresetChanged(name, false, [this, name, display, wearing, hidden, target, who] {
             if (hidden) {
-                Toast("Saved " + display + ". " + who + " shows it again when the live preview stops");
+                Toast(TF("$MTFUI_Toast_SavedHidden", display, who));
             } else if (wearing) {
                 // MTF redraws on tier changes only; re-applying shows the edit right away.
                 game::MtfBridge::Get().Remove(target, name, [this, target, name, display, who] {
                     game::MtfBridge::Get().Apply(target, name, [this, target, display, who](int rc) {
-                        Toast(rc == 1 || rc == 0 ? "Saved " + display + " and refreshed it on " + who : "Saved, but re-applying failed: " + game::ApplyResultText(rc, target == 0x14), rc < 0);
+                        Toast(rc == 1 || rc == 0 ? TF("$MTFUI_Toast_SavedRefreshed", display, who) : TF("$MTFUI_Toast_SavedReapplyFailed", game::ApplyResultText(rc, target == 0x14)), rc < 0);
                         RefreshApplied();
                     });
                 });
             } else {
-                Toast("Saved " + display);
+                Toast(TF("$MTFUI_Toast_Saved", display));
             }
         });
         logger::info("Saved preset {}", name);

@@ -74,7 +74,23 @@ Notes for whoever works on Magic Tattoos UI next. Section 1 is carried over from
 - The cache has a 256 MB budget, estimated from each texture's size and format. Over budget it evicts least recently used textures, never ones drawn in the last two frames, down to three quarters of the budget.
 - A shader resource view may still be referenced by the frame's draw lists after the UI drops it, so `Clear` and eviction retire views and `EndFrame` releases them two frames later. At process exit the destructor only detaches the worker thread: joining or releasing then could hang or crash.
 
-## 6. Code layout
+## 6. Translations
+
+- SKSE Menu Framework has no localization. The UI reads Skyrim's `sLanguage:General` in `App::Init` (kDataLoaded; the INI setting isn't there at kPostLoad) and loads `Data/Interface/Translations/MagicTattoosUI_<LANGUAGE>.txt`, the same file name pattern MCM mods use. The menu section names ("Magic Tattoos", "Editor") are registered at kPostLoad, before that, so they stay English.
+- The source of truth is `translations/MagicTattoosUI_ENGLISH.txt`, kept as UTF-8 in the repo. `build.sh` ships every `translations/MagicTattoosUI_*.txt` as UTF-16 LE with a BOM and CRLF, the encoding Skyrim's own translator expects. The parser reads UTF-16 LE and UTF-8, so a translator can save either.
+- Format: one `$KEY<tab>text` per line, with `\n`, `\t` and `\\` escapes. Lines not starting with `$` are skipped, but leave comments out: Skyrim also loads these files into its global translation table. Every key starts with `$MTFUI_` so it can't collide with another mod's.
+- English is also built into the DLL as an RCDATA resource (`src/Translations.rc.in`), so a missing file or a missing key shows English, never a raw key. A language file only replaces the keys it has.
+- In code, `T("$MTFUI_X")` returns the text and `TF("$MTFUI_X", args...)` formats it with `std::format`. Translators can reorder with `{0}` and `{1}`. A template that fails to format falls back to the English one.
+- **Translated text never goes to ImGui as a printf format.** Use `"%s"`, `TextUnformatted`, or a label parameter, since help text like "100% is" would otherwise read garbage. The only exception is a key ending in `_Fmt` (slider formats). For those, a translation whose `%` conversions differ from English is rejected at load and logged.
+- Translating a label changes its ImGui ID. Tabs, panels, collapsing headers and buttons whose state matters use `"text###id"`.
+- Plurals use separate `_One` and `_Many` keys.
+- The tests check that every `$MTFUI_` key in `src/` has English text, that every English key is used, and that every file in `translations/` has only known keys and matching `_Fmt` placeholders.
+- ImGui only draws glyphs the Menu Framework has loaded. Its `SKSEMenuFramework.ini` has `[Fonts]` switches (`EnableCyrillic`, `EnableChinese`, `EnableJapanese`, `EnableKorean`, `EnablePolish`, `EnableTurkish`, `EnableThai`), all off by default. The framework's ImGui builds its font atlas once at startup and doesn't expose a rebuild, so a mod can't add glyphs itself.
+- On the first frame, `App::CheckTranslationFont` asks the font (`FindGlyphNoFallback`) for every non-ASCII character in the active translation. Typography it lacks (no-break and thin spaces, curly quotes, dashes, the ellipsis) is swapped for a plain stand-in (`io::PlainStandIn`). Any other missing character means the script isn't loaded: the UI drops back to English and the status line says which `[Fonts]` switch to turn on. So translators should write correct typography for their language; the French file uses no-break spaces before `:`, `;`, `?`, `!` and `%` and inside « ».
+- The `$MTFUI_Font_*` strings only show once the UI is in English, so translations leave them out.
+- Russian has three plural forms and the code only has `_One` and `_Many`, so the Russian file words counts as "Label: N" instead.
+
+## 7. Code layout
 
 - `App.cpp` holds state, targets, preview, lint triggers and the per-frame hooks; `AppEditor.cpp` the open preset (load, save, undo, drafts, restore, import); `AppLayout.cpp` the window, panels, status line and modals. `game/Camera.cpp` holds the idle camera setting.
 - Logic that doesn't need the game or ImGui goes in `model/` or `io/`, which build into `mtfui_core` and are tested offline: tier moves and look copying (`Preset.cpp`), search, slider formats and unique names (`Text.cpp`).

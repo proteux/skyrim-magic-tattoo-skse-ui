@@ -1,0 +1,499 @@
+$MTFUI_Common_Cancel	Отмена
+$MTFUI_Common_Choose	(выбрать)
+$MTFUI_Common_ClearStuckEffects	Сбросить зависшие эффекты
+$MTFUI_Common_Create	Создать
+$MTFUI_Common_Edit	Изменить
+$MTFUI_Common_None	Нет
+$MTFUI_Common_Remove	Убрать
+$MTFUI_Common_Restore	Восстановить
+$MTFUI_Common_Save	Сохранить
+$MTFUI_Common_Search	Поиск
+$MTFUI_Common_UsedBy	Используется в
+$MTFUI_List_And	{} и {}
+$MTFUI_List_Comma	{}, {}
+$MTFUI_Area_Body	Тело
+$MTFUI_Area_Face	Лицо
+$MTFUI_Area_Hands	Руки
+$MTFUI_Area_Feet	Ступни
+$MTFUI_Tier_Default	По умолчанию
+$MTFUI_Tier_Numbered	Уровень {}
+$MTFUI_Format_Seconds1_Fmt	%.1f с
+$MTFUI_Format_Milliseconds_Fmt	%d мс
+$MTFUI_Color_Palette	Палитра
+$MTFUI_Param_TextHint	через запятую, пусто = любое
+$MTFUI_Severity_Error	Ошибка
+$MTFUI_Severity_Warning	Предупреждение
+$MTFUI_Severity_Note	Заметка
+$MTFUI_Thumb_Tiny_Fmt	Крошечные
+$MTFUI_Thumb_Small_Fmt	Маленькие
+$MTFUI_Thumb_Medium_Fmt	Средние
+$MTFUI_Thumb_Large_Fmt	Большие
+$MTFUI_Thumb_ExtraLarge_Fmt	Очень большие
+$MTFUI_NamePrompt_Hint	Отображаемое имя
+$MTFUI_NamePrompt_File	Файл: {}.json
+$MTFUI_Preset_NewName	Новый пресет
+$MTFUI_Preset_CopyName	{} (копия)
+$MTFUI_Preset_ImportedName	Импортированный пресет
+$MTFUI_Draft_Title	Восстановить несохранённые правки?
+$MTFUI_Draft_Text	Игра закрылась, когда в «{}» были несохранённые правки.
+$MTFUI_Draft_SaveFirst	Сначала сохраните или отмените правки открытого пресета
+$MTFUI_Draft_ThrowAway	Выбросить
+$MTFUI_Unsaved_Title	Несохранённые изменения
+$MTFUI_Unsaved_NeverSaved	«{}» ещё ни разу не сохранялся.
+$MTFUI_Unsaved_Builtin	«{}» — встроенный пресет, его нельзя изменить, но вы его отредактировали. Сохранить правки как свою копию?
+$MTFUI_Unsaved_Changes	В «{}» есть несохранённые изменения.
+$MTFUI_Unsaved_SaveAsCopy	Сохранить как копию
+$MTFUI_Unsaved_Discard	Отменить правки
+$MTFUI_Status_NoMtf	Magic Tattoos Framework не загружен. Файлы пресетов всё равно можно редактировать.
+$MTFUI_Status_MtfDisabled	MTF отключён в своих настройках. Татуировки не будут обновляться.
+$MTFUI_Status_PreviewOn	{}: {}
+$MTFUI_Status_LoadingTextures	Загрузка текстур: {}...
+$MTFUI_Status_Shortcuts	Горячие клавиши\nCtrl+S  сохранить\nCtrl+Z / Ctrl+Y  отменить / повторить\nCtrl+N  новый пресет\nCtrl+D  дублировать\nCtrl+F  поиск пресетов\nF5  применить к цели\nAlt+Up / Alt+Down  переместить выбранный уровень
+$MTFUI_Status_ShortcutHint	|  Ctrl+S сохранить, Ctrl+Z отменить, F5 применить (наведите, чтобы увидеть все)
+$MTFUI_Tab_Presets	Пресеты
+$MTFUI_Tab_Tattoos	Татуировки
+$MTFUI_Tab_TattoosChoosing	Татуировки (выбор)
+$MTFUI_Tab_General	Общее
+$MTFUI_Tab_Plugins	Плагины
+$MTFUI_Panels_PickHint	Выберите татуировку на вкладке «Татуировки» в Magic Tattoos > Editor в меню
+$MTFUI_Panels_Peek	Удерживать для просмотра
+$MTFUI_Panels_PeekTip	Скрывает остальные панели, пока вы держите кнопку мыши. Панели перетаскиваются за заголовок; расположение запоминается.
+$MTFUI_Panel_Presets	Пресеты
+$MTFUI_Panel_Tiers	Уровни
+$MTFUI_Panel_TierEditor	Редактор уровня
+$MTFUI_Section_CloseWindows	Закрыть окна редактора
+$MTFUI_Section_OpenWindows	Открыть окна редактора
+$MTFUI_Section_WindowsHelp	Пресеты, Уровни и Редактор уровня открываются отдельными панелями поверх игры, а цель и живой предпросмотр — на полосе сверху. Расставьте их вокруг цели; расположение запоминается. Esc или крестик на полосе закрывают их.
+$MTFUI_Section_CloseWindow	Закрыть отдельное окно
+$MTFUI_Section_WindowOpen	Редактор открыт в отдельном окне.
+$MTFUI_Section_OpenWindow	Открыть в отдельном окне
+$MTFUI_Section_WindowHelp	Большое перемещаемое окно с тем же редактором. Закрывается по Esc или крестику.
+$MTFUI_Toast_AlreadyOnHidden	{} уже есть на цели «{}». Он скрыт, пока идёт живой предпросмотр.
+$MTFUI_Toast_AppliedTo	{}: применён к цели «{}»
+$MTFUI_Toast_ApplyResult	{}: {}
+$MTFUI_Toast_ShowOverlaySlots	Показать слоты оверлеев
+$MTFUI_Toast_RemovedFrom	{} снят с цели «{}»
+$MTFUI_Toast_RemovingAll	Снятие пресетов ({}) с цели «{}»
+$MTFUI_Toast_ClearedMtfPreset	Пресет MTF очищен
+$MTFUI_Toast_ClearedNamedMtfPreset	{} больше не пресет MTF
+$MTFUI_Toast_StillReadingSlots	Слоты оверлеев ещё считываются. Попробуйте через мгновение
+$MTFUI_Toast_StartNotMoved	Не перемещено: начиная со слота {}, MTF нужно {} слотов ({}) для ваших пресетов, а свободно только {}. Уберите пресет или выберите начало пониже
+$MTFUI_Toast_StartMoved	Оверлеи ({}) теперь начинаются со слота {}
+$MTFUI_Toast_SlotCountFixed	{}: {} (было {})
+$MTFUI_Toast_SlotCountsFixed	MTF всё ещё использовал старое число слотов оверлеев RaceMenu. Обновлено: {}
+$MTFUI_Toast_SaveBeforeApply	Сохраните пресет перед применением
+$MTFUI_Toast_DraftRestored	Несохранённые правки восстановлены: {}
+$MTFUI_Toast_PresetGone	Пресета «{}» больше нет
+$MTFUI_Toast_CouldNotRead	Не удалось прочитать {}: {}
+$MTFUI_Error_NotJsonObject	это не объект JSON
+$MTFUI_Toast_OnlyOwnDelete	Удалять можно только свои пресеты
+$MTFUI_Toast_DeleteFailed	Не удалось удалить: {}
+$MTFUI_Toast_Deleted	Удалено: {}. Вернуть можно в Общее > Удалённые пресеты.
+$MTFUI_Toast_CouldNotRestore	Не удалось восстановить {}: {}
+$MTFUI_Toast_Undeleted	Восстановлено: {}
+$MTFUI_Toast_BuiltinNameRestore	«{}» — имя встроенного пресета MTF, восстановить поверх него нельзя
+$MTFUI_Toast_CouldNotReadBackup	Не удалось прочитать резервную копию: {}
+$MTFUI_Toast_RestoreFailed	Не удалось восстановить: {}
+$MTFUI_Toast_RestoredKeptEdits	Восстановлено: {}. Ваши открытые правки не тронуты; «Вернуть» покажет восстановленную версию.
+$MTFUI_Toast_RestoredBackup	{} восстановлен из резервной копии
+$MTFUI_Toast_Exported	{} скопирован в буфер обмена как JSON
+$MTFUI_Toast_NothingToImport	Нечего импортировать: {}
+$MTFUI_Toast_Imported	Импортировано: {}. Сохраните, чтобы не потерять.
+$MTFUI_Toast_CouldNotReadName	Не удалось прочитать {}
+$MTFUI_Toast_TiersCopied	Уровни из {} скопированы в {}. Сохраните, чтобы не потерять.
+$MTFUI_Toast_OnlyOwnGroup	Группировать можно только свои пресеты
+$MTFUI_Toast_CouldNotMove	Не удалось переместить {}: {}
+$MTFUI_Toast_EnablingPlugin	Включение {} в MTF
+$MTFUI_Toast_BuiltinReadOnly	Встроенные пресеты только для чтения. Нажмите «Дублировать», чтобы сделать свою копию.
+$MTFUI_Toast_BuiltinNameSave	Имя «{}» занято встроенным пресетом MTF. Продублируйте его под другим именем.
+$MTFUI_Toast_BackupFailed	Не удалось сохранить резервную копию предыдущей версии: {}
+$MTFUI_Toast_SaveFailed	Не удалось сохранить: {}
+$MTFUI_Toast_SavedHidden	Сохранено: {}. На цели «{}» он снова появится, когда живой предпросмотр закончится
+$MTFUI_Toast_SavedRefreshed	{} сохранён и обновлён на цели «{}»
+$MTFUI_Toast_SavedReapplyFailed	Сохранено, но повторно применить не удалось: {}
+$MTFUI_Toast_Saved	Сохранено: {}
+$MTFUI_Toast_ShadersCleared	Шейдеры эффектов MTF сброшены на цели «{}»
+$MTFUI_Toast_ReloadingPacks	Перезагрузка визуальных паков
+$MTFUI_Toast_ShadersStopped	Шейдерные эффекты MTF остановлены на цели «{}»
+$MTFUI_Toast_AfterRestart	Вступит в силу после перезапуска игры
+$MTFUI_Toast_TattooSet	{}: назначено для «{}»
+$MTFUI_Import_NotJson	в буфере обмена нет JSON
+$MTFUI_Import_NotPreset	JSON в буфере обмена — не пресет Magic Tattoos
+$MTFUI_File_Locked	Не удаётся открыть файл (возможно, он занят другой программой)
+$MTFUI_File_NotFound	Файл не найден
+$MTFUI_File_BadJson	Некорректный JSON (байт {})
+$MTFUI_File_CannotWrite	Не удаётся открыть {} для записи: {}
+$MTFUI_File_WriteFailed	Ошибка записи {}
+$MTFUI_File_FlushFailed	Ошибка сброса на диск {}
+$MTFUI_File_CannotReplace	Не удаётся заменить {}
+$MTFUI_File_BadBackupName	Это имя файла нельзя использовать для резервной копии
+$MTFUI_File_CopyFailed	Не удалось скопировать в {}: {}
+$MTFUI_Target_You	Вы
+$MTFUI_Target_YouNamed	Вы ({})
+$MTFUI_Target_Unnamed	Без имени
+$MTFUI_Target_Distance	{}  ({:.0f} м)
+$MTFUI_Target_Label	Цель
+$MTFUI_Target_Crosshair	Под прицелом: {}
+$MTFUI_Target_Console	Выбран в консоли: {}
+$MTFUI_Target_Nearby	Рядом
+$MTFUI_Target_Looking	Поиск...
+$MTFUI_Target_NobodyNearby	Рядом никого нет
+$MTFUI_Target_Help	На кого действуют живой предпросмотр и «Применить». «Под прицелом» — тот, на кого вы смотрели при открытии меню; «Выбран в консоли» — персонаж, по которому вы кликнули в консоли.
+$MTFUI_Target_Hold	Удерживать на месте
+$MTFUI_Target_HoldHelp	Не даёт цели уйти, пока открыто это меню. Она снова сможет двигаться, когда вы закроете меню или выберете другую цель. На вас не действует.
+$MTFUI_Target_LivePreview	Живой предпросмотр
+$MTFUI_Target_LivePreviewHelp	Показывает татуировку, цвета и пульсацию выбранного уровня на цели прямо во время правки, средствами самого MTF. Использует временный пресет, который убирается при закрытии меню или загрузке сохранения. Пресеты на цели, которые нарисовали бы ту же татуировку ещё раз (включая редактируемый), на время скрываются и потом возвращаются.
+$MTFUI_Target_WithEffects	с эффектами
+$MTFUI_Target_WithEffectsHelp	Также запускать в предпросмотре эффекты уровня (свет, звуки, заклинания).
+$MTFUI_Target_Apply	Применить к цели
+$MTFUI_Target_ApplyTip	При необходимости сохраняет пресет, затем применяет его к цели. MTF держит его на цели, пока его не уберут.
+$MTFUI_Target_ApplyDisabledTip	Сначала откройте сохранённый пресет
+$MTFUI_Target_StopPreview	Остановить предпросмотр
+$MTFUI_Applied_Count	Применено ({})
+$MTFUI_Applied_Button	Применено
+$MTFUI_Applied_StarTip	* Пресет MTF (загруженный в его MCM) тоже рисуется на вас. В счёт он не входит.
+$MTFUI_Applied_Title	Пресеты на цели «{}»
+$MTFUI_Applied_UnsavedMcm	Несохранённая настройка MCM
+$MTFUI_Applied_MtfPresetTag	(пресет MTF)
+$MTFUI_Applied_MtfPresetTip	Пресет, загруженный в MCM MTF. MTF рисует его на вас под применёнными пресетами, что бы ни было применено.
+$MTFUI_Applied_ClearMtfPreset	Очистить пресет MTF?
+$MTFUI_Applied_ClearUnsavedMcm	Настройка MCM MTF так и не была сохранена, поэтому она пропадёт.
+$MTFUI_Applied_ClearKeepsFile	Файл пресета останется; загрузите его в MCM MTF, чтобы вернуть.
+$MTFUI_Applied_Asking	Запрос к MTF...
+$MTFUI_Applied_LivePreview	Живой предпросмотр (временный)
+$MTFUI_Applied_HiddenByPreview	(скрыт предпросмотром)
+$MTFUI_Applied_HiddenByPreviewTip	Снят, пока живой предпросмотр показывает ту же татуировку. Вернётся, когда предпросмотр закончится.
+$MTFUI_Applied_RemoveAll	Убрать все
+$MTFUI_Applied_ClearEffectsHelp	Останавливает на цели все шейдерные эффекты, которые может включать MTF (невидимость, призрак, пламя...), и сбрасывает её прозрачность.
+$MTFUI_Apply_Applied	Применено
+$MTFUI_Apply_Already	Уже применён к этому персонажу
+$MTFUI_Apply_NoTarget	Нет цели
+$MTFUI_Apply_TooManyNpcs	MTF уже отслеживает максимальное число NPC
+$MTFUI_Apply_EmptyName	Пустое имя пресета
+$MTFUI_Apply_Unreadable	MTF не смог прочитать пресет
+$MTFUI_Apply_NoSlots	Для его татуировок не осталось свободных слотов оверлеев. {}
+$MTFUI_Apply_Truncated	Осталось слишком мало слотов оверлеев, татуировка будет обрезана. {}
+$MTFUI_Apply_FixPlayer	Уберите другой пресет, опустите начальный слот MTF на вкладке «Общее» или увеличьте iNumOverlays в ini RaceMenu
+$MTFUI_Apply_FixNpc	Уберите с цели другой пресет или оверлей, или увеличьте iNumOverlays в ini RaceMenu
+$MTFUI_Apply_Unexpected	Неожиданный результат {}
+$MTFUI_Preview_NoResponse	MTF не ответил на предпросмотр
+$MTFUI_Preview_WriteFailed	Не удалось записать пресет предпросмотра: {}
+$MTFUI_Preview_Updating	Обновление предпросмотра...
+$MTFUI_Preview_Previewing	Предпросмотр
+$MTFUI_Preview_HidingOne	Предпросмотр (скрыт применённый пресет: {})
+$MTFUI_Preview_HidingMany	Предпросмотр (скрыто применённых пресетов: {})
+$MTFUI_Preview_Failed	Ошибка предпросмотра: {}
+$MTFUI_Preview_PutBackFailed	Не удалось вернуть после живого предпросмотра: {}
+$MTFUI_Preview_PutBackReason	{} ({})
+$MTFUI_Plugins_Intro	Плагины добавляют условия и эффекты, которые вы выбираете в пресетах. Если плагин выключить, MTF перестанет проверять его условия и запускать его эффекты; пресеты, которые его используют, сохранят свои настройки.
+$MTFUI_Plugins_Search	Поиск плагинов, условий, эффектов
+$MTFUI_Plugins_NoMtf	MTF не загружен: переключатели недоступны
+$MTFUI_Plugins_ColOn	Вкл
+$MTFUI_Plugins_ColPlugin	Плагин
+$MTFUI_Plugins_ColProvides	Предоставляет
+$MTFUI_Plugins_CatalogOnly	Только каталог: скрипт не зарегистрирован
+$MTFUI_Plugins_CatalogOnlyTip	У MTF есть файл каталога этого плагина, но его скрипт не зарегистрировался.\nВозможно, .esp плагина отсутствует или отключён.
+$MTFUI_Plugins_Conditions	Условия
+$MTFUI_Plugins_Effects	Эффекты
+$MTFUI_Plugins_PresetCount	Пресетов: {}
+$MTFUI_Plugins_DisabledInUse	Выключен, но используется
+$MTFUI_Plugins_Unused	не используется
+$MTFUI_Plugins_NoCatalogs	В MagicTattoosFramework/plugins не найдено каталогов плагинов.
+$MTFUI_Slots_LivePreview	Живой предпросмотр
+$MTFUI_Slots_StartsAt_Fmt	начало: слот %d
+$MTFUI_Slots_TipMcm	Пресет MTF (загруженный в MCM MTF)
+$MTFUI_Slots_TipFree	свободен
+$MTFUI_Slots_Tip	Слот {}: {}
+$MTFUI_Slots_TipOther	Слот {}: оверлей, нарисованный не MTF\n{}
+$MTFUI_Slots_TipClash	Слот {}: {}\nMTF нарисует поверх оверлея, нарисованного не MTF\n{}
+$MTFUI_Slots_Needs	нужно {} начиная со слота {}, осталось только {}
+$MTFUI_Slots_Used	MTF использует {} из {}
+$MTFUI_Slots_WontMove	Не переместится: пресету MTF и вашим применённым пресетам нужно {} слотов ({}) начиная со слота {}.
+$MTFUI_Slots_CutOff	Часть татуировок обрезана: пресету MTF и вашим применённым пресетам нужно {} слотов ({}) начиная со слота {}.
+$MTFUI_Slots_CoveredOne	В слоте {} оверлей, нарисованный не MTF. Начиная со слота {}, MTF нарисует поверх него.
+$MTFUI_Slots_CoveredMany	В слотах {} оверлеи, нарисованные не MTF. Начиная со слота {}, MTF нарисует поверх них.
+$MTFUI_Slots_ExposedOne	В слоте {} оверлей, нарисованный не MTF. Следующий пресет, применённый к вам, ляжет начиная со слота {} и может нарисовать поверх него.
+$MTFUI_Slots_ExposedMany	В слотах {} оверлеи, нарисованные не MTF. Следующий пресет, применённый к вам, ляжет начиная со слота {} и может нарисовать поверх них.
+$MTFUI_Slots_LegendMcm	пресет MTF
+$MTFUI_Slots_LegendPresets	применённые пресеты
+$MTFUI_Slots_LegendOther	нарисовано не MTF
+$MTFUI_Slots_LegendClash	MTF рисует поверх чужого оверлея
+$MTFUI_Recovery_Deleted	Удалённые пресеты
+$MTFUI_Recovery_Backups	Резервные копии
+$MTFUI_Recovery_BackupsIntro	Каждое сохранение, удаление и восстановление сохраняет заменяемый файл, последние 10 на пресет.
+$MTFUI_Recovery_Paste	Вставить пресет из буфера обмена
+$MTFUI_Recovery_PasteHelp	Открывает JSON пресета из буфера обмена (например, из «Копировать как JSON» в параметрах пресета) как новый несохранённый пресет.
+$MTFUI_Recovery_OpenFolder	Открыть папку резервных копий
+$MTFUI_Recovery_RestoreBackup	Восстановить резервную копию
+$MTFUI_Recovery_NoBackups	Резервных копий пока нет.
+$MTFUI_Recovery_Filter	Фильтр по пресету
+$MTFUI_Recovery_ColPreset	Пресет
+$MTFUI_Recovery_ColSaved	Сохранено
+$MTFUI_Recovery_DeletedTag	(удалён)
+$MTFUI_Recovery_RestoreTip	Заменить {}.json этой версией. Текущий файл сначала будет сохранён в резервную копию.
+$MTFUI_General_NoMtf	MagicTattoosFramework.esp не загружен, поэтому эти настройки недоступны.
+$MTFUI_General_NoMtfPresets	Пресеты по-прежнему можно редактировать; это обычные файлы в Data/SKSE/Plugins/StorageUtilData/MagicTattoosFramework/presets.
+$MTFUI_General_Reading	Чтение настроек MTF...
+$MTFUI_General_Framework	Фреймворк
+$MTFUI_General_Enabled	Включён
+$MTFUI_General_EnabledHelp	Главный выключатель. Когда выключен, MTF перестаёт проверять условия и рисовать татуировки.
+$MTFUI_General_Debug	Отладочные сообщения
+$MTFUI_General_DebugHelp	Пишет дополнительные строки в журнал Papyrus и показывает уведомления. Для обычной игры оставьте выключенным.
+$MTFUI_General_Interval	Интервал обновления
+$MTFUI_General_IntervalHelp	Как часто MTF перепроверяет условия. Меньше — быстрее реакция, но больше нагрузка на скрипты.
+$MTFUI_General_SkyrimNet	SkyrimNet: запоминать визуальные изменения
+$MTFUI_General_SkyrimNetHelp	Позволяет визуальным изменениям от SkyrimNet сохраняться при смене уровней.
+$MTFUI_General_OverlaySlots	Слоты оверлеев
+$MTFUI_General_OverlaySlotsIntro	Ваши татуировки рисуются в слоты оверлеев RaceMenu. Выберите, с какого слота начинается блок MTF, чтобы он не перекрывал оверлеи RaceMenu и других модов (раскраску тела, грязь, другие татуировки).
+$MTFUI_General_OverlaySlotsHelp	Сначала MTF резервирует место под пресет MTF (загруженный в его MCM; очистить его можно в списке «Применено»), затем кладёт над ним каждый применённый к вам пресет. Смена начала сдвигает их все, сохраняя уровни. На NPC это не влияет: MTF кладёт их татуировки выше самого верхнего занятого слота.\n\nБольше слотов: их число задаёт RaceMenu. Откройте Data/SKSE/Plugins/skee64_custom.ini в текстовом редакторе (MTF поставляет этот файл; создайте его, если его нет) и добавьте или измените эти строки, оставив bPlayerOnly=0 в разделе [Overlays]:\n\n[Overlays/Body]\niNumOverlays=12\n[Overlays/Face]\niNumOverlays=6\n[Overlays/Hands]\niNumOverlays=6\n[Overlays/Feet]\niNumOverlays=6\n\nПотом перезапустите игру: RaceMenu читает файл только при запуске. Файл идёт вместе с MTF, поэтому менеджер модов может пометить правку или обновление MTF может его заменить. Надёжнее положить свою копию в отдельный маленький мод, который выигрывает конфликт.
+$MTFUI_General_ReadingSlots	Чтение слотов оверлеев...
+$MTFUI_General_VisualPacks	Визуальные паки
+$MTFUI_General_PackCount	Загружено MTF: {}, найдено на диске: {}
+$MTFUI_General_ReloadPacks	Перезагрузить паки
+$MTFUI_General_ReloadPacksHelp	Используйте после установки или правки JSON визуального пака, чтобы не перезапускать игру.
+$MTFUI_General_Rescan	Пересканировать при каждой загрузке
+$MTFUI_General_Target	Цель
+$MTFUI_General_CurrentTarget	Текущая цель: {}
+$MTFUI_General_RemoveAll	Убрать все пресеты
+$MTFUI_General_ClearEffectsHelp	Останавливает свечение или шейдерный эффект MTF, который продолжает работать после окончания своего уровня.
+$MTFUI_General_ThisMenu	Это меню
+$MTFUI_General_ThumbSize	Размер миниатюр
+$MTFUI_General_Pause	Ставить игру на паузу, пока открыто окно
+$MTFUI_General_SplitPanels	Отдельные панели в самостоятельном окне
+$MTFUI_General_SplitPanelsHelp	Показывает Пресеты, Уровни и Редактор уровня отдельными окнами, которые можно расставить вокруг цели, вместо одного большого окна с вкладками.
+$MTFUI_General_ResetLayout	Сбросить расположение панелей
+$MTFUI_General_Opacity	Непрозрачность окна
+$MTFUI_General_OpacityHelp	Непрозрачность фона самостоятельного окна и его панелей, чтобы сквозь них была видна цель.
+$MTFUI_General_ClearCache	Очистить кэш текстур
+$MTFUI_General_ClearCacheHelp	Заново загружает миниатюры татуировок с диска, если вы заменили файл текстуры.
+$MTFUI_Picker_NotInstalled	{} (не установлен)
+$MTFUI_Picker_PluginDisabled	{} (выключен в MTF)
+$MTFUI_Condition_TierName	Название уровня
+$MTFUI_Condition_TierNameHint	необязательно, например «Разогрев»
+$MTFUI_Condition_TierNameHelp	Только для вас: в этом списке и в меню MTF.
+$MTFUI_Condition_All	Все условия
+$MTFUI_Condition_Any	Любое из условий
+$MTFUI_Condition_Or	или
+$MTFUI_Condition_And	и
+$MTFUI_Condition_Sentence	Носитель {}
+$MTFUI_Condition_Add	Добавить условие
+$MTFUI_Condition_AddAnother	Добавить ещё условие
+$MTFUI_Condition_NoneHint	Без условия этот уровень никогда не включится.
+$MTFUI_Look_SameAsDefault	Как в «По умолчанию»
+$MTFUI_Look_NoTattoo	Без татуировки
+$MTFUI_Look_Choose	Выбрать
+$MTFUI_Look_PackOption	{} ({})
+$MTFUI_Look_Browse	Обзор татуировок...
+$MTFUI_Look_Description	Описание
+$MTFUI_Look_NoneShown	На этом уровне татуировка не показывается; работают только его эффекты.
+$MTFUI_Look_NotFound	Татуировка не найдена в установленных паках.
+$MTFUI_Look_Layers	Слои
+$MTFUI_Look_Layer	Слой {}
+$MTFUI_Look_CopyLayer	Копировать слой
+$MTFUI_Look_PasteLayer	Вставить слой
+$MTFUI_Look_ColorsToAll	Применить цвета этого слоя ко всем слоям
+$MTFUI_Look_Tint	Оттенок
+$MTFUI_Look_TintHelp	Умножается на собственный цвет татуировки. Белый сохраняет исходные чернила.
+$MTFUI_Look_ToAll	Ко всем
+$MTFUI_Look_ToAllTip	Применить этот оттенок ко всем слоям. Правый клик по заголовку слоя — копировать или вставить весь слой.
+$MTFUI_Look_Opacity	Непрозрачность
+$MTFUI_Look_OpacityHelp	Насколько плотные чернила этого слоя. 100% — полностью непрозрачно, 0% скрывает слой.
+$MTFUI_Look_GlowColor	Цвет свечения
+$MTFUI_Look_GlowColorHelp	Цвет света, который излучает татуировка. Чёрный — свечения нет при любой силе.
+$MTFUI_Look_GlowStrength	Сила свечения
+$MTFUI_Look_GlowStrengthHelp	0 = без свечения. Пульсация анимирует это значение.
+$MTFUI_Pulse_Copy	Копировать пульсацию
+$MTFUI_Pulse_Paste	Вставить пульсацию
+$MTFUI_Pulse_Speed	Скорость
+$MTFUI_Pulse_PerSecond_Fmt	%.2f в секунду
+$MTFUI_Pulse_Off_Fmt	выкл
+$MTFUI_Pulse_SpeedHelp	Циклов пульсации в секунду. 0 выключает пульсацию.
+$MTFUI_Pulse_Depth	Глубина
+$MTFUI_Pulse_DepthHelp	Насколько свечение тускнеет от пика. При 100% в нижней точке оно гаснет полностью.
+$MTFUI_Pulse_Pause	Пауза
+$MTFUI_Pulse_NoPause_Fmt	нет
+$MTFUI_Pulse_PauseHelp	Сколько секунд держаться в нижней точке между циклами.
+$MTFUI_Pulse_Shape	Форма
+$MTFUI_Pulse_Smooth	Плавная (встроенная)
+$MTFUI_Pulse_ShapeHelp	Кривые берутся из MagicTattoosFramework/waveforms/*.json.
+$MTFUI_Pulse_NoGlow	Пульсация анимирует свечение, но ни у одного слоя сила свечения не больше 0 (вкладка «Внешний вид»).
+$MTFUI_Effects_DefaultIntro	Эффекты работают, пока ни один уровень не подходит.
+$MTFUI_Effects_TierIntro	Эффекты работают, пока этот уровень активен.
+$MTFUI_Effects_Burst	Один раз при включении: {}
+$MTFUI_Effects_Add	Добавить эффект
+$MTFUI_Effects_OverCap	Собственное меню MTF показывает только первые {}.
+$MTFUI_Timing_Hours	ч
+$MTFUI_Timing_Minutes	мин
+$MTFUI_Timing_DefaultNone	У «По умолчанию» нет включения, поэтому нет и времени.
+$MTFUI_Timing_Stay	Оставаться активным
+$MTFUI_Timing_StayHelp	После включения уровень держится столько времени (игрового), даже когда его условия перестали выполняться. 0 = только пока они выполняются.
+$MTFUI_Timing_Interrupt	Более высокие уровни могут прервать его
+$MTFUI_Timing_InterruptHelp	Пока этот уровень задерживается, разрешить перехватить его более высокому уровню, чьи условия стали истинными.
+$MTFUI_Timing_Cooldown	Перезарядка
+$MTFUI_Timing_CooldownHelp	После окончания уровень не может снова включиться в течение этого времени. 0 = без перезарядки.
+$MTFUI_Inspector_NoPreset	Откройте пресет, чтобы редактировать его уровни.
+$MTFUI_Inspector_TierTitle	Уровень {}: {}
+$MTFUI_Inspector_Priority	приоритет {} из {}
+$MTFUI_Inspector_TabCondition	Условие
+$MTFUI_Inspector_TabLook	Внешний вид
+$MTFUI_Inspector_TabPulse	Пульсация
+$MTFUI_Inspector_TabEffects	Эффекты
+$MTFUI_Inspector_TabEffectsCount	Эффекты ({})
+$MTFUI_Inspector_TabTiming	Время
+$MTFUI_Library_MoveToGroup	Переместить в группу
+$MTFUI_Library_NewGroupItem	Новая группа...
+$MTFUI_Library_RemoveFromGroup	Убрать из группы
+$MTFUI_Library_BuiltinMenu	Встроенный
+$MTFUI_Library_DragToGroup	Переместить {} в группу
+$MTFUI_Library_FileTip	{}.json
+$MTFUI_Library_FileTipApplied	{}.json\nПрименён к текущей цели
+$MTFUI_Library_OnMarker	на цели
+$MTFUI_Library_RemoveFromTarget	Снять с цели
+$MTFUI_Library_DuplicateItem	Дублировать...
+$MTFUI_Library_CopyTiersFrom	Копировать уровни из
+$MTFUI_Library_CopyTiersNote	Татуировка «По умолчанию» этого пресета сохранится
+$MTFUI_Library_DeleteItem	Удалить...
+$MTFUI_Library_NameTitle	Имя пресета
+$MTFUI_Library_Search	Поиск пресетов
+$MTFUI_Library_New	Новый
+$MTFUI_Library_DefaultName	Мой пресет
+$MTFUI_Library_Duplicate	Дублировать
+$MTFUI_Library_Ungrouped	Без группы
+$MTFUI_Library_BuiltinHeader	Встроенные (только чтение)
+$MTFUI_Library_Empty	Пресетов пока нет. Нажмите «Новый», чтобы начать.
+$MTFUI_Library_NewGroupTitle	Новая группа
+$MTFUI_Library_GroupHint	Название группы
+$MTFUI_Library_Move	Переместить
+$MTFUI_Library_DeleteTitle	Удалить пресет?
+$MTFUI_Library_DeleteQuestion	Удалить «{}»?
+$MTFUI_Library_DeleteNote	Его можно вернуть в Общее > Удалённые пресеты.
+$MTFUI_Library_Delete	Удалить
+$MTFUI_TierMenu_MoveUp	Выше
+$MTFUI_TierMenu_MoveDown	Ниже
+$MTFUI_TierMenu_Clear	Очистить уровень
+$MTFUI_TierMenu_Copy	Копировать уровень
+$MTFUI_TierMenu_Paste	Вставить
+$MTFUI_TierMenu_PasteWhole	Уровень целиком
+$MTFUI_TierMenu_PasteLook	Только внешний вид (татуировка, слои, пульсация)
+$MTFUI_TierMenu_PasteConditions	Только условия
+$MTFUI_TierMenu_PasteEffects	Только эффекты
+$MTFUI_TierMenu_PasteTiming	Только время
+$MTFUI_TierMenu_CopyLookFrom	Копировать внешний вид из
+$MTFUI_Tiers_DragMove	Переместить {}
+$MTFUI_Tiers_RowTitle	#{}  {}
+$MTFUI_Tiers_ErrorOne	Ошибок: {}
+$MTFUI_Tiers_ErrorMany	Ошибок: {}
+$MTFUI_Tiers_WarningOne	Предупреждений: {}
+$MTFUI_Tiers_WarningMany	Предупреждений: {}
+$MTFUI_Tiers_UnusedSummary	Не используется. Выберите его и добавьте условие, чтобы создать новый уровень.
+$MTFUI_Tiers_PickPreset	Выберите пресет в списке или нажмите «Новый».
+$MTFUI_Tiers_Explainer	Пресет — это внешний вид «По умолчанию» плюс лестница уровней, которые его меняют. MTF проверяет уровни сверху вниз; первый, чьи условия выполнены, задаёт вид и эффекты татуировки. Если не подходит ни один, используется «По умолчанию».
+$MTFUI_Tiers_Base	Основа
+$MTFUI_Tiers_BaseHelp	«По умолчанию» задаёт базовый вид. Уровни, у которых татуировка оставлена «Как в „По умолчанию“», строятся на нём, и он показывается, когда ни один уровень не подходит.
+$MTFUI_Tiers_Header	Уровни (верхний побеждает)
+$MTFUI_Tiers_HeaderHelp	Перетаскивайте уровни, чтобы менять приоритет, или выберите уровень и нажмите Alt+Up / Alt+Down. Правый клик по уровню — копировать, вставить или очистить. Показывается первый уровень с выполненными условиями; если таких нет, действует «По умолчанию».
+$MTFUI_Header_Revert	Вернуть
+$MTFUI_Header_Undo	Отменить
+$MTFUI_Header_Redo	Повторить
+$MTFUI_Header_Builtin	Встроенный пресет: продублируйте его, чтобы вносить изменения, которые можно сохранить.
+$MTFUI_Header_Name	Имя
+$MTFUI_Header_RenameHelp	При переименовании имя файла не меняется, поэтому всё, что уже использует этот пресет, продолжит работать.
+$MTFUI_Header_NoGroup	Без группы
+$MTFUI_Header_Group	Группа
+$MTFUI_Header_GroupHelp	Папка для этого пресета в списке. Используется только этим интерфейсом; MTF её игнорирует.
+$MTFUI_Options_Title	Параметры пресета
+$MTFUI_Options_Transition	Переход
+$MTFUI_Options_TransitionHelp	Сколько секунд плавно менять непрозрачность, цвета и свечение татуировки при смене активного уровня. 0 = мгновенно.
+$MTFUI_Options_DeathOff	Выкл
+$MTFUI_Options_DeathOverlay	Оверлей (угасание)
+$MTFUI_Options_DeathEmissive	Свечение (перестаёт светиться)
+$MTFUI_Options_DeathInverted	Инверсия (спад и восстановление)
+$MTFUI_Options_OnDeath	При смерти
+$MTFUI_Options_OnDeathHelp	Что происходит с татуировкой, когда носитель умирает.
+$MTFUI_Options_DeathFade	Угасание при смерти
+$MTFUI_Options_CopyJson	Копировать как JSON
+$MTFUI_Options_CopyJsonHelp	Помещает весь пресет в буфер обмена, чтобы поделиться им или где-то сохранить. В Общее > Резервные копии его можно вставить обратно как новый пресет.
+$MTFUI_Checks_Title	Проверки
+$MTFUI_Checks_None	Проблем не найдено
+$MTFUI_Checks_JumpTip	Выбрать этот уровень и показать, где исправить
+$MTFUI_Checks_MoveUp	Поднять его
+$MTFUI_Checks_Enable	Включить
+$MTFUI_Describe_NotInstalled	{} (плагин не установлен)
+$MTFUI_Describe_NoTattoo	без татуировки
+$MTFUI_Describe_Missing	{} (отсутствует)
+$MTFUI_Describe_FromDefault	{} (из «По умолчанию»)
+$MTFUI_Describe_Otherwise	Иначе
+$MTFUI_Describe_Unused	Не используется
+$MTFUI_Describe_When	Когда носитель {}
+$MTFUI_Describe_JoinAnd	{} и {}
+$MTFUI_Describe_JoinOr	{} или {}
+$MTFUI_Describe_Slot	{}: {}
+$MTFUI_Describe_Tinted	{}, оттенок: {}
+$MTFUI_Describe_Glowing	{}, свечение: {}
+$MTFUI_Describe_Pulsing	{}, пульсация {:.2g}/с на {}%
+$MTFUI_Describe_EffectOne	{}, эффектов: {}
+$MTFUI_Describe_EffectMany	{}, эффектов: {}
+$MTFUI_Lint_Value	значение
+$MTFUI_Lint_OutOfRange	{}: {} = {}, вне диапазона от {} до {}
+$MTFUI_Lint_NotAnOption	{}: «{}» — недопустимый вариант для «{}»
+$MTFUI_Lint_BadFileName	Имя файла должно состоять из 1–32 латинских букв, цифр, «_» или «-»
+$MTFUI_Lint_NoDisplayName	Отображаемое имя пустое; MTF покажет имя файла
+$MTFUI_Lint_NoCondition	У «{}» есть внешний вид или эффекты, но нет условия, поэтому он никогда не включится
+$MTFUI_Lint_Shadowed	«{}» никогда не включится: «{}» стоит выше в списке и всегда срабатывает первым. Поднимите его.
+$MTFUI_Lint_ConditionMissing	Условие «{}» не установлено; этот уровень не включится
+$MTFUI_Lint_ConditionDisabled	{} выключен в MTF; «{}» никогда не будет истинным
+$MTFUI_Lint_EmptyText	{}: текст пустой, обычно это совпадает с чем угодно
+$MTFUI_Lint_PackMissing	Пак татуировок «{}» не установлен
+$MTFUI_Lint_NoEntry	Пак выбран, а татуировка нет; ничего не будет показано
+$MTFUI_Lint_EntryMissing	Татуировки «{}» нет в паке {}
+$MTFUI_Lint_TextureMissing	Текстура не найдена: {} (возможно, она в BSA)
+$MTFUI_Lint_Overflow	{} нужно слотов оверлеев: {} ({}), начиная со слота {}, а в RaceMenu их всего {}. Увеличьте число оверлеев в skee64.ini или опустите начальный слот MTF.
+$MTFUI_Lint_LayerTransparent	Слой татуировки полностью прозрачен
+$MTFUI_Lint_AllTransparent	Все слои татуировки полностью прозрачны
+$MTFUI_Lint_NoPulseRate	Глубина пульсации задана, но скорость 0, поэтому пульсации не будет
+$MTFUI_Lint_WaveformMissing	Форма волны «{}» не установлена; MTF использует плавную пульсацию
+$MTFUI_Lint_EffectMissing	Эффект «{}» не установлен
+$MTFUI_Lint_EffectDisabled	{} выключен в MTF; «{}» не будет запускаться
+$MTFUI_Lint_TooManyEffects	Эффектов больше {0}; MCM MTF покажет только первые {0}
+$MTFUI_Tattoos_Favorites	Избранное
+$MTFUI_Tattoos_Recent	Недавние
+$MTFUI_Tattoos_All	Все
+$MTFUI_Tattoos_PackFilter	Пак: {}
+$MTFUI_Tattoos_ShowFilter	Показ: {}
+$MTFUI_Tattoos_AllCount	Все ({})
+$MTFUI_Tattoos_FavoritesCount	Избранное ({})
+$MTFUI_Tattoos_Packs	Паки
+$MTFUI_Tattoos_PackCount	{} ({})
+$MTFUI_Tattoos_PackTip	{}\nОбласть: {}\n{}
+$MTFUI_Tattoos_NoPacks	В MagicTattoosFramework/visuals не найдено визуальных паков.
+$MTFUI_Tattoos_Search	Поиск татуировок
+$MTFUI_Tattoos_ZoomTip	Ctrl+колесо мыши над сеткой тоже меняет масштаб.
+$MTFUI_Tattoos_HideDetails	Скрыть подробности
+$MTFUI_Tattoos_ShowDetails	Показать подробности
+$MTFUI_Tattoos_RemoveFilter	Убрать этот фильтр
+$MTFUI_Tattoos_SearchChip	Поиск: {}
+$MTFUI_Tattoos_ClearAll	Сбросить все
+$MTFUI_Tattoos_CountOne	Татуировок: {}
+$MTFUI_Tattoos_CountMany	Татуировок: {}
+$MTFUI_Tattoos_UsedByOne	Используется в пресетах: {}
+$MTFUI_Tattoos_UsedByMany	Используется в пресетах: {}
+$MTFUI_Tattoos_Choosing	Выбор татуировки для «{}»: дважды кликните по ней, или
+$MTFUI_Tattoos_CancelChoosing	отмена
+$MTFUI_Tattoos_NoFavorites	Избранного пока нет. Выберите татуировку и нажмите звёздочку.
+$MTFUI_Tattoos_NoMatch	Ничего не найдено.
+$MTFUI_Tattoos_NewPresetItem	Новый пресет из этой татуировки...
+$MTFUI_Tattoos_Unfavorite	Убрать из избранного
+$MTFUI_Tattoos_Favorite	В избранное
+$MTFUI_Tattoos_SelectHint	Выберите татуировку, чтобы увидеть её крупнее, проверить, какие пресеты её используют, или назначить её уровню.
+$MTFUI_Tattoos_ShownWith	Показано с цветами «{}».
+$MTFUI_Tattoos_UseFor	Назначить для «{}»
+$MTFUI_Tattoos_OpenPresetFirst	Откройте пресет, чтобы использовать эту татуировку.
+$MTFUI_Tattoos_Subject	Сюжет
+$MTFUI_Tattoos_Style	Стиль
+$MTFUI_Tattoos_Placement	Расположение
+$MTFUI_Tattoos_Layers	Слои
+$MTFUI_Tattoos_UnusedByPresets	Ни в одном из ваших пресетов
+$MTFUI_Tattoos_TextureFiles	Файлы текстур
+$MTFUI_Tattoos_NewPresetTitle	Новый пресет из татуировки
+$MTFUI_Tattoos_DefaultLook	Вид «По умолчанию»: {} ({})
+$MTFUI_Tattoos_UnsavedWarning	Вас спросят, что делать с несохранёнными изменениями открытого пресета.

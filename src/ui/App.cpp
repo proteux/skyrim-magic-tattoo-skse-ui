@@ -9,6 +9,8 @@
 #include "render/DdsCache.h"
 #include "ui/Widgets.h"
 
+extern "C" IMAGE_DOS_HEADER __ImageBase;
+
 namespace mtfui::ui {
     using namespace ImGuiMCP;
 
@@ -18,6 +20,94 @@ namespace mtfui::ui {
         int IniInt(const fs::path& ini, const wchar_t* section, const wchar_t* key, int fallback) {
             return static_cast<int>(GetPrivateProfileIntW(section, key, fallback, ini.wstring().c_str()));
         }
+
+        std::string_view EmbeddedEnglish() {
+            const auto module = reinterpret_cast<HMODULE>(&__ImageBase);
+            const HRSRC res = FindResourceW(module, L"MTFUI_ENGLISH", MAKEINTRESOURCEW(10));  // RT_RCDATA
+            const HGLOBAL data = res ? LoadResource(module, res) : nullptr;
+            const void* bytes = data ? LockResource(data) : nullptr;
+            return bytes ? std::string_view(static_cast<const char*>(bytes), SizeofResource(module, res)) : std::string_view{};
+        }
+
+        // English is built into the DLL, so a missing or partial file never shows raw keys. A file in
+        // Interface/Translations for the game's language (English included) goes over it.
+        std::string LoadTranslations(const fs::path& data) {
+            auto& tr = io::Translations::Get();
+            tr.SetEnglish(EmbeddedEnglish());
+            const auto* setting = RE::GetINISetting("sLanguage:General");
+            std::string language = setting && setting->GetType() == RE::Setting::Type::kString && setting->GetString() ? setting->GetString() : "";
+            std::transform(language.begin(), language.end(), language.begin(), [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+            if (language.empty()) {
+                language = "ENGLISH";
+            }
+            const auto file = data / "Interface" / "Translations" / ("MagicTattoosUI_" + language + ".txt");
+            const auto bytes = io::ReadText(file);
+            if (!bytes) {
+                logger::info("UI language {}: no {}, using English ({} strings)", language, io::PathText(file.filename()), tr.EnglishTable().size());
+                return language;
+            }
+            const auto result = tr.Overlay(*bytes);
+            logger::info("UI language {}: {} of {} strings from {}", language, result.loaded, tr.EnglishTable().size(), io::PathText(file.filename()));
+            for (const auto& key : result.rejected) {
+                logger::warn("Kept {} in English: its printf placeholders don't match the English text", key);
+            }
+            for (const auto& key : result.unknown) {
+                logger::warn("Ignored {}: not a Magic Tattoos UI string (renamed or removed?)", key);
+            }
+            return language;
+        }
+
+        // The SKSEMenuFramework.ini [Fonts] switch that adds a language's letters to the menu font.
+        const char* FontSwitch(std::string_view language) {
+            static constexpr std::pair<std::string_view, const char*> kSwitches[] = { { "RUSSIAN", "EnableCyrillic" }, { "UKRAINIAN", "EnableCyrillic" },
+                { "BULGARIAN", "EnableCyrillic" }, { "POLISH", "EnablePolish" }, { "CZECH", "EnablePolish" }, { "TURKISH", "EnableTurkish" },
+                { "CHINESE", "EnableChinese" }, { "JAPANESE", "EnableJapanese" }, { "KOREAN", "EnableKorean" }, { "THAI", "EnableThai" } };
+            for (const auto& [name, key] : kSwitches) {
+                if (language == name) {
+                    return key;
+                }
+            }
+            return nullptr;
+        }
+    }
+
+    void App::CheckTranslationFont() {
+        auto& tr = io::Translations::Get();
+        auto* font = GetFont();
+        if (!font) {
+            return;
+        }
+        std::vector<char32_t> missing;
+        for (const auto cp : tr.ActiveCodepoints()) {
+            if (cp <= 0xFFFF && ImFontManger::FindGlyphNoFallback(font, static_cast<ImWchar>(cp))) {
+                continue;
+            }
+            if (const auto plain = io::PlainStandIn(cp); !plain.empty()) {
+                tr.ReplaceInActive(cp, plain);
+                logger::info("The menu font has no U+{:04X}; using '{}' instead", static_cast<std::uint32_t>(cp), plain);
+            } else {
+                missing.push_back(cp);
+            }
+        }
+        if (missing.empty()) {
+            return;
+        }
+        std::string list;
+        for (std::size_t i = 0; i < missing.size() && i < 12; ++i) {
+            list += std::format("{}U+{:04X}", i ? " " : "", static_cast<std::uint32_t>(missing[i]));
+        }
+        logger::warn("The menu font can't draw {} character(s) of the {} text ({}...), so the UI stays in English", missing.size(), language_, list);
+        tr.DropActive();
+        if (targetId == 0x14) {
+            targetName = T("$MTFUI_Target_You");
+        }
+        Relint();
+        std::string name = language_;
+        std::transform(name.begin() + 1, name.end(), name.begin() + 1, [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+        fontNotice_ = TF("$MTFUI_Font_Missing", name);
+        const char* key = FontSwitch(language_);
+        fontFix_ = key ? TF("$MTFUI_Font_FixSwitch", key) : std::string(T("$MTFUI_Font_FixFont"));
+        logger::warn("{}", fontFix_);
     }
 
     fs::path GameDataDir() {
@@ -65,6 +155,8 @@ namespace mtfui::ui {
         paths.data = GameDataDir();
         paths.mtfRoot = paths.data / "SKSE" / "Plugins" / "StorageUtilData" / "MagicTattoosFramework";
         paths.uiDir = paths.data / "SKSE" / "Plugins" / "MagicTattoosUI";
+        language_ = LoadTranslations(paths.data);
+        targetName = T("$MTFUI_Target_You");
         settings.Load(paths.uiDir / "settings.json");
         std::erase_if(settings.panels, [](const auto& kv) {
             return kv.first != "main" && kv.first != "library" && kv.first != "tiers" && kv.first != "inspector";
@@ -237,13 +329,13 @@ namespace mtfui::ui {
 
     void App::ApplyToTarget(const std::string& name) {
         if (game::LivePreview::Get().IsSuspended(targetId, name)) {
-            Toast(name + " is already on " + targetName + ". It's hidden until the live preview stops.");
+            Toast(TF("$MTFUI_Toast_AlreadyOnHidden", name, targetName));
             return;
         }
         game::MtfBridge::Get().Apply(targetId, name, [this, name, onPlayer = targetId == 0x14](int rc) {
-            const std::string text = name + ": " + game::ApplyResultText(rc, onPlayer) + (rc == 1 ? " to " + targetName : "");
+            const std::string text = rc == 1 ? TF("$MTFUI_Toast_AppliedTo", name, targetName) : TF("$MTFUI_Toast_ApplyResult", name, game::ApplyResultText(rc, onPlayer));
             if ((rc == -6 || rc == -7) && onPlayer) {
-                Toast(text, true, "Show overlay slots", [this] { RequestTab(Tab::General); });
+                Toast(text, true, T("$MTFUI_Toast_ShowOverlaySlots"), [this] { RequestTab(Tab::General); });
             } else {
                 Toast(text, rc < 0);
             }
@@ -256,12 +348,12 @@ namespace mtfui::ui {
         auto& lp = game::LivePreview::Get();
         if (lp.IsSuspended(targetId, name)) {
             lp.Forget(targetId, name);
-            Toast("Removed " + name + " from " + targetName);
+            Toast(TF("$MTFUI_Toast_RemovedFrom", name, targetName));
             RefreshApplied();
             return;
         }
         game::MtfBridge::Get().Remove(targetId, name, [this, name] {
-            Toast("Removed " + name + " from " + targetName);
+            Toast(TF("$MTFUI_Toast_RemovedFrom", name, targetName));
             SlotUsageChanged();
             RefreshApplied();
         });
@@ -279,7 +371,7 @@ namespace mtfui::ui {
                 });
             }
         }
-        Toast("Removing " + std::to_string(applied.size()) + " preset(s) from " + targetName);
+        Toast(TF("$MTFUI_Toast_RemovingAll", applied.size(), targetName));
         RefreshApplied();
     }
 
@@ -299,7 +391,7 @@ namespace mtfui::ui {
     void App::RemoveMtfPreset() {
         const std::string name = MtfPresetName();
         game::MtfBridge::Get().ClearMcmPreset([this, name] {
-            Toast(name.empty() ? "Cleared MTF's preset" : "Cleared " + name + " as MTF's preset");
+            Toast(name.empty() ? std::string(T("$MTFUI_Toast_ClearedMtfPreset")) : TF("$MTFUI_Toast_ClearedNamedMtfPreset", name));
             if (slotUsage_) {
                 for (auto& a : slotUsage_->areas) {
                     a.mcmWant = 0;
@@ -316,16 +408,13 @@ namespace mtfui::ui {
         }
         area = std::clamp(area, 0, 3);
         if (!slotUsage_) {
-            Toast("Still reading your overlay slots. Try again in a moment", true);
+            Toast(T("$MTFUI_Toast_StillReadingSlots"), true);
             return;
         }
         const auto& slots = slotUsage_->areas[area];
         const auto plan = model::PlanStart(slots, start, game::kPreviewPreset);
         if (!plan.fits) {
-            Toast(std::format("Not moved: from slot {}, MTF needs {} {} slots for your presets, and only {} are left. Remove a preset or pick a "
-                              "lower start",
-                      start, plan.needed, game::kAreas[area], std::max(0, slots.total - start)),
-                true);
+            Toast(TF("$MTFUI_Toast_StartNotMoved", start, plan.needed, model::AreaLabel(game::kAreas[area]), std::max(0, slots.total - start)), true);
             return;
         }
         overlayMove_ = OverlayMove{ area, start };
@@ -348,7 +437,7 @@ namespace mtfui::ui {
         game::MtfBridge::Get().MoveOverlayStart(move.area, move.start, [this, move] {
             overlayMove_.reset();
             overlayMoving_ = false;
-            Toast(std::format("{} overlays now start at slot {}", game::kAreas[move.area], move.start));
+            Toast(TF("$MTFUI_Toast_StartMoved", model::AreaLabel(game::kAreas[move.area]), move.start));
             SlotUsageChanged();
             RefreshApplied();
         });
@@ -371,11 +460,12 @@ namespace mtfui::ui {
             std::string fixed;
             for (int a = 0; a < 4; ++a) {
                 if (u.staleCounts[a] >= 0) {
-                    fixed += std::format("{}{} {} (was {})", fixed.empty() ? "" : ", ", game::kAreas[a], u.areas[a].total, u.staleCounts[a]);
+                    const auto one = TF("$MTFUI_Toast_SlotCountFixed", model::AreaLabel(game::kAreas[a]), u.areas[a].total, u.staleCounts[a]);
+                    fixed = fixed.empty() ? one : TF("$MTFUI_List_Comma", fixed, one);
                 }
             }
             if (!fixed.empty()) {
-                Toast("MTF was still using RaceMenu's old overlay slot counts. Updated: " + fixed);
+                Toast(TF("$MTFUI_Toast_SlotCountsFixed", fixed));
             }
             slotUsage_ = std::move(u);
             Relint();
@@ -461,7 +551,7 @@ namespace mtfui::ui {
             const bool ok = RE::TESForm::LookupByID<RE::Actor>(id) != nullptr;
             game::MtfBridge::PostToUi([this, ok] {
                 if (!ok) {
-                    SetTarget(0x14, "You");
+                    SetTarget(0x14, T("$MTFUI_Target_You"));
                 }
                 RefreshApplied();
             });
@@ -495,7 +585,7 @@ namespace mtfui::ui {
         game::MtfBridge::NewSession();
         HoldVanityCamera(false);
         targetId = 0x14;
-        targetName = "You";
+        targetName = T("$MTFUI_Target_You");
         applied.clear();
         appliedKnown = false;
         overlayMove_.reset();
@@ -538,10 +628,10 @@ namespace mtfui::ui {
         } else if (IsKeyPressed(ImGuiKey_Y, false)) {
             Redo();
         } else if (IsKeyPressed(ImGuiKey_N, false)) {
-            CreateNew("New preset");
+            CreateNew(T("$MTFUI_Preset_NewName"));
             RequestTab(Tab::Presets);
         } else if (IsKeyPressed(ImGuiKey_D, false) && ed.preset) {
-            Duplicate(ed.preset->displayName + " copy");
+            Duplicate(TF("$MTFUI_Preset_CopyName", ed.preset->displayName));
         } else if (IsKeyPressed(ImGuiKey_F, false)) {
             focusSearch = true;
         }
@@ -554,7 +644,7 @@ namespace mtfui::ui {
         auto* io = GetIO();
         if (IsKeyPressed(ImGuiKey_F5, false) && !io->KeyAlt && !io->KeyShift) {
             if (ed.isNew) {
-                Toast("Save the preset before applying it", true);
+                Toast(T("$MTFUI_Toast_SaveBeforeApply"), true);
             } else if (!(Dirty() && !ed.builtin) || Save()) {
                 ApplyToTarget(ed.preset->name);
             }
@@ -605,6 +695,10 @@ namespace mtfui::ui {
             return;
         }
         beganFrame_ = GetFrameCount();
+        if (!fontChecked_) {
+            fontChecked_ = true;
+            CheckTranslationFont();
+        }
         HoldVanityCamera(true);
         HoldActor(settings.holdTarget ? targetId : 0);
         if (holdWanted_ != 0 && GetTime() - lastHoldCheck_ > 0.25) {

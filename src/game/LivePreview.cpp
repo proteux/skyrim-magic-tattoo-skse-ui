@@ -3,6 +3,7 @@
 #include "game/MtfBridge.h"
 #include "io/JsonStore.h"
 #include "io/StyledJson.h"
+#include "io/Translations.h"
 #include "model/Catalogs.h"
 
 namespace mtfui::game {
@@ -94,7 +95,7 @@ namespace mtfui::game {
             busy_ = false;
             lastActor_ = 0;
             ++generation_;
-            status_ = "MTF did not respond to the preview";
+            status_ = T("$MTFUI_Preview_NoResponse");
         }
         if (busy_ || !pending_ || now < pending_->due) {
             return;
@@ -103,13 +104,13 @@ namespace mtfui::game {
         pending_.reset();
         std::string error;
         if (!io::WriteJsonStyled(file_, job.doc, &error)) {
-            status_ = "Could not write the preview preset: " + error;
-            logger::error("{}", status_);
+            status_ = TF("$MTFUI_Preview_WriteFailed", error);
+            logger::error("Could not write the preview preset: {}", error);
             return;
         }
         busy_ = true;
         busySince_ = std::chrono::steady_clock::now();
-        status_ = "Updating preview...";
+        status_ = T("$MTFUI_Preview_Updating");
         last_ = job.doc;
         lastActor_ = job.actor;
         lastSuspend_ = job.suspend;
@@ -183,11 +184,13 @@ namespace mtfui::game {
                     if (rc == 1 || rc == 0) {
                         applied_ = actor;
                         const auto hidden = SuspendedOn(actor).size();
-                        status_ = hidden == 0 ? "Previewing" : std::format("Previewing (hiding {} applied preset{})", hidden, hidden == 1 ? "" : "s");
+                        status_ = hidden == 0 ? std::string(T("$MTFUI_Preview_Previewing"))
+                                  : hidden == 1 ? TF("$MTFUI_Preview_HidingOne", hidden)
+                                                : TF("$MTFUI_Preview_HidingMany", hidden);
                     } else {
                         // Keep last_: the same request again would fail the same way, so only an edit retries.
                         applied_ = 0;
-                        status_ = "Preview failed: " + ApplyResultText(rc, actor == 0x14);
+                        status_ = TF("$MTFUI_Preview_Failed", ApplyResultText(rc, actor == 0x14));
                         auto owed = std::move(suspended_[actor]);
                         suspended_.erase(actor);
                         Restore(actor, owed, true);
@@ -212,7 +215,7 @@ namespace mtfui::game {
         for (const auto& n : names) {
             MtfBridge::Get().Apply(actor, n, [this, actor, n, retry, reasons, remaining, rewriteRecord, done](int rc) {
                 if (rc != 1 && rc != 0) {
-                    reasons->push_back(n + " (" + ApplyResultText(rc, actor == 0x14) + ")");
+                    reasons->push_back(TF("$MTFUI_Preview_PutBackReason", n, ApplyResultText(rc, actor == 0x14)));
                     // Only a missing actor can come right later; a deleted preset or full slots would fail every load.
                     if (rc == -2) {
                         retry->push_back(n);
@@ -224,7 +227,7 @@ namespace mtfui::game {
                 if (!reasons->empty()) {
                     logger::warn("Could not put back {} on {:08X}", JoinNames(*reasons), actor);
                     if (onError_) {
-                        onError_("Could not put back " + JoinNames(*reasons) + " after the live preview");
+                        onError_(TF("$MTFUI_Preview_PutBackFailed", JoinNames(*reasons)));
                     }
                 }
                 if (rewriteRecord) {

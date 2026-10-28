@@ -29,13 +29,8 @@ namespace mtfui::ui {
         constexpr ImVec4 kOtherCell = kWarn;
         constexpr ImVec4 kClashCell = kError;
 
-        std::string Holds(const std::vector<int>& slots) {
-            return slots.size() == 1 ? "Slot " + model::ListSlots(slots) + " holds an overlay MTF didn't draw"
-                                     : "Slots " + model::ListSlots(slots) + " hold overlays MTF didn't draw";
-        }
-
         std::string PresetLabel(const std::string& name) {
-            return model::IEquals(name, game::kPreviewPreset) ? "Live preview" : name;
+            return model::IEquals(name, game::kPreviewPreset) ? T("$MTFUI_Slots_LivePreview") : name;
         }
 
         void LegendItem(const ImVec4& color, const char* label) {
@@ -54,7 +49,7 @@ namespace mtfui::ui {
         void DrawSlotMap(App& app, int area, const game::SlotUsage& usage) {
             const auto& snap = game::MtfBridge::Get().Snapshot();
             const auto& slots = usage.areas[area];
-            const std::string name = game::kAreas[area];
+            const std::string name = model::AreaLabel(game::kAreas[area]);
             int start = g.overlayArea == area ? g.overlayDraft : app.OverlayMoveTarget(area).value_or(snap.overlayStart[area]);
             const bool planning = start != slots.start;
 
@@ -64,7 +59,7 @@ namespace mtfui::ui {
             SameLine(80);
             SetNextItemWidth(140);
             BeginDisabled(app.OverlayMoveBusy());
-            SliderInt("##start", &start, 0, std::max(0, slots.total - 1), "starts at %d");
+            SliderInt("##start", &start, 0, std::max(0, slots.total - 1), T("$MTFUI_Slots_StartsAt_Fmt"));
             if (IsItemActive()) {
                 g.overlayArea = area;
                 g.overlayDraft = start;
@@ -102,16 +97,21 @@ namespace mtfui::ui {
                 const std::string n = std::to_string(i);
                 ImDrawListManager::AddText(dl, ImVec2{ a.x + 6, a.y + 3 }, filled ? 0xFF000000 : GetColorU32(ImGuiCol_TextDisabled, 1.0f), n.c_str());
                 if (IsMouseHoveringRect(a, b)) {
-                    std::string tip = "Slot " + n + ": ";
+                    std::string use;
                     if (c.use == model::SlotUse::Mcm) {
-                        tip += "MTF preset (the one loaded in MTF's MCM)";
+                        use = T("$MTFUI_Slots_TipMcm");
                     } else if (c.use == model::SlotUse::Preset) {
-                        tip += PresetLabel(c.preset);
+                        use = PresetLabel(c.preset);
                     } else if (!c.other) {
-                        tip += "free";
+                        use = T("$MTFUI_Slots_TipFree");
                     }
-                    if (c.other) {
-                        tip += std::string(c.use == model::SlotUse::Free ? "" : "\nMTF would draw over ") + "an overlay MTF didn't draw\n" + c.texture;
+                    std::string tip;
+                    if (!c.other) {
+                        tip = TF("$MTFUI_Slots_Tip", n, use);
+                    } else if (c.use == model::SlotUse::Free) {
+                        tip = TF("$MTFUI_Slots_TipOther", n, c.texture);
+                    } else {
+                        tip = TF("$MTFUI_Slots_TipClash", n, use, c.texture);
                     }
                     SetTooltip("%s", tip.c_str());
                 }
@@ -119,22 +119,23 @@ namespace mtfui::ui {
             Dummy(ImVec2{ cells.size() * (cell + 3), cell });
             SameLine();
             if (!plan.fits) {
-                TextColored(kError, "needs %d from slot %d, only %d left", plan.needed, start, std::max(0, slots.total - start));
+                TextColored(kError, "%s", TF("$MTFUI_Slots_Needs", plan.needed, start, std::max(0, slots.total - start)).c_str());
             } else {
-                TextDisabled("%d of %d used by MTF", mine, slots.total);
+                TextDisabled("%s", TF("$MTFUI_Slots_Used", mine, slots.total).c_str());
             }
 
             Indent(80);
             if (!plan.fits) {
-                TextColored(kError, "%s The MTF preset and your applied presets need %d %s slots from slot %d.",
-                    planning ? "Won't move:" : "Some tattoos are cut off:", plan.needed, name.c_str(), start);
+                TextColored(kError, "%s", TF(planning ? "$MTFUI_Slots_WontMove" : "$MTFUI_Slots_CutOff", plan.needed, name, start).c_str());
             }
             if (!plan.covered.empty()) {
-                TextColored(kWarn, "%s. From slot %d, MTF would draw over %s.", Holds(plan.covered).c_str(), start, plan.covered.size() == 1 ? "it" : "them");
+                const auto list = model::ListSlots(plan.covered);
+                TextColored(kWarn, "%s", (plan.covered.size() == 1 ? TF("$MTFUI_Slots_CoveredOne", list, start) : TF("$MTFUI_Slots_CoveredMany", list, start)).c_str());
             }
             if (!plan.exposed.empty()) {
-                TextColored(kWarn, "%s. The next preset applied to you goes in from slot %d and can draw over %s.", Holds(plan.exposed).c_str(),
-                    start + plan.needed, plan.exposed.size() == 1 ? "it" : "them");
+                const auto list = model::ListSlots(plan.exposed);
+                const int next = start + plan.needed;
+                TextColored(kWarn, "%s", (plan.exposed.size() == 1 ? TF("$MTFUI_Slots_ExposedOne", list, next) : TF("$MTFUI_Slots_ExposedMany", list, next)).c_str());
             }
             Unindent(80);
             PopID();
@@ -149,14 +150,14 @@ namespace mtfui::ui {
         }
 
         void DrawRecovery(App& app) {
-            SeparatorText("Deleted presets");
+            SeparatorText(T("$MTFUI_Recovery_Deleted"));
             if (app.hiddenPresets.empty()) {
-                TextDisabled("None");
+                TextDisabled("%s", T("$MTFUI_Common_None"));
             }
             std::string undelete;
             for (const auto& info : app.hiddenPresets) {
                 PushID(info.name.c_str());
-                if (SmallButton("Restore")) {
+                if (SmallButton(T("$MTFUI_Common_Restore"))) {
                     undelete = info.name;
                 }
                 SameLine();
@@ -169,20 +170,20 @@ namespace mtfui::ui {
                 app.Undelete(undelete);
             }
 
-            SeparatorText("Backups");
-            TextWrapped("Every save, delete and restore keeps the file it replaces, the last 10 per preset.");
-            if (Button("Paste a preset from the clipboard")) {
+            SeparatorText(T("$MTFUI_Recovery_Backups"));
+            TextWrapped("%s", T("$MTFUI_Recovery_BackupsIntro"));
+            if (Button(T("$MTFUI_Recovery_Paste"))) {
                 app.ImportFromClipboard();
             }
-            HelpMarker("Opens preset JSON from the clipboard (for example from Copy as JSON under Preset options) as a new, unsaved preset.");
+            HelpMarker(T("$MTFUI_Recovery_PasteHelp"));
             SameLine();
-            if (Button("Open backups folder")) {
+            if (Button(T("$MTFUI_Recovery_OpenFolder"))) {
                 std::error_code ec;
                 const auto dir = app.paths.uiDir / "backups";
                 fs::create_directories(dir, ec);
                 ShellExecuteW(nullptr, L"open", dir.wstring().c_str(), nullptr, nullptr, SW_SHOWNORMAL);
             }
-            if (!CollapsingHeader("Restore a backup")) {
+            if (!CollapsingHeader((std::string(T("$MTFUI_Recovery_RestoreBackup")) + "###restorebackup").c_str())) {
                 return;
             }
             if (GetTime() - g.backupsRead > 2.0) {
@@ -190,15 +191,15 @@ namespace mtfui::ui {
                 g.backupsRead = GetTime();
             }
             if (g.backups.empty()) {
-                TextDisabled("No backups yet.");
+                TextDisabled("%s", T("$MTFUI_Recovery_NoBackups"));
                 return;
             }
-            SearchBox("##backupsearch", g.backupSearch, 260.0f, "Filter by preset");
+            SearchBox("##backupsearch", g.backupSearch, 260.0f, T("$MTFUI_Recovery_Filter"));
             std::optional<io::BackupInfo> restore;
             if (BeginTable("##backups", 3, ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_BordersInnerV, ImVec2{ 0, 260 })) {
-                TableSetupColumn("Preset", ImGuiTableColumnFlags_WidthStretch);
-                TableSetupColumn("Saved", ImGuiTableColumnFlags_WidthFixed, CalcTextSize("0000-00-00 00:00:00").x);
-                TableSetupColumn("##restore", ImGuiTableColumnFlags_WidthFixed, CalcTextSize("Restore").x + 12.0f);
+                TableSetupColumn(T("$MTFUI_Recovery_ColPreset"), ImGuiTableColumnFlags_WidthStretch);
+                TableSetupColumn(T("$MTFUI_Recovery_ColSaved"), ImGuiTableColumnFlags_WidthFixed, CalcTextSize("0000-00-00 00:00:00").x);
+                TableSetupColumn("##restore", ImGuiTableColumnFlags_WidthFixed, CalcTextSize(T("$MTFUI_Common_Restore")).x + 12.0f);
                 TableHeadersRow();
                 int row = 0;
                 for (const auto& b : g.backups) {
@@ -212,16 +213,16 @@ namespace mtfui::ui {
                     TextUnformatted(b.stem.c_str());
                     if (!live) {
                         SameLine();
-                        TextDisabled("(deleted)");
+                        TextDisabled("%s", T("$MTFUI_Recovery_DeletedTag"));
                     }
                     TableNextColumn();
                     TextUnformatted(StampText(b.stamp).c_str());
                     TableNextColumn();
-                    if (SmallButton("Restore")) {
+                    if (SmallButton(T("$MTFUI_Common_Restore"))) {
                         restore = b;
                     }
                     if (IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
-                        SetTooltip("Replace %s.json with this version. The current file is backed up first.", b.stem.c_str());
+                        SetTooltip("%s", TF("$MTFUI_Recovery_RestoreTip", b.stem).c_str());
                     }
                     PopID();
                 }
@@ -238,134 +239,122 @@ namespace mtfui::ui {
         const auto& snap = bridge.Snapshot();
 
         if (!bridge.Installed()) {
-            TextColored(kError, "MagicTattoosFramework.esp is not loaded, so these settings are unavailable.");
-            TextWrapped("Presets can still be edited; they are plain files in Data/SKSE/Plugins/StorageUtilData/MagicTattoosFramework/presets.");
+            TextColored(kError, "%s", T("$MTFUI_General_NoMtf"));
+            TextWrapped("%s", T("$MTFUI_General_NoMtfPresets"));
             DrawRecovery(app);
             return;
         }
         if (!snap.fresh) {
-            TextDisabled("Reading MTF settings...");
+            TextDisabled("%s", T("$MTFUI_General_Reading"));
             DrawRecovery(app);
             return;
         }
 
-        SeparatorText("Framework");
+        SeparatorText(T("$MTFUI_General_Framework"));
         bool active = snap.modActive;
-        if (Checkbox("Enabled", &active)) {
+        if (Checkbox(T("$MTFUI_General_Enabled"), &active)) {
             bridge.SetModActive(active);
         }
-        HelpMarker("Master switch. While off, MTF stops evaluating conditions and drawing tattoos.");
+        HelpMarker(T("$MTFUI_General_EnabledHelp"));
         SameLine(260);
         bool debug = snap.debugMode;
-        if (Checkbox("Debug messages", &debug)) {
+        if (Checkbox(T("$MTFUI_General_Debug"), &debug)) {
             bridge.SetDebugMode(debug);
         }
-        HelpMarker("Writes extra lines to the Papyrus log and shows notifications. Leave off for normal play.");
+        HelpMarker(T("$MTFUI_General_DebugHelp"));
 
         if (g.interval < 0.0f || !IsAnyItemActive()) {
             g.interval = snap.updateInterval;
         }
         SetNextItemWidth(260);
-        SliderFloat("Update interval", &g.interval, 0.1f, 45.0f, "%.1f s", ImGuiSliderFlags_Logarithmic);
+        SliderFloat(T("$MTFUI_General_Interval"), &g.interval, 0.1f, 45.0f, T("$MTFUI_Format_Seconds1_Fmt"), ImGuiSliderFlags_Logarithmic);
         if (IsItemDeactivatedAfterEdit()) {
             bridge.SetUpdateInterval(g.interval);
         }
-        HelpMarker("How often MTF re-checks conditions. Lower reacts faster but costs more script time.");
+        HelpMarker(T("$MTFUI_General_IntervalHelp"));
 
         if (snap.skyrimNet) {
             bool persist = snap.snPersist;
-            if (Checkbox("SkyrimNet: remember visual changes", &persist)) {
+            if (Checkbox(T("$MTFUI_General_SkyrimNet"), &persist)) {
                 bridge.SetSkyrimNetPersist(persist);
             }
-            HelpMarker("Lets SkyrimNet-driven visual changes persist across tier changes.");
+            HelpMarker(T("$MTFUI_General_SkyrimNetHelp"));
         }
 
-        SeparatorText("Overlay slots");
-        TextWrapped("Your tattoos are drawn into RaceMenu overlay slots. Pick where MTF's block starts so it does not overlap "
-                    "overlays from RaceMenu or other mods (body paint, dirt, other tattoos).");
-        HelpMarker("MTF first reserves room for the MTF preset (the one loaded in its MCM; clear it under Applied), "
-                   "then stacks each preset applied to you above it. "
-                   "Changing the start moves all of them, keeping their tiers. NPCs aren't affected: MTF stacks their tattoos "
-                   "above the highest slot already in use.\n\n"
-                   "More slots: the counts are RaceMenu's. Open Data/SKSE/Plugins/skee64_custom.ini in a text editor (MTF ships "
-                   "one; create it if it's missing) and add or change these lines, keeping bPlayerOnly=0 under [Overlays]:\n\n"
-                   "[Overlays/Body]\niNumOverlays=12\n[Overlays/Face]\niNumOverlays=6\n[Overlays/Hands]\niNumOverlays=6\n"
-                   "[Overlays/Feet]\niNumOverlays=6\n\n"
-                   "Restart the game afterwards; RaceMenu only reads it at startup. The file comes with MTF, so a mod manager may "
-                   "flag the edit or an MTF update may replace it. Putting your copy in its own small mod that wins the conflict "
-                   "keeps it safe.");
+        SeparatorText(T("$MTFUI_General_OverlaySlots"));
+        TextWrapped("%s", T("$MTFUI_General_OverlaySlotsIntro"));
+        HelpMarker(T("$MTFUI_General_OverlaySlotsHelp"));
         app.WantSlotUsage();
         if (const auto* usage = app.SlotUsage()) {
-            LegendItem(kMcmCell, "MTF preset");
-            LegendItem(kPresetCell, "applied presets");
-            LegendItem(kOtherCell, "not drawn by MTF");
-            LegendItem(kClashCell, "MTF draws over another overlay");
+            LegendItem(kMcmCell, T("$MTFUI_Slots_LegendMcm"));
+            LegendItem(kPresetCell, T("$MTFUI_Slots_LegendPresets"));
+            LegendItem(kOtherCell, T("$MTFUI_Slots_LegendOther"));
+            LegendItem(kClashCell, T("$MTFUI_Slots_LegendClash"));
             NewLine();
             for (int a = 0; a < 4; ++a) {
                 DrawSlotMap(app, a, *usage);
             }
         } else {
-            TextDisabled("Reading your overlay slots...");
+            TextDisabled("%s", T("$MTFUI_General_ReadingSlots"));
         }
 
-        SeparatorText("Visual packs");
-        Text("%d pack(s) loaded by MTF, %d found on disk", snap.visualPackCount, static_cast<int>(app.cat.packs.size()));
-        if (Button("Reload packs")) {
+        SeparatorText(T("$MTFUI_General_VisualPacks"));
+        TextUnformatted(TF("$MTFUI_General_PackCount", snap.visualPackCount, app.cat.packs.size()).c_str());
+        if (Button(T("$MTFUI_General_ReloadPacks"))) {
             bridge.ReloadVisualPacks();
             app.ReloadAll();
             render::DdsCache::Get().Clear();
-            app.Toast("Reloading visual packs");
+            app.Toast(T("$MTFUI_Toast_ReloadingPacks"));
         }
-        HelpMarker("Use after installing or editing a visual pack JSON without restarting.");
+        HelpMarker(T("$MTFUI_General_ReloadPacksHelp"));
         SameLine();
         bool rescan = snap.rescanOnLoad;
-        if (Checkbox("Rescan on every load", &rescan)) {
+        if (Checkbox(T("$MTFUI_General_Rescan"), &rescan)) {
             bridge.SetRescanOnLoad(rescan);
         }
 
-        SeparatorText("Target");
-        Text("Current target: %s", app.targetName.c_str());
-        if (Button("Remove all presets")) {
+        SeparatorText(T("$MTFUI_General_Target"));
+        TextUnformatted(TF("$MTFUI_General_CurrentTarget", app.targetName).c_str());
+        if (Button(T("$MTFUI_General_RemoveAll"))) {
             app.RemoveAllFromTarget();
         }
         SameLine();
-        if (Button("Clear stuck effects")) {
+        if (Button(T("$MTFUI_Common_ClearStuckEffects"))) {
             bridge.StopShadersOn(app.targetId);
-            app.Toast("Stopped MTF shader effects on " + app.targetName);
+            app.Toast(TF("$MTFUI_Toast_ShadersStopped", app.targetName));
         }
-        HelpMarker("Stops any MTF glow or shader effect that kept running after its tier ended.");
+        HelpMarker(T("$MTFUI_General_ClearEffectsHelp"));
 
-        SeparatorText("This menu");
+        SeparatorText(T("$MTFUI_General_ThisMenu"));
         SetNextItemWidth(260);
-        ThumbSizeSlider("Thumbnail size", app.settings.thumbSize);
+        ThumbSizeSlider(T("$MTFUI_General_ThumbSize"), app.settings.thumbSize);
         if (IsItemDeactivatedAfterEdit()) {
             app.SaveSettings();
         }
-        if (Checkbox("Pause the game while the window is open", &app.settings.pauseGame)) {
+        if (Checkbox(T("$MTFUI_General_Pause"), &app.settings.pauseGame)) {
             app.SaveSettings();
-            app.Toast("Takes effect after restarting the game");
+            app.Toast(T("$MTFUI_Toast_AfterRestart"));
         }
-        if (Checkbox("Separate panels in the standalone window", &app.settings.splitPanels)) {
+        if (Checkbox(T("$MTFUI_General_SplitPanels"), &app.settings.splitPanels)) {
             app.SaveSettings();
         }
-        HelpMarker("Shows Presets, Tiers and Tier editor as their own windows that you can place around the target, "
-                   "instead of one big tabbed window.");
+        HelpMarker(T("$MTFUI_General_SplitPanelsHelp"));
         if (app.settings.splitPanels) {
             SameLine();
-            if (Button("Reset panel layout")) {
+            if (Button(T("$MTFUI_General_ResetLayout"))) {
                 app.ResetPanelLayout();
             }
         }
         SetNextItemWidth(260);
-        SliderInt("Window opacity", &app.settings.panelOpacity, 20, 100, "%d%%");
+        SliderInt(T("$MTFUI_General_Opacity"), &app.settings.panelOpacity, 20, 100, "%d%%");
         if (IsItemDeactivatedAfterEdit()) {
             app.SaveSettings();
         }
-        HelpMarker("Background opacity of the standalone window and its panels, so the target shows through.");
-        if (Button("Clear texture cache")) {
+        HelpMarker(T("$MTFUI_General_OpacityHelp"));
+        if (Button(T("$MTFUI_General_ClearCache"))) {
             render::DdsCache::Get().Clear();
         }
-        HelpMarker("Reloads tattoo thumbnails from disk, after you replace a texture file.");
+        HelpMarker(T("$MTFUI_General_ClearCacheHelp"));
 
         DrawRecovery(app);
     }

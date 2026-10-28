@@ -64,14 +64,19 @@ Add as an off-site requirement:
 
 ## Permissions
 
-The source is GPL-3.0 (see `LICENSE`), so the permissions should allow it:
+The plugin links CommonLibSSE-NG, so it must be GPL-3.0 (see `LICENSE`). Nexus requires:
 
-- Upload to other sites: Yes, with credit
-- Convert to other games: Yes
-- Modify and release: Yes, under GPL-3.0
-- Use assets in other mods: Yes
-- Use in paid mods: No
-- Source code: link the GitHub repo in the description or the mod page's source link
+- The full GPL-3.0 text in the download. `make package` copies `LICENSE` to `SKSE/Plugins/MagicTattoosUI/LICENSE.txt`.
+- The source code, or a link to a public repository, on the mod page. The GitHub repo must be public, and the description's "License and source code" section links it.
+- A copyright statement and GPL-3.0 disclaimer. `release/README.txt` ships as `SKSE/Plugins/MagicTattoosUI/README.txt`, and `src/main.cpp` carries the same header.
+- Permissions open for modification and redistribution:
+  - Upload to other sites: Yes
+  - Convert to other games: Yes
+  - Modify and release: Yes, under GPL-3.0
+  - Use assets in other mods: Yes
+  - Use in paid mods: Yes, since GPL-3.0 allows selling copies as long as the source stays available
+  - Credit: required
+  - Source code: link the GitHub repo in the mod page's source link field too
 
 ## Images
 

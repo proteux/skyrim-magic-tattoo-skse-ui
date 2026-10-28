@@ -44,7 +44,7 @@ namespace mtfui::ui {
         changed |= ColorEditFlags("##swatch", rgb, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
         if (!palette.empty()) {
             SameLine();
-            if (SmallButton("Palette")) {
+            if (SmallButton(T("$MTFUI_Color_Palette"))) {
                 OpenPopup("##palette");
             }
             SameLine();
@@ -112,7 +112,7 @@ namespace mtfui::ui {
             }
             case model::ParamKind::Text: {
                 std::string s = model::ParamStr(value);
-                if (InputString(label, s, "comma-separated, empty = any")) {
+                if (InputString(label, s, T("$MTFUI_Param_TextHint"))) {
                     value = s;
                     changed = true;
                 }
@@ -153,7 +153,7 @@ namespace mtfui::ui {
     }
 
     void SeverityText(model::Severity s, const std::string& text) {
-        const char* tag = s == model::Severity::Error ? "Error" : s == model::Severity::Warning ? "Warning" : "Note";
+        const char* tag = s == model::Severity::Error ? T("$MTFUI_Severity_Error") : s == model::Severity::Warning ? T("$MTFUI_Severity_Warning") : T("$MTFUI_Severity_Note");
         PushStyleColor(ImGuiCol_Text, SeverityColor(s));
         TextUnformatted(tag);
         PopStyleColor();
@@ -164,13 +164,17 @@ namespace mtfui::ui {
     }
 
     bool ThumbSizeSlider(const char* label, int& size) {
-        const char* word = size < 112 ? "Tiny" : size < 208 ? "Small" : size < 320 ? "Medium" : size < 432 ? "Large" : "Extra large";
+        const char* word = size < 112 ? T("$MTFUI_Thumb_Tiny_Fmt")
+                           : size < 208 ? T("$MTFUI_Thumb_Small_Fmt")
+                           : size < 320 ? T("$MTFUI_Thumb_Medium_Fmt")
+                           : size < 432 ? T("$MTFUI_Thumb_Large_Fmt")
+                                        : T("$MTFUI_Thumb_ExtraLarge_Fmt");
         return SliderInt(label, &size, io::kThumbSizeMin, io::kThumbSizeMax, word, ImGuiSliderFlags_AlwaysClamp | ImGuiSliderFlags_NoInput);
     }
 
     bool SearchBox(const char* id, std::string& text, float width, const char* hint) {
         SetNextItemWidth(width);
-        return InputString(id, text, hint, 0, 128);
+        return InputString(id, text, hint ? hint : T("$MTFUI_Common_Search"), 0, 128);
     }
 
     NamePromptResult NamePrompt(std::string& displayName, const std::string& fileName, bool canConfirm, const char* confirmLabel) {
@@ -178,17 +182,17 @@ namespace mtfui::ui {
             SetKeyboardFocusHere();
         }
         SetNextItemWidth(280);
-        const bool enter = InputString("##name", displayName, "Display name", ImGuiInputTextFlags_EnterReturnsTrue, 64);
-        TextDisabled("File: %s.json", fileName.c_str());
+        const bool enter = InputString("##name", displayName, T("$MTFUI_NamePrompt_Hint"), ImGuiInputTextFlags_EnterReturnsTrue, 64);
+        TextDisabled("%s", TF("$MTFUI_NamePrompt_File", fileName).c_str());
         const bool ok = canConfirm && !displayName.empty();
         auto result = NamePromptResult::Open;
         BeginDisabled(!ok);
-        if (Button(confirmLabel, ImVec2{ 100, 0 }) || (enter && ok)) {
+        if (Button(confirmLabel ? confirmLabel : T("$MTFUI_Common_Create"), ImVec2{ 100, 0 }) || (enter && ok)) {
             result = NamePromptResult::Confirmed;
         }
         EndDisabled();
         SameLine();
-        if (Button("Cancel", ImVec2{ 100, 0 }) || IsKeyPressed(ImGuiKey_Escape, false)) {
+        if (Button(T("$MTFUI_Common_Cancel"), ImVec2{ 100, 0 }) || IsKeyPressed(ImGuiKey_Escape, false)) {
             result = NamePromptResult::Cancelled;
         }
         return result;

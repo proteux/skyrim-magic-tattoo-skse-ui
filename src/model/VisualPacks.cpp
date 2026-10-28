@@ -1,6 +1,7 @@
 #include "model/VisualPacks.h"
 
 #include "io/JsonStore.h"
+#include "io/Translations.h"
 #include "io/UiSettings.h"
 
 namespace mtfui::model {
@@ -66,5 +67,18 @@ namespace mtfui::model {
             return "Feet";
         }
         return "Body";
+    }
+
+    const char* AreaLabel(std::string_view area) {
+        if (area == "Face") {
+            return T("$MTFUI_Area_Face");
+        }
+        if (area == "Hands") {
+            return T("$MTFUI_Area_Hands");
+        }
+        if (area == "Feet") {
+            return T("$MTFUI_Area_Feet");
+        }
+        return T("$MTFUI_Area_Body");
     }
 }

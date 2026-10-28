@@ -1,0 +1,11 @@
+* text=auto eol=lf
+
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+*.png binary
+*.dds binary
+
+# Copies of real MTF data, compared byte for byte by the tests.
+tests/fixtures/** -text
+extras/** -text

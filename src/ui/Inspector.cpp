@@ -35,7 +35,7 @@ namespace mtfui::ui {
         bool CatalogPicker(App& app, const char* id, std::string& key, bool conditions) {
             const model::PluginCatalog* owner = nullptr;
             const auto* current = conditions ? app.cat.FindCondition(key, &owner) : app.cat.FindEffect(key, &owner);
-            std::string preview = key.empty() ? "(choose)" : current ? current->label : key + " (not installed)";
+            std::string preview = key.empty() ? T("$MTFUI_Common_Choose") : current ? current->label : TF("$MTFUI_Picker_NotInstalled", key);
             bool changed = false;
             if (BeginCombo(id, preview.c_str(), ImGuiComboFlags_HeightLargest)) {
                 if (IsWindowAppearing()) {
@@ -52,7 +52,7 @@ namespace mtfui::ui {
                             continue;
                         }
                         if (!header) {
-                            SeparatorText(enabled ? plugin.label.c_str() : (plugin.label + " (disabled in MTF)").c_str());
+                            SeparatorText(enabled ? plugin.label.c_str() : TF("$MTFUI_Picker_PluginDisabled", plugin.label).c_str());
                             header = true;
                         }
                         const std::string k = plugin.pluginId + ":" + e.id;
@@ -77,20 +77,20 @@ namespace mtfui::ui {
         }
 
         void DrawConditionTab(App& app, model::Slot& s, int slot) {
-            InputString("Tier name", s.name, "optional, e.g. Warming", 0, 33);
-            HelpMarker("Only for your reference in this list and in MTF's menu.");
+            InputString(T("$MTFUI_Condition_TierName"), s.name, T("$MTFUI_Condition_TierNameHint"), 0, 33);
+            HelpMarker(T("$MTFUI_Condition_TierNameHelp"));
             Spacing();
             if (s.conditions.size() > 1) {
-                RadioButton("All of these", &s.op, 0);
+                RadioButton(T("$MTFUI_Condition_All"), &s.op, 0);
                 SameLine();
-                RadioButton("Any of these", &s.op, 1);
+                RadioButton(T("$MTFUI_Condition_Any"), &s.op, 1);
             }
             int remove = -1;
             for (std::size_t i = 0; i < s.conditions.size(); ++i) {
                 auto& c = s.conditions[i];
                 PushID(static_cast<int>(i));
                 if (i > 0) {
-                    TextDisabled(s.op == 1 ? "or" : "and");
+                    TextDisabled("%s", s.op == 1 ? T("$MTFUI_Condition_Or") : T("$MTFUI_Condition_And"));
                 }
                 BeginGroup();
                 const float avail = GetContentRegionAvail().x;
@@ -119,7 +119,7 @@ namespace mtfui::ui {
                         }
                     }
                     PushStyleColor(ImGuiCol_Text, kMuted);
-                    TextWrapped("The wearer %s", model::DescribeCondition(app.cat, c).c_str());
+                    TextWrapped("%s", TF("$MTFUI_Condition_Sentence", model::DescribeCondition(app.cat, c)).c_str());
                     PopStyleColor();
                 }
                 EndGroup();
@@ -130,13 +130,13 @@ namespace mtfui::ui {
                 s.conditions.erase(s.conditions.begin() + remove);
             }
             BeginDisabled(static_cast<int>(s.conditions.size()) >= model::kConditionCap);
-            if (Button(s.conditions.empty() ? "Add a condition" : "Add another condition")) {
+            if (Button(s.conditions.empty() ? T("$MTFUI_Condition_Add") : T("$MTFUI_Condition_AddAnother"))) {
                 s.conditions.push_back({});
             }
             EndDisabled();
             if (s.conditions.empty()) {
                 SameLine();
-                TextDisabled("Without one, this tier never activates.");
+                TextDisabled("%s", T("$MTFUI_Condition_NoneHint"));
             }
         }
 
@@ -165,18 +165,18 @@ namespace mtfui::ui {
                 mode = None;
             }
             if (slot > 0) {
-                if (RadioButton("Same as Default", mode == Inherit)) {
+                if (RadioButton(T("$MTFUI_Look_SameAsDefault"), mode == Inherit)) {
                     s.packId.clear();
                     s.entryId.clear();
                 }
                 SameLine();
             }
-            if (RadioButton("No tattoo", mode == None)) {
+            if (RadioButton(T("$MTFUI_Look_NoTattoo"), mode == None)) {
                 s.packId = slot == 0 ? "" : model::kNoTexture;
                 s.entryId.clear();
             }
             SameLine();
-            if (RadioButton("Choose", mode == Choose) && mode != Choose && !app.cat.packs.empty()) {
+            if (RadioButton(T("$MTFUI_Look_Choose"), mode == Choose) && mode != Choose && !app.cat.packs.empty()) {
                 s.packId = app.cat.packs.front().packId;
                 s.entryId = app.cat.packs.front().entries.empty() ? "" : app.cat.packs.front().entries.front().id;
             }
@@ -188,7 +188,7 @@ namespace mtfui::ui {
                 SetNextItemWidth(-FLT_MIN);
                 if (BeginCombo("##pack", pack ? pack->label.c_str() : s.packId.c_str())) {
                     for (const auto& p : app.cat.packs) {
-                        if (Selectable((p.label + " (" + p.area + ")##" + p.packId).c_str(), pack == &p)) {
+                        if (Selectable((TF("$MTFUI_Look_PackOption", p.label, model::AreaLabel(p.area)) + "##" + p.packId).c_str(), pack == &p)) {
                             s.packId = p.packId;
                             s.entryId = p.entries.empty() ? "" : p.entries.front().id;
                         }
@@ -196,7 +196,7 @@ namespace mtfui::ui {
                     EndCombo();
                 }
                 SetNextItemWidth(-FLT_MIN);
-                if (BeginCombo("##entry", entry ? entry->label.c_str() : (s.entryId.empty() ? "(choose)" : s.entryId.c_str()), ImGuiComboFlags_HeightLarge)) {
+                if (BeginCombo("##entry", entry ? entry->label.c_str() : (s.entryId.empty() ? T("$MTFUI_Common_Choose") : s.entryId.c_str()), ImGuiComboFlags_HeightLarge)) {
                     if (pack) {
                         for (const auto& e : pack->entries) {
                             if (Selectable((e.label + "##" + e.id).c_str(), entry == &e)) {
@@ -207,7 +207,7 @@ namespace mtfui::ui {
                     EndCombo();
                 }
             }
-            if (Button("Browse tattoos...", ImVec2(-FLT_MIN, 0))) {
+            if (Button(T("$MTFUI_Look_Browse"), ImVec2(-FLT_MIN, 0))) {
                 app.picking = true;
                 app.pickSlot = slot;
                 app.RequestTab(Tab::Tattoos);
@@ -237,34 +237,34 @@ namespace mtfui::ui {
                 in.waveform = app.cat.FindWaveform(s.pulse.waveform);
                 const float size = std::min(GetContentRegionAvail().x, 380.0f);
                 render::DrawPreview("##preview2d", in, size);
-                if (!entry->description.empty() && TreeNodeEx("Description", ImGuiTreeNodeFlags_SpanAvailWidth)) {
+                if (!entry->description.empty() && TreeNodeEx("##description", ImGuiTreeNodeFlags_SpanAvailWidth, "%s", T("$MTFUI_Look_Description"))) {
                     PushStyleColor(ImGuiCol_Text, kMuted);
                     TextWrapped("%s", entry->description.c_str());
                     PopStyleColor();
                     TreePop();
                 }
             } else {
-                TextDisabled(vis.none ? "No tattoo is shown for this tier; only its effects run." : "Tattoo not found in the installed packs.");
+                TextDisabled("%s", vis.none ? T("$MTFUI_Look_NoneShown") : T("$MTFUI_Look_NotFound"));
             }
 
             // Layers past the tattoo's texture count draw nothing, so they aren't offered.
             if (usedLayers > 0) {
-                SeparatorText("Layers");
+                SeparatorText(T("$MTFUI_Look_Layers"));
             }
             for (int l = 0; l < usedLayers; ++l) {
                 auto& layer = s.layers[l];
                 PushID(l);
-                const std::string header = "Layer " + std::to_string(l + 1);
+                const std::string header = TF("$MTFUI_Look_Layer", l + 1);
                 SetNextItemOpen(true, ImGuiCond_Appearing);
                 const bool open = CollapsingHeader((header + "###layer").c_str());
                 if (BeginPopupContextItem("##layerctx")) {
-                    if (MenuItem("Copy layer")) {
+                    if (MenuItem(T("$MTFUI_Look_CopyLayer"))) {
                         app.clip.layer = layer;
                     }
-                    if (MenuItem("Paste layer", nullptr, false, app.clip.layer.has_value())) {
+                    if (MenuItem(T("$MTFUI_Look_PasteLayer"), nullptr, false, app.clip.layer.has_value())) {
                         layer = *app.clip.layer;
                     }
-                    if (MenuItem("Use this layer's colors on every layer")) {
+                    if (MenuItem(T("$MTFUI_Look_ColorsToAll"))) {
                         for (auto& other : s.layers) {
                             other = layer;
                         }
@@ -273,68 +273,67 @@ namespace mtfui::ui {
                 }
                 if (open) {
                     constexpr float kFieldWidth = 220;
-                    ColorEditRgb("Tint", layer.tint, app.cat.colors, kFieldWidth, "Multiplies the tattoo's own color. White keeps the original ink.");
+                    ColorEditRgb(T("$MTFUI_Look_Tint"), layer.tint, app.cat.colors, kFieldWidth, T("$MTFUI_Look_TintHelp"));
                     if (usedLayers > 1) {
                         SameLine();
-                        if (SmallButton("To all")) {
+                        if (SmallButton(T("$MTFUI_Look_ToAll"))) {
                             for (auto& other : s.layers) {
                                 other.tint = layer.tint;
                             }
                         }
                         if (IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
-                            SetTooltip("Apply this tint to every layer. Right-click a layer header to copy or paste a whole layer.");
+                            SetTooltip("%s", T("$MTFUI_Look_ToAllTip"));
                         }
                     }
                     int alpha = static_cast<int>(layer.alpha);
                     SetNextItemWidth(kFieldWidth);
-                    if (SliderInt("Opacity", &alpha, 0, 100, "%d%%")) {
+                    if (SliderInt(T("$MTFUI_Look_Opacity"), &alpha, 0, 100, "%d%%")) {
                         layer.alpha = alpha;
                     }
-                    HelpMarker("How solid this layer's ink is. 100% is fully opaque, 0% hides the layer.");
-                    ColorEditRgb("Glow color", layer.emissive, app.cat.colors, kFieldWidth,
-                        "Color of the light the tattoo gives off. Black means no glow whatever the strength.");
+                    HelpMarker(T("$MTFUI_Look_OpacityHelp"));
+                    ColorEditRgb(T("$MTFUI_Look_GlowColor"), layer.emissive, app.cat.colors, kFieldWidth, T("$MTFUI_Look_GlowColorHelp"));
                     float mult = static_cast<float>(layer.emissiveMult);
                     SetNextItemWidth(kFieldWidth);
-                    if (SliderFloat("Glow strength", &mult, 0.0f, 10.0f, "%.2f")) {
+                    if (SliderFloat(T("$MTFUI_Look_GlowStrength"), &mult, 0.0f, 10.0f, "%.2f")) {
                         layer.emissiveMult = mult;
                     }
-                    HelpMarker("0 = no glow. The pulse animates this value.");
+                    HelpMarker(T("$MTFUI_Look_GlowStrengthHelp"));
                 }
                 PopID();
             }
         }
 
         void DrawPulseTab(App& app, model::Slot& s) {
-            if (SmallButton("Copy pulse")) {
+            if (SmallButton(T("$MTFUI_Pulse_Copy"))) {
                 app.clip.pulse = s.pulse;
             }
             SameLine();
             BeginDisabled(!app.clip.pulse.has_value());
-            if (SmallButton("Paste pulse")) {
+            if (SmallButton(T("$MTFUI_Pulse_Paste"))) {
                 s.pulse = *app.clip.pulse;
             }
             EndDisabled();
             float rate = static_cast<float>(s.pulse.rate);
             SetNextItemWidth(240);
-            if (SliderFloat("Speed", &rate, 0.0f, 5.0f, rate > 0.0f ? "%.2f per second" : "off")) {
+            if (SliderFloat(T("$MTFUI_Pulse_Speed"), &rate, 0.0f, 5.0f, rate > 0.0f ? T("$MTFUI_Pulse_PerSecond_Fmt") : T("$MTFUI_Pulse_Off_Fmt"))) {
                 s.pulse.rate = std::round(rate * 100.0f) / 100.0f;
             }
-            HelpMarker("Pulse cycles per second. 0 turns the pulse off.");
+            HelpMarker(T("$MTFUI_Pulse_SpeedHelp"));
             int depth = static_cast<int>(s.pulse.depth);
             SetNextItemWidth(240);
-            if (SliderInt("Depth", &depth, 0, 100, "%d%%")) {
+            if (SliderInt(T("$MTFUI_Pulse_Depth"), &depth, 0, 100, "%d%%")) {
                 s.pulse.depth = depth;
             }
-            HelpMarker("How far the glow dims from its peak. 100% fades fully out at the low point.");
+            HelpMarker(T("$MTFUI_Pulse_DepthHelp"));
             float pause = static_cast<float>(s.pulse.pause);
             SetNextItemWidth(240);
-            if (SliderFloat("Pause", &pause, 0.0f, 10.0f, pause > 0.0f ? "%.1f s" : "none")) {
+            if (SliderFloat(T("$MTFUI_Pulse_Pause"), &pause, 0.0f, 10.0f, pause > 0.0f ? T("$MTFUI_Format_Seconds1_Fmt") : T("$MTFUI_Pulse_NoPause_Fmt"))) {
                 s.pulse.pause = std::round(pause * 10.0f) / 10.0f;
             }
-            HelpMarker("Seconds to rest at the low point between cycles.");
+            HelpMarker(T("$MTFUI_Pulse_PauseHelp"));
             SetNextItemWidth(240);
-            if (BeginCombo("Shape", s.pulse.waveform.empty() ? "Smooth (built-in)" : s.pulse.waveform.c_str())) {
-                if (Selectable("Smooth (built-in)", s.pulse.waveform.empty())) {
+            if (BeginCombo(T("$MTFUI_Pulse_Shape"), s.pulse.waveform.empty() ? T("$MTFUI_Pulse_Smooth") : s.pulse.waveform.c_str())) {
+                if (Selectable(T("$MTFUI_Pulse_Smooth"), s.pulse.waveform.empty())) {
                     s.pulse.waveform.clear();
                 }
                 for (const auto& w : app.cat.waveforms) {
@@ -344,7 +343,7 @@ namespace mtfui::ui {
                 }
                 EndCombo();
             }
-            HelpMarker("Curves come from MagicTattoosFramework/waveforms/*.json.");
+            HelpMarker(T("$MTFUI_Pulse_ShapeHelp"));
             Spacing();
             render::DrawPulseGraph(s.pulse, app.cat.FindWaveform(s.pulse.waveform), GetContentRegionAvail().x, 90.0f);
             bool glows = false;
@@ -352,12 +351,12 @@ namespace mtfui::ui {
                 glows = glows || l.emissiveMult > 0.0;
             }
             if (s.pulse.rate > 0.0 && !glows) {
-                TextColored(kWarn, "The pulse animates glow, but no layer has glow strength above 0 (Appearance tab).");
+                TextColored(kWarn, "%s", T("$MTFUI_Pulse_NoGlow"));
             }
         }
 
         void DrawEffectsTab(App& app, model::Slot& s, int slot) {
-            TextWrapped(slot == 0 ? "Effects run while no tier matches." : "Effects run while this tier is active.");
+            TextWrapped("%s", slot == 0 ? T("$MTFUI_Effects_DefaultIntro") : T("$MTFUI_Effects_TierIntro"));
             int remove = -1, moveUp = -1;
             for (std::size_t i = 0; i < s.effects.size(); ++i) {
                 auto& fx = s.effects[i];
@@ -392,7 +391,8 @@ namespace mtfui::ui {
                         }
                     }
                     PushStyleColor(ImGuiCol_Text, kMuted);
-                    TextWrapped("%s%s", e->kind == "burst" ? "Once on activation: " : "", model::DescribeEffect(app.cat, fx).c_str());
+                    const auto description = model::DescribeEffect(app.cat, fx);
+                    TextWrapped("%s", e->kind == "burst" ? TF("$MTFUI_Effects_Burst", description).c_str() : description.c_str());
                     PopStyleColor();
                 }
                 Separator();
@@ -404,28 +404,28 @@ namespace mtfui::ui {
                 std::swap(s.effects[moveUp], s.effects[moveUp - 1]);
             }
             BeginDisabled(static_cast<int>(s.effects.size()) >= 32);
-            if (Button("Add effect")) {
+            if (Button(T("$MTFUI_Effects_Add"))) {
                 s.effects.push_back({});
             }
             EndDisabled();
             if (static_cast<int>(s.effects.size()) > model::kEffectCap) {
                 SameLine();
-                TextColored(kWarn, "MTF's own menu only shows the first %d.", model::kEffectCap);
+                TextColored(kWarn, "%s", TF("$MTFUI_Effects_OverCap", model::kEffectCap).c_str());
             }
         }
 
-        bool MinutesEditor(const char* label, const char* help, std::int64_t& minutes) {
+        bool MinutesEditor(const char* id, const char* label, const char* help, std::int64_t& minutes) {
             int h = static_cast<int>(minutes / 60);
             int m = static_cast<int>(minutes % 60);
             bool changed = false;
-            PushID(label);
+            PushID(id);
             TextUnformatted(label);
             HelpMarker(help);
             SetNextItemWidth(160);
-            changed |= InputInt("hours", &h, 1, 6);
+            changed |= InputInt(T("$MTFUI_Timing_Hours"), &h, 1, 6);
             SameLine();
             SetNextItemWidth(160);
-            changed |= InputInt("minutes", &m, 5, 15);
+            changed |= InputInt(T("$MTFUI_Timing_Minutes"), &m, 5, 15);
             PopID();
             if (changed) {
                 // Minutes past 59 or below 0 carry into the hours.
@@ -436,36 +436,34 @@ namespace mtfui::ui {
 
         void DrawTimingTab(model::Slot& s, int slot) {
             if (slot == 0) {
-                TextWrapped("Default has no activation, so it has no timing.");
+                TextWrapped("%s", T("$MTFUI_Timing_DefaultNone"));
                 return;
             }
-            MinutesEditor("Stay active for",
-                "Once activated, the tier stays on for this long (in-game time) even after its conditions stop. 0 = only while they hold.",
-                s.persistMin);
+            MinutesEditor("##stay", T("$MTFUI_Timing_Stay"), T("$MTFUI_Timing_StayHelp"), s.persistMin);
             bool allow = s.allowOverride != 0;
             BeginDisabled(s.persistMin <= 0);
-            if (Checkbox("Higher tiers can interrupt it", &allow)) {
+            if (Checkbox(T("$MTFUI_Timing_Interrupt"), &allow)) {
                 s.allowOverride = allow ? 1 : 0;
             }
             EndDisabled();
-            HelpMarker("While this tier is lingering, let a higher tier whose conditions become true take over.");
+            HelpMarker(T("$MTFUI_Timing_InterruptHelp"));
             Spacing();
-            MinutesEditor("Cooldown", "After the tier ends, it cannot activate again for this long. 0 = no cooldown.", s.coolMin);
+            MinutesEditor("##cooldown", T("$MTFUI_Timing_Cooldown"), T("$MTFUI_Timing_CooldownHelp"), s.coolMin);
         }
     }
 
     void DrawInspectorPanel(App& app) {
         if (!app.HasPreset()) {
-            TextDisabled("Open a preset to edit its tiers.");
+            TextDisabled("%s", T("$MTFUI_Inspector_NoPreset"));
             return;
         }
         auto& p = app.Preset();
         const int slot = std::clamp(app.ed.slot, 0, static_cast<int>(p.slots.size()) - 1);
         auto& s = p.slots[slot];
-        Text("%s", slot == 0 ? "Default" : ("Tier " + std::to_string(slot) + ": " + model::SlotLabel(p, slot)).c_str());
+        TextUnformatted(slot == 0 ? T("$MTFUI_Tier_Default") : TF("$MTFUI_Inspector_TierTitle", slot, model::SlotLabel(p, slot)).c_str());
         if (slot > 0) {
             SameLine();
-            TextDisabled("priority %d of %d", slot, model::kSlotCount - 1);
+            TextDisabled("%s", TF("$MTFUI_Inspector_Priority", slot, model::kSlotCount - 1).c_str());
         }
         bool anyIssue = false;
         for (const auto severity : { model::Severity::Error, model::Severity::Warning }) {
@@ -484,24 +482,25 @@ namespace mtfui::ui {
             app.inspectorTab.reset();
             auto flags = [&](model::LintTab t) { return requested == t ? ImGuiTabItemFlags_SetSelected : 0; };
             // Default applies whenever no tier matches, so it has no conditions to edit.
-            if (slot > 0 && BeginTabItem("Condition", nullptr, flags(model::LintTab::Condition))) {
+            const auto label = [](const std::string& text, const char* id) { return text + "###" + id; };
+            if (slot > 0 && BeginTabItem(label(T("$MTFUI_Inspector_TabCondition"), "cond").c_str(), nullptr, flags(model::LintTab::Condition))) {
                 DrawConditionTab(app, s, slot);
                 EndTabItem();
             }
-            if (BeginTabItem("Appearance", nullptr, flags(model::LintTab::Look))) {
+            if (BeginTabItem(label(T("$MTFUI_Inspector_TabLook"), "look").c_str(), nullptr, flags(model::LintTab::Look))) {
                 DrawLookTab(app, s, slot);
                 EndTabItem();
             }
-            if (BeginTabItem("Pulse", nullptr, flags(model::LintTab::Pulse))) {
+            if (BeginTabItem(label(T("$MTFUI_Inspector_TabPulse"), "pulse").c_str(), nullptr, flags(model::LintTab::Pulse))) {
                 DrawPulseTab(app, s);
                 EndTabItem();
             }
-            const std::string fxLabel = s.effects.empty() ? "Effects###fx" : "Effects (" + std::to_string(s.effects.size()) + ")###fx";
-            if (BeginTabItem(fxLabel.c_str(), nullptr, flags(model::LintTab::Effects))) {
+            const std::string fxText = s.effects.empty() ? T("$MTFUI_Inspector_TabEffects") : TF("$MTFUI_Inspector_TabEffectsCount", s.effects.size());
+            if (BeginTabItem(label(fxText, "fx").c_str(), nullptr, flags(model::LintTab::Effects))) {
                 DrawEffectsTab(app, s, slot);
                 EndTabItem();
             }
-            if (BeginTabItem("Timing", nullptr, flags(model::LintTab::Timing))) {
+            if (BeginTabItem(label(T("$MTFUI_Inspector_TabTiming"), "timing").c_str(), nullptr, flags(model::LintTab::Timing))) {
                 DrawTimingTab(s, slot);
                 EndTabItem();
             }

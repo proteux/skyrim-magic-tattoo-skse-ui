@@ -1,6 +1,7 @@
 #include "io/JsonStore.h"
 
 #include "io/StyledJson.h"
+#include "io/Translations.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
 #    define WIN32_LEAN_AND_MEAN
@@ -100,7 +101,7 @@ namespace mtfui::io {
         if (!in) {
             if (error) {
                 std::error_code ec;
-                *error = fs::exists(path, ec) ? "Cannot open the file (is another program using it?)" : "File not found";
+                *error = fs::exists(path, ec) ? T("$MTFUI_File_Locked") : T("$MTFUI_File_NotFound");
             }
             return std::nullopt;
         }
@@ -118,7 +119,7 @@ namespace mtfui::io {
             return nlohmann::json::parse(*text, nullptr, true, true);
         } catch (const nlohmann::json::parse_error& e) {
             if (error) {
-                *error = "Not valid JSON (byte " + std::to_string(e.byte) + ")";
+                *error = TF("$MTFUI_File_BadJson", e.byte);
             }
             return std::nullopt;
         }
@@ -141,7 +142,7 @@ namespace mtfui::io {
         if (h == INVALID_HANDLE_VALUE) {
             const DWORD code = GetLastError();
             if (error) {
-                *error = "Cannot open " + PathText(tmp) + " for writing: " + WinError(code);
+                *error = TF("$MTFUI_File_CannotWrite", PathText(tmp), WinError(code));
             }
             return false;
         }
@@ -153,13 +154,13 @@ namespace mtfui::io {
         const DWORD flushCode = flushed ? 0 : GetLastError();
         CloseHandle(h);
         if (!wrote) {
-            return fail("Write failed for " + PathText(tmp), writeCode);
+            return fail(TF("$MTFUI_File_WriteFailed", PathText(tmp)), writeCode);
         }
         if (!flushed) {
-            return fail("Flush failed for " + PathText(tmp), flushCode);
+            return fail(TF("$MTFUI_File_FlushFailed", PathText(tmp)), flushCode);
         }
         if (!MoveFileExW(tmp.c_str(), path.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
-            return fail("Cannot replace " + PathText(path), GetLastError());
+            return fail(TF("$MTFUI_File_CannotReplace", PathText(path)), GetLastError());
         }
         return true;
     }
@@ -196,7 +197,7 @@ namespace mtfui::io {
         const auto stem = NarrowName(path, true);
         if (!stem) {
             if (error) {
-                *error = "The file name can't be used for a backup";
+                *error = T("$MTFUI_File_BadBackupName");
             }
             return false;
         }
@@ -226,7 +227,7 @@ namespace mtfui::io {
         fs::copy_file(path, target, fs::copy_options::overwrite_existing, ec);
         if (ec) {
             if (error) {
-                *error = "Could not copy to " + PathText(backupDir) + ": " + ec.message();
+                *error = TF("$MTFUI_File_CopyFailed", PathText(backupDir), ec.message());
             }
             return false;
         }

@@ -118,22 +118,26 @@ namespace mtfui::ui {
         std::string SourceLabel(App& app) {
             switch (g.source) {
                 case Source::Favorites:
-                    return "Favorites";
+                    return T("$MTFUI_Tattoos_Favorites");
                 case Source::Recent:
-                    return "Recently used";
+                    return T("$MTFUI_Tattoos_Recent");
                 case Source::Pack:
                     if (const auto* p = app.cat.FindPack(g.pack)) {
                         return p->label;
                     }
                     return g.pack;
                 default:
-                    return "All";
+                    return T("$MTFUI_Tattoos_All");
             }
+        }
+
+        std::string SourceText(App& app) {
+            return g.source == Source::Pack ? TF("$MTFUI_Tattoos_PackFilter", SourceLabel(app)) : TF("$MTFUI_Tattoos_ShowFilter", SourceLabel(app));
         }
 
         void DrawSourceCombo(App& app, float width) {
             SetNextItemWidth(width);
-            const std::string preview = (g.source == Source::Pack ? "Pack: " : "Show: ") + SourceLabel(app);
+            const std::string preview = SourceText(app);
             if (!BeginCombo("##tsource", preview.c_str(), ImGuiComboFlags_HeightLarge)) {
                 return;
             }
@@ -141,28 +145,28 @@ namespace mtfui::ui {
             for (const auto& p : app.cat.packs) {
                 total += p.entries.size();
             }
-            if (Selectable(("All (" + std::to_string(total) + ")").c_str(), g.source == Source::All)) {
+            if (Selectable((TF("$MTFUI_Tattoos_AllCount", total) + "##all").c_str(), g.source == Source::All)) {
                 g.source = Source::All;
             }
-            if (Selectable(("Favorites (" + std::to_string(app.settings.favorites.size()) + ")").c_str(), g.source == Source::Favorites)) {
+            if (Selectable((TF("$MTFUI_Tattoos_FavoritesCount", app.settings.favorites.size()) + "##favorites").c_str(), g.source == Source::Favorites)) {
                 g.source = Source::Favorites;
             }
-            if (Selectable("Recently used", g.source == Source::Recent)) {
+            if (Selectable((std::string(T("$MTFUI_Tattoos_Recent")) + "##recent").c_str(), g.source == Source::Recent)) {
                 g.source = Source::Recent;
             }
-            SeparatorText("Packs");
+            SeparatorText(T("$MTFUI_Tattoos_Packs"));
             for (const auto& p : app.cat.packs) {
                 const bool sel = g.source == Source::Pack && model::IEquals(p.packId, g.pack);
-                if (Selectable((p.label + " (" + std::to_string(p.entries.size()) + ")##" + p.packId).c_str(), sel)) {
+                if (Selectable((TF("$MTFUI_Tattoos_PackCount", p.label, p.entries.size()) + "##" + p.packId).c_str(), sel)) {
                     g.source = Source::Pack;
                     g.pack = p.packId;
                 }
                 if (IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
-                    SetTooltip("%s\nArea: %s\n%s", p.packId.c_str(), p.area.c_str(), io::PathText(p.file.filename()).c_str());
+                    SetTooltip("%s", TF("$MTFUI_Tattoos_PackTip", p.packId, model::AreaLabel(p.area), io::PathText(p.file.filename())).c_str());
                 }
             }
             if (app.cat.packs.empty()) {
-                TextDisabled("No visual packs found in MagicTattoosFramework/visuals.");
+                TextDisabled("%s", T("$MTFUI_Tattoos_NoPacks"));
             }
             EndCombo();
         }
@@ -170,7 +174,7 @@ namespace mtfui::ui {
         void DrawToolbar(App& app) {
             Flow flow;
             flow.Next(220.0f);
-            SearchBox("##tsearch", g.search, 220.0f, "Search tattoos");
+            SearchBox("##tsearch", g.search, 220.0f, T("$MTFUI_Tattoos_Search"));
             flow.Next(230.0f);
             DrawSourceCombo(app, 230.0f);
         }
@@ -186,9 +190,9 @@ namespace mtfui::ui {
                 app.SaveSettings();
             }
             if (IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
-                SetTooltip("Ctrl+mouse wheel over the grid also zooms.");
+                SetTooltip("%s", T("$MTFUI_Tattoos_ZoomTip"));
             }
-            const char* detailsLabel = app.settings.showDetails ? "Hide details" : "Show details";
+            const char* detailsLabel = app.settings.showDetails ? T("$MTFUI_Tattoos_HideDetails") : T("$MTFUI_Tattoos_ShowDetails");
             const float right = GetWindowContentRegionMax().x - ButtonWidth(detailsLabel);
             SameLine();
             SetCursorPosX(std::max(GetCursorPosX(), right));
@@ -214,21 +218,22 @@ namespace mtfui::ui {
                     clear();
                 }
                 if (IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
-                    SetTooltip("Remove this filter");
+                    SetTooltip("%s", T("$MTFUI_Tattoos_RemoveFilter"));
                 }
             };
             if (!g.search.empty()) {
-                chip("search", "Search: " + g.search, [] { g.search.clear(); });
+                chip("search", TF("$MTFUI_Tattoos_SearchChip", g.search), [] { g.search.clear(); });
             }
             if (g.source != Source::All) {
-                chip("source", (g.source == Source::Pack ? "Pack: " : "Show: ") + SourceLabel(app), [] { g.source = Source::All; });
+                chip("source", SourceText(app), [] { g.source = Source::All; });
             }
-            flow.Next(ButtonWidth("Clear all"));
-            if (SmallButton("Clear all")) {
+            const char* clearAll = T("$MTFUI_Tattoos_ClearAll");
+            flow.Next(ButtonWidth(clearAll));
+            if (SmallButton(clearAll)) {
                 g.search.clear();
                 g.source = Source::All;
             }
-            const std::string countText = std::to_string(count) + (count == 1 ? " tattoo" : " tattoos");
+            const std::string countText = count == 1 ? TF("$MTFUI_Tattoos_CountOne", count) : TF("$MTFUI_Tattoos_CountMany", count);
             flow.Next(CalcTextSize(countText.c_str()).x);
             TextDisabled("%s", countText.c_str());
         }
@@ -239,7 +244,7 @@ namespace mtfui::ui {
             }
             const int slot = TargetSlot(app);
             app.UseEntry(slot, it.pack->packId, it.entry->id);
-            app.Toast(it.entry->label + " set on " + model::SlotLabel(app.Preset(), slot));
+            app.Toast(TF("$MTFUI_Toast_TattooSet", it.entry->label, model::SlotLabel(app.Preset(), slot)));
             if (app.picking) {
                 app.picking = false;
                 app.RequestTab(Tab::Presets);
@@ -268,7 +273,7 @@ namespace mtfui::ui {
             render::DrawThumbAt(GetWindowDrawList(), p, zoom, it.entry->textures.empty() ? std::string{} : it.entry->textures.front());
             PushTextWrapPos(GetCursorPosX() + zoom);
             TextUnformatted(it.entry->label.c_str());
-            TextDisabled("%s  (%s)", it.pack->label.c_str(), it.pack->area.c_str());
+            TextDisabled("%s  (%s)", it.pack->label.c_str(), model::AreaLabel(it.pack->area));
             std::string tags;
             for (const auto* t : { &it.entry->subject, &it.entry->style, &it.entry->placement }) {
                 if (!t->empty()) {
@@ -279,7 +284,7 @@ namespace mtfui::ui {
                 TextDisabled("%s", tags.c_str());
             }
             if (const auto* users = app.usage.Entry(it.pack->packId, it.entry->id)) {
-                TextColored(kGood, "Used by %d preset%s", static_cast<int>(users->size()), users->size() == 1 ? "" : "s");
+                TextColored(kGood, "%s", (users->size() == 1 ? TF("$MTFUI_Tattoos_UsedByOne", users->size()) : TF("$MTFUI_Tattoos_UsedByMany", users->size())).c_str());
             }
             PopTextWrapPos();
             EndTooltip();
@@ -299,15 +304,15 @@ namespace mtfui::ui {
                 g_zoomUnsaved = g_zoomUnsaved || zoomed;
             }
             if (app.picking && app.HasPreset()) {
-                TextColored(kAccent, "Choosing a tattoo for %s: double-click one, or", model::SlotLabel(app.Preset(), TargetSlot(app)).c_str());
+                TextColored(kAccent, "%s", TF("$MTFUI_Tattoos_Choosing", model::SlotLabel(app.Preset(), TargetSlot(app))).c_str());
                 SameLine();
-                if (SmallButton("cancel")) {
+                if (SmallButton(T("$MTFUI_Tattoos_CancelChoosing"))) {
                     app.picking = false;
                     app.RequestTab(Tab::Presets);
                 }
             }
             if (items.empty()) {
-                TextDisabled(g.source == Source::Favorites ? "No favorites yet. Select a tattoo and click the star." : "Nothing matches.");
+                TextDisabled("%s", g.source == Source::Favorites ? T("$MTFUI_Tattoos_NoFavorites") : T("$MTFUI_Tattoos_NoMatch"));
                 EndChild();
                 return;
             }
@@ -362,12 +367,12 @@ namespace mtfui::ui {
                     const bool hovered = IsItemHovered(ImGuiHoveredFlags_DelayShort);
                     if (BeginPopupContextItem("##tctx")) {
                         g.selected = it.key;
-                        if (MenuItem("New preset from this tattoo...")) {
+                        if (MenuItem(T("$MTFUI_Tattoos_NewPresetItem"))) {
                             g.newFrom = it.key;
                             g.newName = it.entry->label;
                         }
                         const bool fav = app.settings.IsFavorite(it.key);
-                        if (MenuItem(fav ? "Unfavorite" : "Favorite")) {
+                        if (MenuItem(fav ? T("$MTFUI_Tattoos_Unfavorite") : T("$MTFUI_Tattoos_Favorite"))) {
                             app.settings.ToggleFavorite(it.key);
                             app.SaveSettings();
                         }
@@ -409,7 +414,7 @@ namespace mtfui::ui {
             }
             const auto found = std::find_if(items.begin(), items.end(), [](const Item& i) { return i.key == g.selected; });
             if (found == items.end()) {
-                TextWrapped("Select a tattoo to see it larger, check which presets use it, or put it on a tier.");
+                TextWrapped("%s", T("$MTFUI_Tattoos_SelectHint"));
                 EndChild();
                 return;
             }
@@ -417,11 +422,11 @@ namespace mtfui::ui {
             Text("%s", it.entry->label.c_str());
             SameLine();
             const bool fav = app.settings.IsFavorite(it.key);
-            if (SmallButton(fav ? "Unfavorite" : "Favorite")) {
+            if (SmallButton(fav ? T("$MTFUI_Tattoos_Unfavorite") : T("$MTFUI_Tattoos_Favorite"))) {
                 app.settings.ToggleFavorite(it.key);
                 app.SaveSettings();
             }
-            TextDisabled("%s  /  %s  (%s)", it.pack->label.c_str(), it.entry->id.c_str(), it.pack->area.c_str());
+            TextDisabled("%s  /  %s  (%s)", it.pack->label.c_str(), it.entry->id.c_str(), model::AreaLabel(it.pack->area));
 
             render::PreviewInput in;
             in.textures = it.entry->textures;
@@ -433,20 +438,25 @@ namespace mtfui::ui {
             }
             render::DrawPreview("##tpreview", in, std::min(GetContentRegionAvail().x, 360.0f));
             if (app.HasPreset()) {
-                TextDisabled("Shown with the colors of %s.", model::SlotLabel(app.Preset(), slot).c_str());
+                TextDisabled("%s", TF("$MTFUI_Tattoos_ShownWith", model::SlotLabel(app.Preset(), slot)).c_str());
             }
 
             if (app.HasPreset()) {
-                if (Button(("Use for " + model::SlotLabel(app.Preset(), slot)).c_str())) {
+                if (Button((TF("$MTFUI_Tattoos_UseFor", model::SlotLabel(app.Preset(), slot)) + "###usefor").c_str())) {
                     UseSelected(app, it);
                 }
             } else {
-                TextDisabled("Open a preset to use this tattoo.");
+                TextDisabled("%s", T("$MTFUI_Tattoos_OpenPresetFirst"));
             }
 
             Spacing();
+            const char* keys[] = { T("$MTFUI_Tattoos_Subject"), T("$MTFUI_Tattoos_Style"), T("$MTFUI_Tattoos_Placement"), T("$MTFUI_Tattoos_Layers") };
+            float keyWidth = 0.0f;
+            for (const char* k : keys) {
+                keyWidth = std::max(keyWidth, CalcTextSize(k).x);
+            }
             if (BeginTable("##tinfo", 2)) {
-                TableSetupColumn("##k", ImGuiTableColumnFlags_WidthFixed, CalcTextSize("Placement").x);
+                TableSetupColumn("##k", ImGuiTableColumnFlags_WidthFixed, keyWidth);
                 TableSetupColumn("##v", ImGuiTableColumnFlags_WidthStretch);
                 auto row = [](const char* k, const std::string& v) {
                     if (v.empty()) {
@@ -458,24 +468,24 @@ namespace mtfui::ui {
                     TableNextColumn();
                     TextWrapped("%s", v.c_str());
                 };
-                row("Subject", it.entry->subject);
-                row("Style", it.entry->style);
-                row("Placement", it.entry->placement);
-                row("Layers", std::to_string(it.entry->textures.size()));
+                row(keys[0], it.entry->subject);
+                row(keys[1], it.entry->style);
+                row(keys[2], it.entry->placement);
+                row(keys[3], std::to_string(it.entry->textures.size()));
                 EndTable();
             }
             if (!it.entry->description.empty()) {
                 TextWrapped("%s", it.entry->description.c_str());
             }
-            SeparatorText("Used by");
+            SeparatorText(T("$MTFUI_Common_UsedBy"));
             if (const auto* users = app.usage.Entry(it.pack->packId, it.entry->id)) {
                 for (const auto& u : *users) {
                     BulletText("%s", u.c_str());
                 }
             } else {
-                TextDisabled("None of your presets");
+                TextDisabled("%s", T("$MTFUI_Tattoos_UnusedByPresets"));
             }
-            if (TreeNode("Texture files")) {
+            if (TreeNode("##texturefiles", "%s", T("$MTFUI_Tattoos_TextureFiles"))) {
                 for (const auto& t : it.entry->textures) {
                     TextWrapped("%s", t.c_str());
                 }
@@ -485,20 +495,21 @@ namespace mtfui::ui {
         }
 
         void DrawNewPresetPopup(App& app) {
-            if (!g.newFrom.empty() && !IsPopupOpen("New preset from tattoo")) {
-                OpenPopup("New preset from tattoo");
+            const char* title = T("$MTFUI_Tattoos_NewPresetTitle");
+            if (!g.newFrom.empty() && !IsPopupOpen(title)) {
+                OpenPopup(title);
             }
-            if (!BeginPopupModal("New preset from tattoo", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            if (!BeginPopupModal(title, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
                 return;
             }
             const auto slash = g.newFrom.find('/');
             const auto* pack = slash == std::string::npos ? nullptr : app.cat.FindPack(g.newFrom.substr(0, slash));
             const auto* entry = pack ? pack->Find(g.newFrom.substr(slash + 1)) : nullptr;
             if (entry) {
-                TextDisabled("Default look: %s (%s)", entry->label.c_str(), pack->label.c_str());
+                TextDisabled("%s", TF("$MTFUI_Tattoos_DefaultLook", entry->label, pack->label).c_str());
             }
             if (app.Dirty()) {
-                TextColored(kWarn, "You'll be asked what to do with the unsaved changes to the open preset.");
+                TextColored(kWarn, "%s", T("$MTFUI_Tattoos_UnsavedWarning"));
             }
             switch (NamePrompt(g.newName, app.UniqueName(g.newName), entry != nullptr)) {
                 case NamePromptResult::Confirmed:
