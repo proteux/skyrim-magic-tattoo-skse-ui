@@ -32,7 +32,8 @@ namespace mtfui::ui {
             int lo = 0;
             int hi = 100;
             int steps = 10;
-            std::vector<std::uint32_t> colors;  // low end of the range first
+            std::vector<std::uint32_t> tintColors;  // low end of the range first
+            std::vector<std::uint32_t> glowColors;
             bool tint = true;
             bool emissive = true;
             bool glow = true;
@@ -500,9 +501,21 @@ namespace mtfui::ui {
             if (pick) {
                 SetGradientCondition(*pick);
             }
-            if (grad.colors.empty()) {
-                grad.colors = kHealthBar;
+            if (grad.tintColors.empty()) {
+                grad.tintColors = kHealthBar;
             }
+            if (grad.glowColors.empty()) {
+                grad.glowColors = kHealthBar;
+            }
+        }
+
+        std::vector<model::ColorStop> EvenStops(const std::vector<std::uint32_t>& colors) {
+            std::vector<model::ColorStop> stops;
+            const auto n = colors.size();
+            for (std::size_t i = 0; i < n; ++i) {
+                stops.push_back({ n == 1 ? 0.0 : static_cast<double>(i) / (n - 1), colors[i] });
+            }
+            return stops;
         }
 
         model::GradientSpec GradientSpecFromState() {
@@ -512,12 +525,12 @@ namespace mtfui::ui {
             spec.lo = std::min(grad.lo, grad.hi);
             spec.hi = std::max(grad.lo, grad.hi);
             spec.steps = grad.steps;
-            const auto n = grad.colors.size();
-            for (std::size_t i = 0; i < n; ++i) {
-                spec.stops.push_back({ n == 1 ? 0.0 : static_cast<double>(i) / (n - 1), grad.colors[i] });
+            if (grad.tint) {
+                spec.tintStops = EvenStops(grad.tintColors);
             }
-            spec.tint = grad.tint;
-            spec.emissive = grad.emissive;
+            if (grad.emissive) {
+                spec.emissiveStops = EvenStops(grad.glowColors);
+            }
             if (grad.glow) {
                 spec.emissiveMult = model::Ramp{ grad.glowLow, grad.glowHigh };
             }
@@ -527,7 +540,7 @@ namespace mtfui::ui {
             return spec;
         }
 
-        void DrawGradientStrip(const model::GradientSpec& spec, float width) {
+        void DrawGradientStrip(const model::GradientSpec& spec, const std::vector<model::ColorStop>& stops, float width) {
             const auto plan = model::PlanGradient(spec);
             const int bands = static_cast<int>(plan.tiers.size()) + 1;
             const float h = GetFrameHeight();
@@ -537,7 +550,7 @@ namespace mtfui::ui {
             for (int j = 0; j < bands; ++j) {
                 const double t = bands == 1 ? 0.0 : static_cast<double>(j) / (bands - 1);
                 ImDrawListManager::AddRectFilled(dl, ImVec2{ at.x + cell * j, at.y }, ImVec2{ at.x + cell * (j + 1), at.y + h },
-                    render::ToImColor(model::SampleGradient(spec.stops, t), 1.0f), 0.0f, 0);
+                    render::ToImColor(model::SampleGradient(stops, t), 1.0f), 0.0f, 0);
             }
             ImDrawListManager::AddRect(dl, at, ImVec2{ at.x + width, at.y + h }, GetColorU32(ImGuiCol_Border, 1.0f), 0.0f, 0, 1.0f);
             Dummy(ImVec2{ width, h });
@@ -545,6 +558,41 @@ namespace mtfui::ui {
             const std::string high = std::to_string(spec.hi);
             SameLine(width - CalcTextSize(high.c_str()).x);
             TextDisabled("%s", high.c_str());
+        }
+
+        // Two to four colors, low end of the range first.
+        void DrawColorList(const char* id, std::vector<std::uint32_t>& colors, float width) {
+            PushID(id);
+            int remove = -1;
+            for (std::size_t i = 0; i < colors.size(); ++i) {
+                PushID(static_cast<int>(i));
+                SetNextItemWidth(width * 0.6f);
+                ColorEditRgb("##color", colors[i]);
+                if (colors.size() > 2) {
+                    SameLine();
+                    if (SmallButton(T("$MTFUI_Gradient_RemoveColor"))) {
+                        remove = static_cast<int>(i);
+                    }
+                }
+                PopID();
+            }
+            if (remove >= 0) {
+                colors.erase(colors.begin() + remove);
+            }
+            BeginDisabled(colors.size() >= 4);
+            if (SmallButton(T("$MTFUI_Gradient_AddColor"))) {
+                colors.push_back(colors.back());
+            }
+            EndDisabled();
+            SameLine();
+            if (SmallButton(T("$MTFUI_Gradient_Reverse"))) {
+                std::reverse(colors.begin(), colors.end());
+            }
+            SameLine();
+            if (SmallButton(T("$MTFUI_Gradient_HealthBar"))) {
+                colors = kHealthBar;
+            }
+            PopID();
         }
 
         void DrawGradientModal(App& app, const char* title, const std::vector<model::GradientCondition>& conditions) {
@@ -604,44 +652,26 @@ namespace mtfui::ui {
                 }
             }
 
-            SeparatorText(T("$MTFUI_Gradient_Colors"));
-            HelpMarker(T("$MTFUI_Gradient_ColorsHelp"));
-            int remove = -1;
-            for (std::size_t i = 0; i < grad.colors.size(); ++i) {
-                PushID(static_cast<int>(i));
-                SetNextItemWidth(width * 0.6f);
-                ColorEditRgb("##color", grad.colors[i]);
-                if (grad.colors.size() > 2) {
-                    SameLine();
-                    if (SmallButton(T("$MTFUI_Gradient_RemoveColor"))) {
-                        remove = static_cast<int>(i);
-                    }
-                }
-                PopID();
-            }
-            if (remove >= 0) {
-                grad.colors.erase(grad.colors.begin() + remove);
-            }
-            BeginDisabled(grad.colors.size() >= 4);
-            if (SmallButton(T("$MTFUI_Gradient_AddColor"))) {
-                grad.colors.push_back(grad.colors.back());
-            }
-            EndDisabled();
-            SameLine();
-            if (SmallButton(T("$MTFUI_Gradient_Reverse"))) {
-                std::reverse(grad.colors.begin(), grad.colors.end());
-            }
-            SameLine();
-            if (SmallButton(T("$MTFUI_Gradient_HealthBar"))) {
-                grad.colors = kHealthBar;
-            }
             const auto spec = GradientSpecFromState();
-            DrawGradientStrip(spec, width);
-
-            SeparatorText(T("$MTFUI_Gradient_Apply"));
+            SeparatorText(T("$MTFUI_Gradient_TintSection"));
+            HelpMarker(T("$MTFUI_Gradient_ColorsHelp"));
             Checkbox(T("$MTFUI_Gradient_Tint"), &grad.tint);
-            SameLine();
+            if (grad.tint) {
+                DrawColorList("##tint", grad.tintColors, width);
+                DrawGradientStrip(spec, EvenStops(grad.tintColors), width);
+            }
+
+            SeparatorText(T("$MTFUI_Gradient_GlowSection"));
+            HelpMarker(T("$MTFUI_Gradient_ColorsHelp"));
             Checkbox(T("$MTFUI_Gradient_Emissive"), &grad.emissive);
+            if (grad.emissive) {
+                SameLine();
+                if (SmallButton(T("$MTFUI_Gradient_SameAsTint"))) {
+                    grad.glowColors = grad.tintColors;
+                }
+                DrawColorList("##glow", grad.glowColors, width);
+                DrawGradientStrip(spec, EvenStops(grad.glowColors), width);
+            }
             Checkbox(T("$MTFUI_Gradient_Glow"), &grad.glow);
             HelpMarker(T("$MTFUI_Gradient_GlowHelp"));
             if (grad.glow) {

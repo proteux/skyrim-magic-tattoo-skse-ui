@@ -29,9 +29,8 @@ namespace mtfui::model {
         std::int64_t lo = 0;
         std::int64_t hi = 100;
         int steps = 10;  // tiers, on top of Default
-        std::vector<ColorStop> stops;
-        bool tint = true;
-        bool emissive = true;
+        std::vector<ColorStop> tintStops;  // empty = keep Default's tint
+        std::vector<ColorStop> emissiveStops;  // empty = keep Default's glow color
         std::optional<Ramp> emissiveMult;
         std::optional<Ramp> alpha;  // percent
     };

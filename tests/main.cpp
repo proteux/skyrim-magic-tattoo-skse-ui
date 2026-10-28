@@ -173,7 +173,8 @@ namespace {
         model::GradientSpec spec;
         spec.conditionId = "mtf.attributes:health.below";
         spec.steps = 4;
-        spec.stops = { { 0.0, 0xFF0000 }, { 1.0, 0x00FF00 } };
+        spec.tintStops = { { 0.0, 0xFF0000 }, { 1.0, 0x00FF00 } };
+        spec.emissiveStops = { { 0.0, 0x0000FF }, { 1.0, 0xFFFFFF } };
         auto plan = model::PlanGradient(spec);
         Check(plan.tiers.size() == 4, "4 steps make 4 tiers");
         if (plan.tiers.size() == 4) {
@@ -194,8 +195,8 @@ namespace {
         }
         Check(plan.tiers.size() <= 100 && rising, "more steps than values merge equal thresholds");
 
-        Check(model::SampleGradient(spec.stops, 0.0) == 0xFF0000 && model::SampleGradient(spec.stops, 1.0) == 0x00FF00, "gradient ends are the stops");
-        const auto mid = model::SampleGradient(spec.stops, 0.5);
+        Check(model::SampleGradient(spec.tintStops, 0.0) == 0xFF0000 && model::SampleGradient(spec.tintStops, 1.0) == 0x00FF00, "gradient ends are the stops");
+        const auto mid = model::SampleGradient(spec.tintStops, 0.5);
         Check(((mid >> 16) & 0xFF) > 0x80 && ((mid >> 8) & 0xFF) > 0x80 && (mid & 0xFF) < 0x50, "red to green passes through yellow");
 
         const auto dragon = model::PresetFromJson("B_H_-_DRAGON", *io::ReadJson(fixtures / "presets" / "B_H_-_DRAGON.json"));
@@ -206,7 +207,15 @@ namespace {
         model::ApplyGradient(cat, p, spec, model::kMaxSlotsFallback);
         Check(p.slots.size() == 21, "20 steps make Default plus 20 tiers");
         Check(p.slots[0].packId == dragon.slots[0].packId && p.slots[0].effects == dragon.slots[0].effects, "Default keeps its tattoo and effects");
-        Check(p.slots[0].layers[0].tint == 0x00FF00 && p.slots[1].layers[0].emissive == 0xFF0000, "Default and tier 1 take the end colors");
+        Check(p.slots[0].layers[0].tint == 0x00FF00 && p.slots[1].layers[0].tint == 0xFF0000, "Default and tier 1 take the end tints");
+        Check(p.slots[0].layers[0].emissive == 0xFFFFFF && p.slots[1].layers[0].emissive == 0x0000FF, "glow colors follow their own stops");
+
+        auto glowOnly = dragon;
+        auto glowSpec = spec;
+        glowSpec.tintStops.clear();
+        model::ApplyGradient(cat, glowOnly, glowSpec, model::kMaxSlotsFallback);
+        Check(glowOnly.slots[1].layers[0].tint == dragon.slots[0].layers[0].tint && glowOnly.slots[1].layers[0].emissive == 0x0000FF,
+            "without tint stops, tiers keep Default's tint");
         Check(std::abs(p.slots[1].layers[0].emissiveMult - 0.5) < 1e-9 && std::abs(p.slots[0].layers[0].emissiveMult - 2.0) < 1e-9, "glow ramp");
         bool inherit = true;
         for (std::size_t i = 1; i < p.slots.size(); ++i) {

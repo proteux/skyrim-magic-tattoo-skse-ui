@@ -414,15 +414,16 @@ $MTFUI_Gradient_To_Fmt	to %d
 $MTFUI_Gradient_Steps	Tiers
 $MTFUI_Gradient_StepsInfo	{} tiers plus Default, about {} each
 $MTFUI_Gradient_PastMenu	MTF's own menu only shows the first {} tiers. The rest work, but don't save this preset from MTF's menu.
-$MTFUI_Gradient_Colors	Colors
-$MTFUI_Gradient_ColorsHelp	From the low end of the range (top, left in the strip) to the high end. Two to four colors, evenly spaced.
+$MTFUI_Gradient_TintSection	Tint
+$MTFUI_Gradient_GlowSection	Glow
+$MTFUI_Gradient_ColorsHelp	From the low end of the range (top, left in the strip) to the high end. Two to four colors, evenly spaced. Turned off, the tiers keep Default's color.
+$MTFUI_Gradient_SameAsTint	Same as tint
 $MTFUI_Gradient_RemoveColor	Remove
 $MTFUI_Gradient_AddColor	Add color
 $MTFUI_Gradient_Reverse	Reverse
 $MTFUI_Gradient_HealthBar	Health bar
-$MTFUI_Gradient_Apply	Apply to
-$MTFUI_Gradient_Tint	Tint
-$MTFUI_Gradient_Emissive	Glow color
+$MTFUI_Gradient_Tint	Change tint
+$MTFUI_Gradient_Emissive	Change glow color
 $MTFUI_Gradient_Glow	Glow strength ramp
 $MTFUI_Gradient_GlowHelp	Glow strength at each end of the range. A glow color only shows with some strength; the other layer settings come from Default.
 $MTFUI_Gradient_LowEnd_Fmt	low end %.1f

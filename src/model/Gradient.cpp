@@ -126,13 +126,14 @@ namespace mtfui::model {
         const auto baseLayers = base.layers;
         auto look = [&](double t) {
             auto layers = baseLayers;
-            const auto rgb = SampleGradient(spec.stops, t);
+            const auto tint = SampleGradient(spec.tintStops, t);
+            const auto emissive = SampleGradient(spec.emissiveStops, t);
             for (auto& l : layers) {
-                if (spec.tint) {
-                    l.tint = rgb;
+                if (!spec.tintStops.empty()) {
+                    l.tint = tint;
                 }
-                if (spec.emissive) {
-                    l.emissive = rgb;
+                if (!spec.emissiveStops.empty()) {
+                    l.emissive = emissive;
                 }
                 if (spec.emissiveMult) {
                     // Stored as a Papyrus float; rounding now keeps the saved preset equal to the edited one.
