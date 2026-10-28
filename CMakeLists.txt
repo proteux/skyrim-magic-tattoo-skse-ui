@@ -14,12 +14,18 @@ find_package(nlohmann_json CONFIG REQUIRED)
 
 configure_file(src/Version.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/Version.h" @ONLY)
 
+# The English text is built into the DLL, so the UI never shows raw keys even without the translation files.
+set(MTFUI_ENGLISH_FILE "${CMAKE_CURRENT_SOURCE_DIR}/translations/MagicTattoosUI_ENGLISH.txt")
+configure_file(src/Translations.rc.in "${CMAKE_CURRENT_BINARY_DIR}/generated/Translations.rc" @ONLY)
+set_source_files_properties("${CMAKE_CURRENT_BINARY_DIR}/generated/Translations.rc" PROPERTIES OBJECT_DEPENDS "${MTFUI_ENGLISH_FILE}")
+
 # Game-independent model and IO, shared by the plugin and the offline tests.
 add_library(mtfui_core STATIC
     src/io/StyledJson.cpp
     src/io/JsonStore.cpp
     src/io/DdsHeader.cpp
     src/io/UiSettings.cpp
+    src/io/Translations.cpp
     src/model/Preset.cpp
     src/model/PluginCatalog.cpp
     src/model/VisualPacks.cpp
@@ -63,6 +69,7 @@ add_commonlibsse_plugin(${PROJECT_NAME}
         src/ui/GeneralTab.cpp
         src/ui/PluginsTab.cpp
         src/ui/TargetBar.cpp
+        "${CMAKE_CURRENT_BINARY_DIR}/generated/Translations.rc"
 )
 target_include_directories(${PROJECT_NAME} PRIVATE src include "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_link_libraries(${PROJECT_NAME} PRIVATE mtfui_core Microsoft::DirectXTK Microsoft::DirectXTex d3d11)
@@ -71,5 +78,5 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE src/pch.h)
 if(BUILD_TESTING)
     add_executable(mtfui_tests tests/main.cpp)
     target_link_libraries(mtfui_tests PRIVATE mtfui_core)
-    add_test(NAME mtfui_tests COMMAND mtfui_tests "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures")
+    add_test(NAME mtfui_tests COMMAND mtfui_tests "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures" "${CMAKE_CURRENT_SOURCE_DIR}")
 endif()

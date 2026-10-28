@@ -2,6 +2,7 @@
 #include "io/DdsHeader.h"
 #include "io/JsonStore.h"
 #include "io/StyledJson.h"
+#include "io/Translations.h"
 #include "io/UiSettings.h"
 #include "model/Catalogs.h"
 #include "model/Describe.h"
@@ -17,6 +18,8 @@
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
+#include <regex>
+#include <set>
 #include <string>
 #include <thread>
 
@@ -528,10 +531,104 @@ namespace {
 
         Check(model::ListSlots({ 3 }) == "3" && model::ListSlots({ 3, 5 }) == "3 and 5" && model::ListSlots({ 3, 5, 7 }) == "3, 5 and 7", "slot lists read naturally");
     }
+
+    void TranslationParsing() {
+        // UTF-16 LE with a BOM, as Skyrim's own translation files are saved.
+        const std::string utf8 = "$A\tCaf\xC3\xA9\r\n; not a key\n$B \tline\\none\\ttab\\\\\n$C\t\xF0\x9F\x90\x89\n$NoTab\n";
+        std::string utf16 = "\xFF\xFE";
+        for (std::size_t i = 0; i < utf8.size();) {
+            const auto c = static_cast<unsigned char>(utf8[i]);
+            std::uint32_t cp = c;
+            int extra = c >= 0xF0 ? 3 : c >= 0xE0 ? 2 : c >= 0xC0 ? 1 : 0;
+            if (extra) {
+                cp = c & (0x3F >> extra);
+            }
+            for (int k = 1; k <= extra; ++k) {
+                cp = (cp << 6) | (static_cast<unsigned char>(utf8[i + k]) & 0x3F);
+            }
+            i += extra + 1;
+            auto put = [&](std::uint32_t u) {
+                utf16 += static_cast<char>(u & 0xFF);
+                utf16 += static_cast<char>(u >> 8);
+            };
+            if (cp >= 0x10000) {
+                put(0xD800 + ((cp - 0x10000) >> 10));
+                put(0xDC00 + ((cp - 0x10000) & 0x3FF));
+            } else {
+                put(cp);
+            }
+        }
+        for (const auto& bytes : { utf8, utf16, "\xEF\xBB\xBF" + utf8 }) {
+            const auto t = io::ParseTranslations(bytes);
+            Check(t.size() == 3, "translation lines without a $key and a tab are skipped");
+            Check(t.contains("$A") && t.at("$A") == "Caf\xC3\xA9", "accents survive the file encoding");
+            Check(t.contains("$B") && t.at("$B") == "line\none\ttab\\", "escapes and a padded key");
+            Check(t.contains("$C") && t.at("$C") == "\xF0\x9F\x90\x89", "surrogate pairs decode");
+        }
+
+        Check(io::PrintfSpecs("%d%% of %.1f s") == std::vector<std::string>{ "%d", "%.1f" }, "printf specs skip %%");
+
+        auto& tr = io::Translations::Get();
+        const std::string english = "$X_Fmt\t%d ms\n$Y\t{} of {}\n$Z\tPlain\n";
+        tr.SetEnglish(english);
+        const auto load = tr.Overlay("$X_Fmt\t%s ms\n$Y\t{1} sur {0}\n$Z\t100% s\xC3\xBBr\n$Gone\tx\n");
+        Check(load.loaded == 2 && load.rejected == std::vector<std::string>{ "$X_Fmt" } && load.unknown == std::vector<std::string>{ "$Gone" },
+            "a printf format that changes placeholders is kept in English, unknown keys ignored");
+        Check(std::string(T("$X_Fmt")) == "%d ms" && std::string(T("$Z")) == "100% s\xC3\xBBr", "only _Fmt keys are checked as printf formats");
+        Check(TF("$Y", 3, 5) == "5 sur 3", "translations can reorder placeholders");
+        Check(std::string(T("$Missing")) == "$Missing", "an unknown key shows itself");
+        tr.Overlay("$Y\t{} of {\n");
+        Check(TF("$Y", 3, 5) == "3 of 5", "a broken format falls back to English");
+    }
+
+    // Every key the code uses has English text, and the files only hold keys the code uses.
+    void TranslationFiles(const fs::path& root) {
+        const auto english = io::ReadText(root / "translations" / "MagicTattoosUI_ENGLISH.txt");
+        Check(english.has_value(), "the English translation file is readable");
+        if (!english) {
+            return;
+        }
+        const auto table = io::ParseTranslations(*english);
+        std::set<std::string> used;
+        const std::regex key(R"re("(\$MTFUI_[A-Za-z0-9_]+)")re");
+        for (const auto& e : fs::recursive_directory_iterator(root / "src")) {
+            if (e.path().extension() != ".cpp" && e.path().extension() != ".h") {
+                continue;
+            }
+            const auto text = io::ReadText(e.path()).value_or("");
+            for (auto it = std::sregex_iterator(text.begin(), text.end(), key); it != std::sregex_iterator(); ++it) {
+                used.insert((*it)[1]);
+            }
+        }
+        Check(used.size() > 400, "the source scan finds the translated strings");
+        for (const auto& k : used) {
+            Check(table.contains(k), k + " has English text");
+        }
+        for (const auto& [k, text] : table) {
+            Check(used.contains(k), k + " is used by the code");
+            Check(!text.empty(), k + " is not empty");
+        }
+
+        auto& tr = io::Translations::Get();
+        for (const auto& e : fs::directory_iterator(root / "translations")) {
+            tr.SetEnglish(*english);
+            const auto load = tr.Overlay(io::ReadText(e.path()).value_or(""));
+            for (const auto& k : load.rejected) {
+                Check(false, e.path().filename().string() + ": " + k + " changes the printf placeholders");
+            }
+            for (const auto& k : load.unknown) {
+                Check(false, e.path().filename().string() + ": " + k + " is not a key the code uses");
+            }
+        }
+        tr.SetEnglish(*english);
+    }
 }
 
 int main(int argc, char** argv) {
     const fs::path fixtures = argc > 1 ? argv[1] : "tests/fixtures";
+    const fs::path root = argc > 2 ? argv[2] : ".";
+    TranslationParsing();
+    TranslationFiles(root);
     Formatting();
     RoundTripPresets(fixtures);
     Groups(fixtures);

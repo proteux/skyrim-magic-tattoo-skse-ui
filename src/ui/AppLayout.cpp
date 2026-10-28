@@ -41,23 +41,24 @@ namespace mtfui::ui {
             return;
         }
         modalsFrame_ = GetFrameCount();
-        if (draftOffer_ && !IsPopupOpen("Restore unsaved edits?")) {
-            OpenPopup("Restore unsaved edits?");
+        const char* restoreTitle = T("$MTFUI_Draft_Title");
+        if (draftOffer_ && !IsPopupOpen(restoreTitle)) {
+            OpenPopup(restoreTitle);
         }
-        if (BeginPopupModal("Restore unsaved edits?", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-            TextWrapped("The game closed while '%s' had unsaved edits.", draftName_.c_str());
+        if (BeginPopupModal(restoreTitle, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            TextWrapped("%s", TF("$MTFUI_Draft_Text", draftName_).c_str());
             Spacing();
-            if (Button("Restore", ImVec2{ 110, 0 })) {
+            if (Button(T("$MTFUI_Common_Restore"), ImVec2{ 110, 0 })) {
                 draftOffer_ = false;
                 if (ed.preset && Dirty()) {
-                    Toast("Save or discard the open preset first", true);
+                    Toast(T("$MTFUI_Draft_SaveFirst"), true);
                 } else {
                     RestoreDraft();
                 }
                 CloseCurrentPopup();
             }
             SameLine();
-            if (Button("Throw away", ImVec2{ 110, 0 })) {
+            if (Button(T("$MTFUI_Draft_ThrowAway"), ImVec2{ 110, 0 })) {
                 draftOffer_ = false;
                 DiscardDraft();
                 CloseCurrentPopup();
@@ -65,19 +66,20 @@ namespace mtfui::ui {
             EndPopup();
         }
 
+        const char* unsavedTitle = T("$MTFUI_Unsaved_Title");
         if (confirmOpen_) {
-            OpenPopup("Unsaved changes");
+            OpenPopup(unsavedTitle);
             confirmOpen_ = false;
         }
         SetNextWindowSize(ImVec2{ 420, 0 }, ImGuiCond_Appearing);
-        if (BeginPopupModal("Unsaved changes", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        if (BeginPopupModal(unsavedTitle, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            const std::string shown = ed.preset ? ed.preset->displayName : std::string{};
             if (ed.isNew) {
-                TextWrapped("'%s' has never been saved.", ed.preset ? ed.preset->displayName.c_str() : "");
+                TextWrapped("%s", TF("$MTFUI_Unsaved_NeverSaved", shown).c_str());
             } else if (ed.builtin) {
-                TextWrapped("'%s' is a built-in preset and can't be changed, but you edited it. Save your edits as your own copy?",
-                    ed.preset ? ed.preset->displayName.c_str() : "");
+                TextWrapped("%s", TF("$MTFUI_Unsaved_Builtin", shown).c_str());
             } else {
-                TextWrapped("'%s' has unsaved changes.", ed.preset ? ed.preset->displayName.c_str() : "");
+                TextWrapped("%s", TF("$MTFUI_Unsaved_Changes", shown).c_str());
             }
             Spacing();
             auto run = [this] {
@@ -89,25 +91,25 @@ namespace mtfui::ui {
                 }
             };
             if (ed.builtin) {
-                if (Button("Save as a copy", ImVec2{ 130, 0 }) && ed.preset) {
-                    Duplicate(ed.preset->displayName + " copy");
+                if (Button(T("$MTFUI_Unsaved_SaveAsCopy"), ImVec2{ 130, 0 }) && ed.preset) {
+                    Duplicate(TF("$MTFUI_Preset_CopyName", ed.preset->displayName));
                     if (Save()) {
                         run();
                     }
                 }
-            } else if (Button("Save", ImVec2{ 110, 0 })) {
+            } else if (Button(T("$MTFUI_Common_Save"), ImVec2{ 110, 0 })) {
                 // On failure the toast says why and the choice stays open.
                 if (Save()) {
                     run();
                 }
             }
             SameLine();
-            if (Button("Discard", ImVec2{ 110, 0 })) {
+            if (Button(T("$MTFUI_Unsaved_Discard"), ImVec2{ 110, 0 })) {
                 ClearEditor();
                 run();
             }
             SameLine();
-            if (Button("Cancel", ImVec2{ 110, 0 }) || IsKeyPressed(ImGuiKey_Escape, false)) {
+            if (Button(T("$MTFUI_Common_Cancel"), ImVec2{ 110, 0 }) || IsKeyPressed(ImGuiKey_Escape, false)) {
                 pendingAction_ = nullptr;
                 CloseCurrentPopup();
             }
@@ -134,30 +136,23 @@ namespace mtfui::ui {
         }
         const auto& bridge = game::MtfBridge::Get();
         if (!bridge.Installed()) {
-            TextColored(kError, "Magic Tattoos Framework is not loaded. You can still edit preset files.");
+            TextColored(kError, "%s", T("$MTFUI_Status_NoMtf"));
         } else if (bridge.Snapshot().fresh && !bridge.Snapshot().modActive) {
-            TextColored(kWarn, "MTF is disabled in its settings. Tattoos will not update.");
+            TextColored(kWarn, "%s", T("$MTFUI_Status_MtfDisabled"));
         } else {
             const auto& lp = game::LivePreview::Get();
             const int pending = render::DdsCache::Get().Pending();
             if (!lp.Status().empty()) {
-                TextColored(kAccent, "%s on %s", lp.Status().c_str(), targetName.c_str());
+                TextColored(kAccent, "%s", TF("$MTFUI_Status_PreviewOn", lp.Status(), targetName).c_str());
             } else if (pending > 0) {
-                TextDisabled("Loading %d texture(s)...", pending);
+                TextDisabled("%s", TF("$MTFUI_Status_LoadingTextures", pending).c_str());
             } else {
                 TextDisabled("Magic Tattoos UI %s", kVersion);
                 if (IsItemHovered()) {
-                    SetTooltip("Shortcuts\n"
-                               "Ctrl+S  save\n"
-                               "Ctrl+Z / Ctrl+Y  undo / redo\n"
-                               "Ctrl+N  new preset\n"
-                               "Ctrl+D  duplicate\n"
-                               "Ctrl+F  search presets\n"
-                               "F5  apply to target\n"
-                               "Alt+Up / Alt+Down  move the selected tier");
+                    SetTooltip("%s", T("$MTFUI_Status_Shortcuts"));
                 }
                 SameLine();
-                TextDisabled("|  Ctrl+S save, Ctrl+Z undo, F5 apply (hover for more)");
+                TextDisabled("%s", T("$MTFUI_Status_ShortcutHint"));
             }
         }
     }
@@ -170,9 +165,9 @@ namespace mtfui::ui {
         // The Tattoos tab draws its own footer where the status line would go.
         bool ownFooter = false;
         if (BeginTabBar("##mtfui_tabs")) {
-            auto tab = [&](const char* label, Tab t, void (*fn)(App&)) {
+            auto tab = [&](const std::string& label, Tab t, void (*fn)(App&)) {
                 const int flags = requestedTab_ == t ? ImGuiTabItemFlags_SetSelected : 0;
-                if (BeginTabItem(label, nullptr, flags)) {
+                if (BeginTabItem(label.c_str(), nullptr, flags)) {
                     if (requestedTab_ == t) {
                         requestedTab_.reset();
                     }
@@ -186,11 +181,11 @@ namespace mtfui::ui {
                 }
             };
             if (presetsTab) {
-                tab("Presets", Tab::Presets, DrawPresetsTab);
+                tab(std::string(T("$MTFUI_Tab_Presets")) + "###presets", Tab::Presets, DrawPresetsTab);
             }
-            tab(picking ? "Tattoos (choosing)###tattoos" : "Tattoos###tattoos", Tab::Tattoos, DrawTattoosTab);
-            tab("General", Tab::General, DrawGeneralTab);
-            tab("Plugins", Tab::Plugins, DrawPluginsTab);
+            tab(std::string(picking ? T("$MTFUI_Tab_TattoosChoosing") : T("$MTFUI_Tab_Tattoos")) + "###tattoos", Tab::Tattoos, DrawTattoosTab);
+            tab(std::string(T("$MTFUI_Tab_General")) + "###general", Tab::General, DrawGeneralTab);
+            tab(std::string(T("$MTFUI_Tab_Plugins")) + "###plugins", Tab::Plugins, DrawPluginsTab);
             EndTabBar();
         }
         // While the editor windows are up, the strip at the top shows the status.
@@ -235,7 +230,7 @@ namespace mtfui::ui {
             requestedTab_.reset();
         }
         if (requestedTab_ == Tab::Tattoos && !pickHintShown_ && GetFrameCount() - lastSectionFrame_ > 2) {
-            Toast("Choose the tattoo on the Tattoos tab of Magic Tattoos > Editor in the menu");
+            Toast(T("$MTFUI_Panels_PickHint"));
             pickHintShown_ = true;
         }
         if (!requestedTab_) {
@@ -290,11 +285,10 @@ namespace mtfui::ui {
             SetNextWindowBgAlpha(settings.panelOpacity / 100.0f);
             if (Begin("Magic Tattoos###mtfui_main", &open, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize)) {
                 DrawTargetBar(*this);
-                Button("Hold to peek");
+                Button(T("$MTFUI_Panels_Peek"));
                 peeking_ = IsItemActive();
                 if (IsItemHovered()) {
-                    SetTooltip("Hides the other panels while you hold the mouse button down. Drag panels by their title bar to move them; "
-                               "the layout is remembered.");
+                    SetTooltip("%s", T("$MTFUI_Panels_PeekTip"));
                 }
                 SameLine(0, 16);
                 DrawStatus();
@@ -307,9 +301,9 @@ namespace mtfui::ui {
         }
 
         if (!peeking_) {
-            DrawPanel("library", "Presets###mtfui_library", [this] { DrawLibraryPanel(*this); });
-            DrawPanel("tiers", "Tiers###mtfui_tiers", [this] { DrawTiersPanel(*this); });
-            DrawPanel("inspector", "Tier editor###mtfui_inspector", [this] { DrawInspectorPanel(*this); });
+            DrawPanel("library", (std::string(T("$MTFUI_Panel_Presets")) + "###mtfui_library").c_str(), [this] { DrawLibraryPanel(*this); });
+            DrawPanel("tiers", (std::string(T("$MTFUI_Panel_Tiers")) + "###mtfui_tiers").c_str(), [this] { DrawTiersPanel(*this); });
+            DrawPanel("inspector", (std::string(T("$MTFUI_Panel_TierEditor")) + "###mtfui_inspector").c_str(), [this] { DrawInspectorPanel(*this); });
         }
         placeAlways_ = false;
         return open;
@@ -330,27 +324,26 @@ namespace mtfui::ui {
                 requestedTab_.reset();
                 ShowEditorWindows(true);
             }
-            if (Button(shown ? "Close editor windows" : "Open editor windows")) {
+            if (Button(shown ? T("$MTFUI_Section_CloseWindows") : T("$MTFUI_Section_OpenWindows"))) {
                 ShowEditorWindows(!shown);
             }
-            HelpMarker("Presets, Tiers and Tier editor open as separate panels over the game, with the target and live preview "
-                       "on a strip at the top. Place them around the target; the layout is remembered. Esc or the X on the strip closes them.");
+            HelpMarker(T("$MTFUI_Section_WindowsHelp"));
             // The strip has the target bar while the editor windows are up.
             Draw(false, !window_->IsOpen);
         } else {
             if (window_->IsOpen) {
                 // Drawing the editor here as well would run every edit twice.
-                if (Button("Close its own window")) {
+                if (Button(T("$MTFUI_Section_CloseWindow"))) {
                     window_->IsOpen = false;
                     OnEditorClose();
                 }
                 SameLine();
-                TextDisabled("The editor is open in its own window.");
+                TextDisabled("%s", T("$MTFUI_Section_WindowOpen"));
             } else {
-                if (Button("Open in its own window")) {
+                if (Button(T("$MTFUI_Section_OpenWindow"))) {
                     window_->IsOpen = true;
                 }
-                HelpMarker("A larger, movable window with the same editor. Esc or the X closes it.");
+                HelpMarker(T("$MTFUI_Section_WindowHelp"));
                 Draw(true, true);
             }
         }

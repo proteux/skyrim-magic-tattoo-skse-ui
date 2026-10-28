@@ -9,11 +9,11 @@ namespace mtfui::ui {
     namespace {
         std::string g_search;
 
-        void EntryList(const char* title, const std::vector<model::CatalogEntry>& list) {
+        void EntryList(const char* id, const char* title, const std::vector<model::CatalogEntry>& list) {
             if (list.empty()) {
                 return;
             }
-            if (TreeNode(title, "%s (%d)", title, static_cast<int>(list.size()))) {
+            if (TreeNode(id, "%s (%d)", title, static_cast<int>(list.size()))) {
                 for (const auto& e : list) {
                     BulletText("%s", e.label.c_str());
                     if (IsItemHovered(ImGuiHoveredFlags_DelayShort) && !e.description.empty()) {
@@ -28,12 +28,11 @@ namespace mtfui::ui {
     void DrawPluginsTab(App& app) {
         auto& bridge = game::MtfBridge::Get();
         const auto& snap = bridge.Snapshot();
-        TextWrapped("Plugins add the conditions and effects you pick in presets. Turning one off stops MTF from evaluating "
-                    "its conditions and running its effects; presets that use it keep their settings.");
-        SearchBox("##plugsearch", g_search, 280.0f, "Search plugins, conditions, effects");
+        TextWrapped("%s", T("$MTFUI_Plugins_Intro"));
+        SearchBox("##plugsearch", g_search, 280.0f, T("$MTFUI_Plugins_Search"));
         if (!bridge.Installed()) {
             SameLine();
-            TextColored(kWarn, "MTF not loaded: toggles unavailable");
+            TextColored(kWarn, "%s", T("$MTFUI_Plugins_NoMtf"));
         }
         Spacing();
 
@@ -41,10 +40,10 @@ namespace mtfui::ui {
             return;
         }
         TableSetupScrollFreeze(0, 1);
-        TableSetupColumn("On", ImGuiTableColumnFlags_WidthFixed, 40.0f);
-        TableSetupColumn("Plugin", ImGuiTableColumnFlags_WidthStretch, 2.0f);
-        TableSetupColumn("Provides", ImGuiTableColumnFlags_WidthStretch, 2.0f);
-        TableSetupColumn("Used by", ImGuiTableColumnFlags_WidthStretch, 1.5f);
+        TableSetupColumn(T("$MTFUI_Plugins_ColOn"), ImGuiTableColumnFlags_WidthFixed, 40.0f);
+        TableSetupColumn(T("$MTFUI_Plugins_ColPlugin"), ImGuiTableColumnFlags_WidthStretch, 2.0f);
+        TableSetupColumn(T("$MTFUI_Plugins_ColProvides"), ImGuiTableColumnFlags_WidthStretch, 2.0f);
+        TableSetupColumn(T("$MTFUI_Common_UsedBy"), ImGuiTableColumnFlags_WidthStretch, 1.5f);
         TableHeadersRow();
 
         for (const auto& plugin : app.cat.plugins) {
@@ -76,36 +75,35 @@ namespace mtfui::ui {
             TextUnformatted(plugin.label.c_str());
             TextDisabled("%s", plugin.pluginId.c_str());
             if (snap.fresh && !snap.registeredPlugins.empty() && !registered) {
-                TextColored(kWarn, "Catalog only: no script registered");
+                TextColored(kWarn, "%s", T("$MTFUI_Plugins_CatalogOnly"));
                 if (IsItemHovered()) {
-                    SetTooltip("MTF has a catalog file for this plugin but its script did not register.\n"
-                               "The plugin's .esp may be missing or disabled.");
+                    SetTooltip("%s", T("$MTFUI_Plugins_CatalogOnlyTip"));
                 }
             }
 
             TableNextColumn();
-            EntryList("Conditions", plugin.conditions);
-            EntryList("Effects", plugin.effects);
+            EntryList("##conditions", T("$MTFUI_Plugins_Conditions"), plugin.conditions);
+            EntryList("##effects", T("$MTFUI_Plugins_Effects"), plugin.effects);
 
             TableNextColumn();
             if (const auto* users = app.usage.Plugin(plugin.pluginId)) {
-                if (TreeNode("##users", "%d preset(s)", static_cast<int>(users->size()))) {
+                if (TreeNode("##users", "%s", TF("$MTFUI_Plugins_PresetCount", users->size()).c_str())) {
                     for (const auto& u : *users) {
                         BulletText("%s", u.c_str());
                     }
                     TreePop();
                 }
                 if (!on) {
-                    TextColored(kWarn, "Disabled but in use");
+                    TextColored(kWarn, "%s", T("$MTFUI_Plugins_DisabledInUse"));
                 }
             } else {
-                TextDisabled("unused");
+                TextDisabled("%s", T("$MTFUI_Plugins_Unused"));
             }
             PopID();
         }
         EndTable();
         if (app.cat.plugins.empty()) {
-            TextDisabled("No plugin catalogs found in MagicTattoosFramework/plugins.");
+            TextDisabled("%s", T("$MTFUI_Plugins_NoCatalogs"));
         }
     }
 }

@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace mtfui::model {
@@ -30,4 +31,6 @@ namespace mtfui::model {
 
     // Normalizes the pack area to the names MTF's SetOverlaySlot accepts: Body, Face, Hands, Feet.
     std::string NormalizeArea(const std::string& area);
+    // The area's name for display, in the UI's language.
+    const char* AreaLabel(std::string_view area);
 }

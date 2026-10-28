@@ -1,6 +1,7 @@
 #include "game/Targets.h"
 
 #include "game/Papyrus.h"
+#include "io/Translations.h"
 #include "io/UiSettings.h"
 
 namespace mtfui::game {
@@ -9,7 +10,7 @@ namespace mtfui::game {
             ActorInfo i;
             i.id = actor->GetFormID();
             const char* name = actor->GetDisplayFullName();
-            i.name = name && *name ? name : "Unnamed";
+            i.name = name && *name ? name : T("$MTFUI_Target_Unnamed");
             i.player = actor->IsPlayerRef();
             i.distance = from.GetDistance(actor->GetPosition());
             if (auto* base = actor->GetActorBase()) {
@@ -34,10 +35,10 @@ namespace mtfui::game {
     ActorInfo PlayerInfo() {
         auto* player = RE::PlayerCharacter::GetSingleton();
         if (!player) {
-            return { 0x14, "You", 0.0f, true, false };
+            return { 0x14, T("$MTFUI_Target_You"), 0.0f, true, false };
         }
         ActorInfo i = Info(player, player->GetPosition());
-        i.name = "You (" + i.name + ")";
+        i.name = TF("$MTFUI_Target_YouNamed", i.name);
         return i;
     }
 

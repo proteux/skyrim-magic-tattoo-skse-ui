@@ -2,6 +2,7 @@
 
 #include "game/OverlayVisibility.h"
 #include "game/Papyrus.h"
+#include "io/Translations.h"
 #include "io/UiSettings.h"
 #include "model/Catalogs.h"
 
@@ -797,18 +798,17 @@ namespace mtfui::game {
     }
 
     std::string ApplyResultText(int rc, bool onPlayer) {
-        const std::string fix = onPlayer ? "Remove another preset, lower MTF's start slot on the General tab, or raise iNumOverlays in RaceMenu's ini"
-                                         : "Remove another preset or overlay from them, or raise iNumOverlays in RaceMenu's ini";
+        const char* fix = onPlayer ? T("$MTFUI_Apply_FixPlayer") : T("$MTFUI_Apply_FixNpc");
         switch (rc) {
-            case 1: return "Applied";
-            case 0: return "Already applied to this actor";
-            case -2: return "No target actor";
-            case -3: return "MTF is already tracking the maximum number of NPCs";
-            case -4: return "Preset name is empty";
-            case -5: return "MTF could not read the preset";
-            case -6: return "No free overlay slots left for its tattoos. " + fix;
-            case -7: return "Too few overlay slots left, so its tattoo would be cut off. " + fix;
-            default: return "Unexpected result " + std::to_string(rc);
+            case 1: return T("$MTFUI_Apply_Applied");
+            case 0: return T("$MTFUI_Apply_Already");
+            case -2: return T("$MTFUI_Apply_NoTarget");
+            case -3: return T("$MTFUI_Apply_TooManyNpcs");
+            case -4: return T("$MTFUI_Apply_EmptyName");
+            case -5: return T("$MTFUI_Apply_Unreadable");
+            case -6: return TF("$MTFUI_Apply_NoSlots", fix);
+            case -7: return TF("$MTFUI_Apply_Truncated", fix);
+            default: return TF("$MTFUI_Apply_Unexpected", rc);
         }
     }
 }

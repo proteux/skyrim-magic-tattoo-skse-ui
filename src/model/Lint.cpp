@@ -1,5 +1,6 @@
 #include "model/Lint.h"
 
+#include "io/Translations.h"
 #include "io/UiSettings.h"
 #include "model/Describe.h"
 
@@ -91,8 +92,7 @@ namespace mtfui::model {
                     const auto v = ParamInt(values[i]);
                     if (v < spec.min || v > spec.max) {
                         out.push_back({ Severity::Warning, slot,
-                            what + ": " + (spec.label.empty() ? "value" : spec.label) + " is " + std::to_string(v) + ", outside " +
-                                std::to_string(spec.min) + " to " + std::to_string(spec.max) });
+                            TF("$MTFUI_Lint_OutOfRange", what, spec.label.empty() ? std::string(T("$MTFUI_Lint_Value")) : spec.label, v, spec.min, spec.max) });
                     }
                 } else if (spec.kind == ParamKind::Menu) {
                     const auto v = ParamStr(values[i]);
@@ -101,7 +101,7 @@ namespace mtfui::model {
                         found = found || IEquals(o.id, v);
                     }
                     if (!found) {
-                        out.push_back({ Severity::Warning, slot, what + ": '" + v + "' is not an option for " + spec.label });
+                        out.push_back({ Severity::Warning, slot, TF("$MTFUI_Lint_NotAnOption", what, v, spec.label) });
                     }
                 }
             }
@@ -111,10 +111,10 @@ namespace mtfui::model {
     std::vector<LintIssue> LintPreset(const Catalogs& cat, const Preset& preset, const LintContext& ctx) {
         std::vector<LintIssue> out;
         if (SanitizePresetName(preset.name) != preset.name || preset.name.empty()) {
-            out.push_back({ Severity::Error, -1, "File name must be 1-32 characters of letters, digits, '_' or '-'" });
+            out.push_back({ Severity::Error, -1, T("$MTFUI_Lint_BadFileName") });
         }
         if (preset.displayName.empty()) {
-            out.push_back({ Severity::Info, -1, "Display name is empty; MTF will show the file name" });
+            out.push_back({ Severity::Info, -1, T("$MTFUI_Lint_NoDisplayName") });
         }
 
         const int slotCount = std::min<int>(kSlotCount, static_cast<int>(preset.slots.size()));
@@ -125,7 +125,7 @@ namespace mtfui::model {
 
             if (i > 0 && !s.Configured()) {
                 if (HasContent(s)) {
-                    out.push_back({ Severity::Warning, i, label + " has a look or effects but no condition, so it never activates", LintTab::Condition });
+                    out.push_back({ Severity::Warning, i, TF("$MTFUI_Lint_NoCondition", label), LintTab::Condition });
                 }
                 continue;
             }
@@ -133,7 +133,7 @@ namespace mtfui::model {
             for (int j = 1; j < i; ++j) {
                 if (Shadows(cat, preset.slots[j], s)) {
                     out.push_back({ Severity::Warning, i,
-                        label + " can never activate: " + SlotLabel(preset, j) + " is higher in the list and always matches first. Move it up.",
+                        TF("$MTFUI_Lint_Shadowed", label, SlotLabel(preset, j)),
                         LintTab::Condition, { LintFix::Kind::MoveAbove, j, {} } });
                     break;
                 }
@@ -143,17 +143,17 @@ namespace mtfui::model {
                 const PluginCatalog* owner = nullptr;
                 const auto* entry = cat.FindCondition(c.pluginId, &owner);
                 if (!entry) {
-                    out.push_back({ Severity::Error, i, "Condition '" + c.pluginId + "' is not installed; this tier will not activate", LintTab::Condition });
+                    out.push_back({ Severity::Error, i, TF("$MTFUI_Lint_ConditionMissing", c.pluginId), LintTab::Condition });
                     continue;
                 }
                 if (ctx.pluginEnabled && !ctx.pluginEnabled(owner->pluginId)) {
-                    out.push_back({ Severity::Warning, i, owner->label + " is disabled in MTF; '" + entry->label + "' will never be true", LintTab::Condition,
+                    out.push_back({ Severity::Warning, i, TF("$MTFUI_Lint_ConditionDisabled", owner->label, entry->label), LintTab::Condition,
                         { LintFix::Kind::EnablePlugin, -1, owner->pluginId } });
                 }
                 const auto before = out.size();
                 CheckParams(*entry, ConditionParams(c), 3, i, entry->label, out);
                 if (entry->params[0].kind == ParamKind::Text && ParamStr(c.param).empty()) {
-                    out.push_back({ Severity::Info, i, entry->label + ": text is empty, which usually matches anything" });
+                    out.push_back({ Severity::Info, i, TF("$MTFUI_Lint_EmptyText", entry->label) });
                 }
                 for (auto k = before; k < out.size(); ++k) {
                     out[k].tab = LintTab::Condition;
@@ -165,16 +165,16 @@ namespace mtfui::model {
             if (!vis.inherited && !s.packId.empty() && s.packId != kNoTexture) {
                 const auto* pack = cat.FindPack(s.packId);
                 if (!pack) {
-                    out.push_back({ Severity::Error, i, "Tattoo pack '" + s.packId + "' is not installed" });
+                    out.push_back({ Severity::Error, i, TF("$MTFUI_Lint_PackMissing", s.packId) });
                 } else if (s.entryId.empty()) {
-                    out.push_back({ Severity::Warning, i, "A pack is chosen but no tattoo; nothing will show" });
+                    out.push_back({ Severity::Warning, i, T("$MTFUI_Lint_NoEntry") });
                 } else if (const auto* e = pack->Find(s.entryId); !e) {
-                    out.push_back({ Severity::Error, i, "Tattoo '" + s.entryId + "' is missing from " + pack->label });
+                    out.push_back({ Severity::Error, i, TF("$MTFUI_Lint_EntryMissing", s.entryId, pack->label) });
                 } else {
                     if (ctx.textureExists) {
                         for (const auto& t : e->textures) {
                             if (!t.empty() && !ctx.textureExists(t)) {
-                                out.push_back({ Severity::Warning, i, "Texture not found: " + t + " (it may be in a BSA)" });
+                                out.push_back({ Severity::Warning, i, TF("$MTFUI_Lint_TextureMissing", t) });
                             }
                         }
                     }
@@ -184,9 +184,7 @@ namespace mtfui::model {
                         start->second + static_cast<int>(e->textures.size()) > cap->second && !overflowReported.contains(pack->area)) {
                         overflowReported.insert(pack->area);
                         out.push_back({ Severity::Warning, i,
-                            e->label + " needs " + std::to_string(e->textures.size()) + " " + pack->area + " overlay slot(s) starting at " +
-                                std::to_string(start->second) + ", but RaceMenu only has " + std::to_string(cap->second) +
-                                ". Raise the overlay count in skee64.ini or lower MTF's start slot." });
+                            TF("$MTFUI_Lint_Overflow", e->label, e->textures.size(), AreaLabel(pack->area), start->second, cap->second) });
                     }
                 }
             }
@@ -199,7 +197,7 @@ namespace mtfui::model {
                     anyVisible = anyVisible || s.layers[l].alpha > 0;
                 }
                 if (!anyVisible) {
-                    out.push_back({ Severity::Info, i, used == 1 ? "The tattoo's layer is fully transparent" : "Every layer of the tattoo is fully transparent" });
+                    out.push_back({ Severity::Info, i, used == 1 ? T("$MTFUI_Lint_LayerTransparent") : T("$MTFUI_Lint_AllTransparent") });
                 }
             }
             for (auto k = lookStart; k < out.size(); ++k) {
@@ -207,10 +205,10 @@ namespace mtfui::model {
             }
 
             if (s.pulse.depth > 0 && s.pulse.rate <= 0.0) {
-                out.push_back({ Severity::Info, i, "Pulse depth is set but rate is 0, so it will not pulse", LintTab::Pulse });
+                out.push_back({ Severity::Info, i, T("$MTFUI_Lint_NoPulseRate"), LintTab::Pulse });
             }
             if (!s.pulse.waveform.empty() && !cat.FindWaveform(s.pulse.waveform)) {
-                out.push_back({ Severity::Warning, i, "Waveform '" + s.pulse.waveform + "' is not installed; MTF falls back to a smooth pulse", LintTab::Pulse });
+                out.push_back({ Severity::Warning, i, TF("$MTFUI_Lint_WaveformMissing", s.pulse.waveform), LintTab::Pulse });
             }
 
             const auto fxStart = out.size();
@@ -218,18 +216,17 @@ namespace mtfui::model {
                 const PluginCatalog* owner = nullptr;
                 const auto* entry = cat.FindEffect(fx.key, &owner);
                 if (!entry) {
-                    out.push_back({ Severity::Error, i, "Effect '" + fx.key + "' is not installed" });
+                    out.push_back({ Severity::Error, i, TF("$MTFUI_Lint_EffectMissing", fx.key) });
                     continue;
                 }
                 if (ctx.pluginEnabled && !ctx.pluginEnabled(owner->pluginId)) {
-                    out.push_back({ Severity::Warning, i, owner->label + " is disabled in MTF; '" + entry->label + "' will not run", LintTab::Effects,
+                    out.push_back({ Severity::Warning, i, TF("$MTFUI_Lint_EffectDisabled", owner->label, entry->label), LintTab::Effects,
                         { LintFix::Kind::EnablePlugin, -1, owner->pluginId } });
                 }
                 CheckParams(*entry, fx.params, entry->ParamCount(), i, entry->label, out);
             }
             if (static_cast<int>(s.effects.size()) > kEffectCap) {
-                out.push_back({ Severity::Info, i, "More than " + std::to_string(kEffectCap) + " effects; MTF's MCM will only show the first " +
-                                                        std::to_string(kEffectCap) });
+                out.push_back({ Severity::Info, i, TF("$MTFUI_Lint_TooManyEffects", kEffectCap) });
             }
             for (auto k = fxStart; k < out.size(); ++k) {
                 out[k].tab = LintTab::Effects;

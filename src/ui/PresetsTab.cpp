@@ -26,7 +26,7 @@ namespace mtfui::ui {
         PresetsTabState g;
 
         void DrawGroupMenu(const model::PresetFileInfo& info, const std::vector<std::string>& groups) {
-            if (!BeginMenu("Move to group")) {
+            if (!BeginMenu(T("$MTFUI_Library_MoveToGroup"))) {
                 return;
             }
             for (const auto& group : groups) {
@@ -37,11 +37,11 @@ namespace mtfui::ui {
             if (!groups.empty()) {
                 Separator();
             }
-            if (MenuItem("New group...")) {
+            if (MenuItem(T("$MTFUI_Library_NewGroupItem"))) {
                 g.groupTarget = info.name;
                 g.groupDraft.clear();
             }
-            if (!info.group.empty() && MenuItem("Remove from group")) {
+            if (!info.group.empty() && MenuItem(T("$MTFUI_Library_RemoveFromGroup"))) {
                 g.move.emplace(info.name, std::string{});
             }
             ImGuiMCP::EndMenu();
@@ -90,7 +90,7 @@ namespace mtfui::ui {
 
             if (std::any_of(app.library.begin(), app.library.end(), [](const model::PresetFileInfo& o) { return o.builtin; })) {
                 Separator();
-                if (BeginMenu("Built-in")) {
+                if (BeginMenu(T("$MTFUI_Library_BuiltinMenu"))) {
                     for (const auto& other : app.library) {
                         if (other.builtin) {
                             item(other);
@@ -114,39 +114,39 @@ namespace mtfui::ui {
             }
             if (!info.builtin && BeginDragDropSource()) {
                 SetDragDropPayload("MTFUI_PRESET", info.name.c_str(), info.name.size() + 1);
-                Text("Move %s to a group", info.displayName.c_str());
+                TextUnformatted(TF("$MTFUI_Library_DragToGroup", info.displayName).c_str());
                 EndDragDropSource();
             }
             if (IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
-                SetTooltip("%s.json%s", info.name.c_str(), applied ? "\nApplied to the current target" : "");
+                SetTooltip("%s", (applied ? TF("$MTFUI_Library_FileTipApplied", info.name) : TF("$MTFUI_Library_FileTip", info.name)).c_str());
             }
             if (applied) {
                 SameLine(onMarkerX);
-                TextColored(kGood, "on");
+                TextColored(kGood, "%s", T("$MTFUI_Library_OnMarker"));
             }
             if (BeginPopupContextItem("##ctx")) {
-                if (MenuItem("Apply to target")) {
+                if (MenuItem(T("$MTFUI_Target_Apply"))) {
                     app.ApplyToTarget(info.name);
                 }
-                if (applied && MenuItem("Remove from target")) {
+                if (applied && MenuItem(T("$MTFUI_Library_RemoveFromTarget"))) {
                     app.RemoveFromTarget(info.name);
                 }
-                if (MenuItem("Duplicate...")) {
+                if (MenuItem(T("$MTFUI_Library_DuplicateItem"))) {
                     g.nameAction = NameAction::Duplicate;
                     g.duplicateSource = info.name;
-                    g.nameDraft = info.displayName + " copy";
+                    g.nameDraft = TF("$MTFUI_Preset_CopyName", info.displayName);
                     g.openNamePrompt = true;
                 }
                 if (!info.builtin) {
                     DrawGroupMenu(info, groups);
                 }
-                if (!info.builtin && BeginMenu("Copy tiers from")) {
-                    TextDisabled("Keeps this preset's Default tattoo");
+                if (!info.builtin && BeginMenu(T("$MTFUI_Library_CopyTiersFrom"))) {
+                    TextDisabled("%s", T("$MTFUI_Library_CopyTiersNote"));
                     Separator();
                     DrawCopyTiersMenu(app, info.name, groups);
                     ImGuiMCP::EndMenu();
                 }
-                if (!info.builtin && MenuItem("Delete...")) {
+                if (!info.builtin && MenuItem(T("$MTFUI_Library_DeleteItem"))) {
                     g.deleteName = info.name;
                 }
                 EndPopup();
@@ -169,25 +169,26 @@ namespace mtfui::ui {
                 SetKeyboardFocusHere();
                 app.focusSearch = false;
             }
-            SearchBox("##presetsearch", g.search, -1.0f, "Search presets");
-            if (Button("New")) {
+            const char* namePromptTitle = T("$MTFUI_Library_NameTitle");
+            SearchBox("##presetsearch", g.search, -1.0f, T("$MTFUI_Library_Search"));
+            if (Button(T("$MTFUI_Library_New"))) {
                 g.nameAction = NameAction::New;
-                g.nameDraft = "My Preset";
-                OpenPopup("Preset name");
+                g.nameDraft = T("$MTFUI_Library_DefaultName");
+                OpenPopup(namePromptTitle);
             }
             SameLine();
             BeginDisabled(!app.HasPreset());
-            if (Button("Duplicate")) {
+            if (Button(T("$MTFUI_Library_Duplicate"))) {
                 g.nameAction = NameAction::Duplicate;
                 g.duplicateSource.clear();
-                g.nameDraft = app.Preset().displayName + " copy";
-                OpenPopup("Preset name");
+                g.nameDraft = TF("$MTFUI_Preset_CopyName", app.Preset().displayName);
+                OpenPopup(namePromptTitle);
             }
             EndDisabled();
             Separator();
 
             if (BeginChild("##list")) {
-                const float onMarkerX = GetContentRegionAvail().x - CalcTextSize("on").x;
+                const float onMarkerX = GetContentRegionAvail().x - CalcTextSize(T("$MTFUI_Library_OnMarker")).x;
                 const auto groups = app.Groups();
                 const bool searching = !g.search.empty();
                 const std::string openName = app.HasPreset() && !app.ed.isNew ? app.Preset().name : std::string{};
@@ -227,7 +228,7 @@ namespace mtfui::ui {
                         continue;
                     }
                     if (!groups.empty() && !ungroupedHeader) {
-                        SeparatorText("Ungrouped");
+                        SeparatorText(T("$MTFUI_Library_Ungrouped"));
                         GroupDropTarget({});
                         ungroupedHeader = true;
                     }
@@ -240,13 +241,13 @@ namespace mtfui::ui {
                         continue;
                     }
                     if (!builtinHeader) {
-                        SeparatorText("Built-in (read-only)");
+                        SeparatorText(T("$MTFUI_Library_BuiltinHeader"));
                         builtinHeader = true;
                     }
                     DrawLibraryItem(app, info, groups, onMarkerX);
                 }
                 if (app.library.empty()) {
-                    TextWrapped("No presets yet. Click New to start one.");
+                    TextWrapped("%s", T("$MTFUI_Library_Empty"));
                 }
             }
             EndChild();
@@ -257,44 +258,46 @@ namespace mtfui::ui {
                 app.SetGroup(name, group);
             }
 
-            if (!g.groupTarget.empty() && !IsPopupOpen("New group")) {
-                OpenPopup("New group");
+            const char* groupTitle = T("$MTFUI_Library_NewGroupTitle");
+            if (!g.groupTarget.empty() && !IsPopupOpen(groupTitle)) {
+                OpenPopup(groupTitle);
             }
-            if (BeginPopupModal("New group", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            if (BeginPopupModal(groupTitle, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
                 if (IsWindowAppearing()) {
                     SetKeyboardFocusHere();
                 }
                 SetNextItemWidth(260);
-                const bool enter = InputString("##group", g.groupDraft, "Group name", ImGuiInputTextFlags_EnterReturnsTrue, 64);
+                const bool enter = InputString("##group", g.groupDraft, T("$MTFUI_Library_GroupHint"), ImGuiInputTextFlags_EnterReturnsTrue, 64);
                 const bool valid = g.groupDraft.find_first_not_of(' ') != std::string::npos;
                 BeginDisabled(!valid);
-                if (Button("Move", ImVec2{ 100, 0 }) || (enter && valid)) {
+                if (Button(T("$MTFUI_Library_Move"), ImVec2{ 100, 0 }) || (enter && valid)) {
                     app.SetGroup(g.groupTarget, g.groupDraft);
                     g.groupTarget.clear();
                     CloseCurrentPopup();
                 }
                 EndDisabled();
                 SameLine();
-                if (Button("Cancel", ImVec2{ 100, 0 }) || IsKeyPressed(ImGuiKey_Escape, false)) {
+                if (Button(T("$MTFUI_Common_Cancel"), ImVec2{ 100, 0 }) || IsKeyPressed(ImGuiKey_Escape, false)) {
                     g.groupTarget.clear();
                     CloseCurrentPopup();
                 }
                 EndPopup();
             }
 
+            const char* deleteTitle = T("$MTFUI_Library_DeleteTitle");
             if (!g.deleteName.empty()) {
-                OpenPopup("Delete preset?");
+                OpenPopup(deleteTitle);
             }
-            if (BeginPopupModal("Delete preset?", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-                Text("Delete '%s'?", g.deleteName.c_str());
-                TextDisabled("You can bring it back from General > Deleted presets.");
-                if (Button("Delete", ImVec2{ 100, 0 })) {
+            if (BeginPopupModal(deleteTitle, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+                TextUnformatted(TF("$MTFUI_Library_DeleteQuestion", g.deleteName).c_str());
+                TextDisabled("%s", T("$MTFUI_Library_DeleteNote"));
+                if (Button(T("$MTFUI_Library_Delete"), ImVec2{ 100, 0 })) {
                     app.Delete(g.deleteName);
                     g.deleteName.clear();
                     CloseCurrentPopup();
                 }
                 SameLine();
-                if (Button("Cancel", ImVec2{ 100, 0 }) || IsKeyPressed(ImGuiKey_Escape, false)) {
+                if (Button(T("$MTFUI_Common_Cancel"), ImVec2{ 100, 0 }) || IsKeyPressed(ImGuiKey_Escape, false)) {
                     g.deleteName.clear();
                     CloseCurrentPopup();
                 }
@@ -303,9 +306,9 @@ namespace mtfui::ui {
 
             if (g.openNamePrompt) {
                 g.openNamePrompt = false;
-                OpenPopup("Preset name");
+                OpenPopup(namePromptTitle);
             }
-            if (BeginPopupModal("Preset name", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            if (BeginPopupModal(namePromptTitle, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
                 switch (NamePrompt(g.nameDraft, app.UniqueName(g.nameDraft))) {
                     case NamePromptResult::Confirmed:
                         if (g.nameAction == NameAction::New) {
@@ -327,46 +330,46 @@ namespace mtfui::ui {
 
         void DrawTierMenu(App& app, int i) {
             auto& p = app.Preset();
-            if (i > 1 && MenuItem("Move up", "Alt+Up")) {
+            if (i > 1 && MenuItem(T("$MTFUI_TierMenu_MoveUp"), "Alt+Up")) {
                 app.MoveTier(i, i - 1);
             }
-            if (i > 0 && i + 1 < static_cast<int>(p.slots.size()) && MenuItem("Move down", "Alt+Down")) {
+            if (i > 0 && i + 1 < static_cast<int>(p.slots.size()) && MenuItem(T("$MTFUI_TierMenu_MoveDown"), "Alt+Down")) {
                 app.MoveTier(i, i + 1);
             }
-            if (i > 0 && MenuItem("Clear tier")) {
+            if (i > 0 && MenuItem(T("$MTFUI_TierMenu_Clear"))) {
                 p.slots[i] = model::DefaultSlot();
             }
             Separator();
-            if (MenuItem("Copy tier")) {
+            if (MenuItem(T("$MTFUI_TierMenu_Copy"))) {
                 app.clip.tier = p.slots[i];
                 app.clip.tierVisual = model::ResolveVisual(p, i);
             }
-            if (BeginMenu("Paste", app.clip.tier.has_value())) {
+            if (BeginMenu(T("$MTFUI_TierMenu_Paste"), app.clip.tier.has_value())) {
                 const auto& src = *app.clip.tier;
                 auto& dst = p.slots[i];
-                if (i > 0 && MenuItem("Whole tier")) {
+                if (i > 0 && MenuItem(T("$MTFUI_TierMenu_PasteWhole"))) {
                     const auto vis = app.clip.tierVisual;
                     dst = src;
                     model::SetLook(dst, false, src, vis);
                 }
-                if (MenuItem("Look only (tattoo, layers, pulse)")) {
+                if (MenuItem(T("$MTFUI_TierMenu_PasteLook"))) {
                     model::SetLook(dst, i == 0, src, app.clip.tierVisual);
                 }
-                if (i > 0 && MenuItem("Conditions only", nullptr, false, !src.conditions.empty())) {
+                if (i > 0 && MenuItem(T("$MTFUI_TierMenu_PasteConditions"), nullptr, false, !src.conditions.empty())) {
                     dst.conditions = src.conditions;
                     dst.op = src.op;
                 }
-                if (MenuItem("Effects only", nullptr, false, !src.effects.empty())) {
+                if (MenuItem(T("$MTFUI_TierMenu_PasteEffects"), nullptr, false, !src.effects.empty())) {
                     dst.effects = src.effects;
                 }
-                if (i > 0 && MenuItem("Timing only")) {
+                if (i > 0 && MenuItem(T("$MTFUI_TierMenu_PasteTiming"))) {
                     dst.persistMin = src.persistMin;
                     dst.allowOverride = src.allowOverride;
                     dst.coolMin = src.coolMin;
                 }
                 ImGuiMCP::EndMenu();
             }
-            if (BeginMenu("Copy look from")) {
+            if (BeginMenu(T("$MTFUI_TierMenu_CopyLookFrom"))) {
                 for (int j = 0; j < static_cast<int>(p.slots.size()); ++j) {
                     if (j != i && MenuItem(model::SlotLabel(p, j).c_str())) {
                         model::CopyLook(p, j, i);
@@ -388,7 +391,7 @@ namespace mtfui::ui {
             }
             if (i > 0 && BeginDragDropSource()) {
                 SetDragDropPayload("MTFUI_TIER", &i, sizeof(int));
-                Text("Move %s", model::SlotLabel(p, i).c_str());
+                TextUnformatted(TF("$MTFUI_Tiers_DragMove", model::SlotLabel(p, i)).c_str());
                 EndDragDropSource();
             }
             if (i > 0 && BeginDragDropTarget()) {
@@ -407,7 +410,7 @@ namespace mtfui::ui {
             const float pad = 6.0f;
             const float thumb = rowH - 8.0f;
             ImDrawListManager::PushClipRect(dl, start, ImVec2{ start.x + width - thumb - 12.0f, start.y + rowH }, true);
-            std::string title = i == 0 ? "Default" : "#" + std::to_string(i) + "  " + model::SlotLabel(p, i);
+            std::string title = i == 0 ? T("$MTFUI_Tier_Default") : TF("$MTFUI_Tiers_RowTitle", i, model::SlotLabel(p, i));
             const auto titleColor = unused ? GetColorU32(ImGuiCol_TextDisabled, 1.0f) : GetColorU32(ImGuiCol_Text, 1.0f);
             ImDrawListManager::AddText(dl, ImVec2{ start.x + pad, start.y + 4.0f }, titleColor, title.c_str());
 
@@ -423,12 +426,14 @@ namespace mtfui::ui {
                 }
             }
             if (errors + warnings > 0) {
-                const std::string badge = std::to_string(errors + warnings) + (errors ? " error" : " warning") + (errors + warnings > 1 ? "s" : "");
+                const int n = errors + warnings;
+                const std::string badge = errors ? (n == 1 ? TF("$MTFUI_Tiers_ErrorOne", n) : TF("$MTFUI_Tiers_ErrorMany", n))
+                                                 : (n == 1 ? TF("$MTFUI_Tiers_WarningOne", n) : TF("$MTFUI_Tiers_WarningMany", n));
                 const float tw = CalcTextSize(title.c_str()).x;
                 ImDrawListManager::AddText(dl, ImVec2{ start.x + pad + tw + 12.0f, start.y + 4.0f },
                     GetColorU32(errors ? kError : kWarn), badge.c_str());
             }
-            const std::string summary = unused ? "Unused. Select it and add a condition to make a new tier." : model::DescribeSlot(app.cat, p, i);
+            const std::string summary = unused ? T("$MTFUI_Tiers_UnusedSummary") : model::DescribeSlot(app.cat, p, i);
             ImDrawListManager::AddText(dl, ImVec2{ start.x + pad, start.y + 6.0f + GetTextLineHeight() }, GetColorU32(ImGuiCol_TextDisabled, 1.0f), summary.c_str());
             ImDrawListManager::PopClipRect(dl);
 
@@ -449,51 +454,51 @@ namespace mtfui::ui {
             auto& p = app.Preset();
             const bool dirty = app.Dirty();
             BeginDisabled(!dirty || app.ed.builtin);
-            if (Button(app.ed.isNew ? "Create" : "Save")) {
+            if (Button(app.ed.isNew ? T("$MTFUI_Common_Create") : T("$MTFUI_Common_Save"))) {
                 app.Save();
             }
             EndDisabled();
             SameLine();
             BeginDisabled(!dirty);
-            if (Button("Revert")) {
+            if (Button(T("$MTFUI_Header_Revert"))) {
                 app.Revert();
             }
             EndDisabled();
             SameLine();
             BeginDisabled(app.ed.undo.empty());
-            if (Button("Undo")) {
+            if (Button(T("$MTFUI_Header_Undo"))) {
                 app.Undo();
             }
             EndDisabled();
             SameLine();
             BeginDisabled(app.ed.redo.empty());
-            if (Button("Redo")) {
+            if (Button(T("$MTFUI_Header_Redo"))) {
                 app.Redo();
             }
             EndDisabled();
             if (app.ed.builtin) {
                 SameLine();
-                TextColored(kWarn, "Built-in preset: Duplicate it to make changes you can save.");
+                TextColored(kWarn, "%s", T("$MTFUI_Header_Builtin"));
             } else if (dirty) {
                 SameLine();
-                TextColored(kWarn, "Unsaved changes");
+                TextColored(kWarn, "%s", T("$MTFUI_Unsaved_Title"));
             }
 
             SetNextItemWidth(260);
-            if (InputString("Name", p.displayName, nullptr, 0, 64) && app.ed.isNew) {
+            if (InputString(T("$MTFUI_Header_Name"), p.displayName, nullptr, 0, 64) && app.ed.isNew) {
                 p.name = app.UniqueName(p.displayName);
             }
             SameLine();
             TextDisabled("%s.json", p.name.c_str());
             if (!app.ed.isNew && model::SanitizePresetName(p.displayName) != p.name) {
-                HelpMarker("The file name stays the same when you rename, so anything already using this preset keeps working.");
+                HelpMarker(T("$MTFUI_Header_RenameHelp"));
             }
 
             SetNextItemWidth(260 - GetFrameHeight() - GetStyle()->ItemInnerSpacing.x);
-            InputString("##groupname", p.group, "No group", 0, 64);
+            InputString("##groupname", p.group, T("$MTFUI_Header_NoGroup"), 0, 64);
             SameLine(0, GetStyle()->ItemInnerSpacing.x);
-            if (BeginCombo("Group", nullptr, ImGuiComboFlags_NoPreview)) {
-                if (Selectable("No group", p.group.empty())) {
+            if (BeginCombo(T("$MTFUI_Header_Group"), nullptr, ImGuiComboFlags_NoPreview)) {
+                if (Selectable(T("$MTFUI_Header_NoGroup"), p.group.empty())) {
                     p.group.clear();
                 }
                 for (const auto& group : app.Groups()) {
@@ -503,41 +508,41 @@ namespace mtfui::ui {
                 }
                 EndCombo();
             }
-            HelpMarker("Folder for this preset in the list. Only this UI uses it; MTF ignores it.");
+            HelpMarker(T("$MTFUI_Header_GroupHelp"));
 
-            if (CollapsingHeader("Preset options")) {
+            if (CollapsingHeader((std::string(T("$MTFUI_Options_Title")) + "###presetoptions").c_str())) {
                 float duration = static_cast<float>(p.transitionDuration);
                 SetNextItemWidth(220);
-                if (SliderFloat("Transition", &duration, 0.0f, 10.0f, "%.1f s")) {
+                if (SliderFloat(T("$MTFUI_Options_Transition"), &duration, 0.0f, 10.0f, T("$MTFUI_Format_Seconds1_Fmt"))) {
                     p.transitionDuration = duration;
                 }
-                HelpMarker("Seconds to cross-fade the tattoo's opacity, colors and glow when the active tier changes. 0 = instant.");
-                static const char* modes[] = { "Off", "Overlay (fade out)", "Emissive (stop glowing)", "Inverted (dip and recover)" };
+                HelpMarker(T("$MTFUI_Options_TransitionHelp"));
+                const char* modes[] = { T("$MTFUI_Options_DeathOff"), T("$MTFUI_Options_DeathOverlay"), T("$MTFUI_Options_DeathEmissive"),
+                    T("$MTFUI_Options_DeathInverted") };
                 int mode = p.fade.enabled ? p.fade.mode + 1 : 0;
                 SetNextItemWidth(220);
-                if (Combo("On death", &mode, modes, 4)) {
+                if (Combo(T("$MTFUI_Options_OnDeath"), &mode, modes, 4)) {
                     p.fade.enabled = mode > 0;
                     p.fade.mode = std::max(0, mode - 1);
                 }
-                HelpMarker("What happens to the tattoo when the wearer dies.");
+                HelpMarker(T("$MTFUI_Options_OnDeathHelp"));
                 if (p.fade.enabled) {
                     int ms = static_cast<int>(p.fade.durationMs);
                     SetNextItemWidth(220);
-                    if (SliderInt("Death fade", &ms, 100, 10000, "%d ms")) {
+                    if (SliderInt(T("$MTFUI_Options_DeathFade"), &ms, 100, 10000, T("$MTFUI_Format_Milliseconds_Fmt"))) {
                         p.fade.durationMs = ms;
                     }
                 }
-                if (Button("Copy as JSON")) {
+                if (Button(T("$MTFUI_Options_CopyJson"))) {
                     app.ExportToClipboard();
                 }
-                HelpMarker("Puts the whole preset on the clipboard, to share it or keep it somewhere. "
-                           "General > Backups can paste one back in as a new preset.");
+                HelpMarker(T("$MTFUI_Options_CopyJsonHelp"));
             }
         }
 
         void DrawIssues(App& app) {
             if (app.issues.empty()) {
-                TextColored(kGood, "No problems found");
+                TextColored(kGood, "%s", T("$MTFUI_Checks_None"));
                 return;
             }
             // A fix changes the list, so apply it after the loop.
@@ -553,12 +558,12 @@ namespace mtfui::ui {
                         }
                     }
                     if (IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
-                        SetTooltip("Select this tier and show where to fix it");
+                        SetTooltip("%s", T("$MTFUI_Checks_JumpTip"));
                     }
                     SameLine();
                 }
                 if (issue.fix.kind != model::LintFix::Kind::None) {
-                    if (SmallButton(issue.fix.kind == model::LintFix::Kind::MoveAbove ? "Move it up" : "Enable it")) {
+                    if (SmallButton(issue.fix.kind == model::LintFix::Kind::MoveAbove ? T("$MTFUI_Checks_MoveUp") : T("$MTFUI_Checks_Enable"))) {
                         fix = issue;
                     }
                     SameLine();
@@ -577,25 +582,22 @@ namespace mtfui::ui {
     void DrawTiersPanel(App& app) {
         if (!app.HasPreset()) {
             Spacing();
-            TextWrapped("Pick a preset in the list, or click New.");
+            TextWrapped("%s", T("$MTFUI_Tiers_PickPreset"));
             Spacing();
-            TextWrapped("A preset is a Default look plus a ladder of tiers that modify it. MTF checks tiers from the top; the first one "
-                        "whose conditions match decides the tattoo's look and effects. When none match, Default is used.");
+            TextWrapped("%s", T("$MTFUI_Tiers_Explainer"));
             return;
         }
         DrawPresetHeader(app);
         const float rowWidth = GetContentRegionAvail().x;
-        SeparatorText("Base");
-        HelpMarker("Default sets the base look. Tiers that leave their tattoo as \"Same as Default\" build on it, "
-                   "and it is shown whenever no tier matches.");
+        SeparatorText(T("$MTFUI_Tiers_Base"));
+        HelpMarker(T("$MTFUI_Tiers_BaseHelp"));
         DrawTierRow(app, 0, rowWidth);
-        SeparatorText("Tiers (top wins)");
-        HelpMarker("Drag tiers to change priority, or select one and press Alt+Up / Alt+Down. Right-click a tier to copy, paste or clear it. "
-                   "The first tier whose conditions are true is shown; Default applies when none are.");
+        SeparatorText(T("$MTFUI_Tiers_Header"));
+        HelpMarker(T("$MTFUI_Tiers_HeaderHelp"));
         for (int i = 1; i < model::kSlotCount && i < static_cast<int>(app.Preset().slots.size()); ++i) {
             DrawTierRow(app, i, rowWidth);
         }
-        SeparatorText("Checks");
+        SeparatorText(T("$MTFUI_Checks_Title"));
         DrawIssues(app);
     }
 
