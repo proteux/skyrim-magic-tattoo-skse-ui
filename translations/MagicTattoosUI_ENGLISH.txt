@@ -49,6 +49,9 @@ $MTFUI_Status_MtfDisabled	MTF is disabled in its settings. Tattoos will not upda
 $MTFUI_Status_PreviewOn	{} on {}
 $MTFUI_Status_LoadingTextures	Loading {} texture(s)...
 $MTFUI_Status_Shortcuts	Shortcuts\nCtrl+S  save\nCtrl+Z / Ctrl+Y  undo / redo\nCtrl+N  new preset\nCtrl+D  duplicate\nCtrl+F  search presets\nF5  apply to target\nAlt+Up / Alt+Down  move the selected tier
+$MTFUI_Font_Missing	The menu font can't draw {} letters, so this menu is in English. Hover for the fix.
+$MTFUI_Font_FixSwitch	In Data/SKSE/Plugins/SKSEMenuFramework.ini, set {} = true under [Fonts], then restart the game.
+$MTFUI_Font_FixFont	In Data/SKSE/Plugins/SKSEMenuFramework.ini, pick a PrimaryFont under [Fonts] that has these letters, then restart the game.
 $MTFUI_Status_ShortcutHint	|  Ctrl+S save, Ctrl+Z undo, F5 apply (hover for more)
 $MTFUI_Tab_Presets	Presets
 $MTFUI_Tab_Tattoos	Tattoos

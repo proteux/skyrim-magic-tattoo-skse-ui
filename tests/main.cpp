@@ -579,6 +579,21 @@ namespace {
         Check(std::string(T("$Missing")) == "$Missing", "an unknown key shows itself");
         tr.Overlay("$Y\t{} of {\n");
         Check(TF("$Y", 3, 5) == "3 of 5", "a broken format falls back to English");
+
+        // The UI checks these against the menu font, swaps typography it lacks, and drops a script it can't draw.
+        tr.SetEnglish(english);
+        tr.Overlay("$Y\t{}\xC2\xA0sur\xC2\xA0{}\xE2\x80\xA6\n$Z\t\xD0\x9F\xD1\x80\xD0\xB8\xD0\xB2\xD0\xB5\xD1\x82 \xE2\x80\x94 ok\n");
+        const auto cps = tr.ActiveCodepoints();
+        Check(cps == std::vector<char32_t>{ 0xA0, 0x41F, 0x432, 0x435, 0x438, 0x440, 0x442, 0x2014, 0x2026 }, "the translation's non-ASCII characters, once each");
+        for (const auto cp : { char32_t{ 0xA0 }, char32_t{ 0x2014 }, char32_t{ 0x2026 } }) {
+            Check(!io::PlainStandIn(cp).empty(), "typography has a plain stand-in");
+            tr.ReplaceInActive(cp, io::PlainStandIn(cp));
+        }
+        Check(io::PlainStandIn(0x41F).empty(), "letters have no stand-in");
+        Check(TF("$Y", 3, 5) == "3 sur 5...", "stand-ins replace typography the font lacks");
+        Check(std::string(T("$Z")) == "\xD0\x9F\xD1\x80\xD0\xB8\xD0\xB2\xD0\xB5\xD1\x82 - ok", "letters are kept when only typography is swapped");
+        tr.DropActive();
+        Check(std::string(T("$Z")) == "Plain" && tr.ActiveCodepoints().empty(), "dropping the translation leaves English");
     }
 
     // Every key the code uses has English text, and the files only hold keys the code uses.

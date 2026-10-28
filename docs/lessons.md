@@ -85,7 +85,10 @@ Notes for whoever works on Magic Tattoos UI next. Section 1 is carried over from
 - Translating a label changes its ImGui ID. Tabs, panels, collapsing headers and buttons whose state matters use `"text###id"`.
 - Plurals use separate `_One` and `_Many` keys.
 - The tests check that every `$MTFUI_` key in `src/` has English text, that every English key is used, and that every file in `translations/` has only known keys and matching `_Fmt` placeholders.
-- ImGui only draws glyphs the Menu Framework's font has. Accented Latin and Cyrillic should be fine; Chinese, Japanese and Korean need a font that covers them.
+- ImGui only draws glyphs the Menu Framework has loaded. Its `SKSEMenuFramework.ini` has `[Fonts]` switches (`EnableCyrillic`, `EnableChinese`, `EnableJapanese`, `EnableKorean`, `EnablePolish`, `EnableTurkish`, `EnableThai`), all off by default. The framework's ImGui builds its font atlas once at startup and doesn't expose a rebuild, so a mod can't add glyphs itself.
+- On the first frame, `App::CheckTranslationFont` asks the font (`FindGlyphNoFallback`) for every non-ASCII character in the active translation. Typography it lacks (no-break and thin spaces, curly quotes, dashes, the ellipsis) is swapped for a plain stand-in (`io::PlainStandIn`). Any other missing character means the script isn't loaded: the UI drops back to English and the status line says which `[Fonts]` switch to turn on. So translators should write correct typography for their language; the French file uses no-break spaces before `:`, `;`, `?`, `!` and `%` and inside « ».
+- The `$MTFUI_Font_*` strings only show once the UI is in English, so translations leave them out.
+- Russian has three plural forms and the code only has `_One` and `_Many`, so the Russian file words counts as "Label: N" instead.
 
 ## 7. Code layout
 

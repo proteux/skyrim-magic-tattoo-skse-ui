@@ -88,7 +88,7 @@ Open the SKSE Menu Framework menu (F1 by default) and choose **Magic Tattoos**. 
 - Deleting a preset works like MTF's own delete: the file is kept but hidden, and General > Deleted presets brings it back. A backup also goes to `Data/SKSE/Plugins/MagicTattoosUI/backups`.
 - The UI keeps its own settings in `Data/SKSE/Plugins/MagicTattoosUI/settings.json` and unsaved drafts in `drafts/` next to it. It never changes MTF's files except the presets you save, delete, or restore.
 - Saving the game while an NPC is held in place releases them first, so a frozen NPC is never written into the save.
-- The UI follows the game's language. To translate it, copy `Data/Interface/Translations/MagicTattoosUI_ENGLISH.txt` to `MagicTattoosUI_<LANGUAGE>.txt` (for example `MagicTattoosUI_FRENCH.txt`, matching `sLanguage` in `Skyrim.ini`) and translate the text after each tab. Keep the `{}` placeholders and the key before the tab. Any line you leave out stays English. The log lists keys it couldn't use.
+- The UI follows the game's language. It ships in English, French and Russian. Russian needs `EnableCyrillic = true` under `[Fonts]` in `Data/SKSE/Plugins/SKSEMenuFramework.ini`; until then the menu stays in English and its status line says what to change. To translate it, copy `Data/Interface/Translations/MagicTattoosUI_ENGLISH.txt` to `MagicTattoosUI_<LANGUAGE>.txt` (for example `MagicTattoosUI_FRENCH.txt`, matching `sLanguage` in `Skyrim.ini`) and translate the text after each tab. Keep the `{}` placeholders and the key before the tab. Any line you leave out stays English. The log lists keys it couldn't use.
 
 ## Troubleshooting
 

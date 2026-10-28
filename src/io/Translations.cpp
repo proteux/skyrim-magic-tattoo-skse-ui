@@ -1,5 +1,6 @@
 #include "io/Translations.h"
 
+#include <algorithm>
 #include <cstdint>
 
 namespace mtfui::io {
@@ -40,6 +41,20 @@ namespace mtfui::io {
                 AppendUtf8(out, cp);
             }
             return out;
+        }
+
+        // Decodes one UTF-8 sequence at s[i] and advances i past it. Malformed bytes decode as themselves.
+        char32_t NextCodepoint(std::string_view s, std::size_t& i) {
+            const auto c = static_cast<unsigned char>(s[i++]);
+            const int extra = c >= 0xF0 ? 3 : c >= 0xE0 ? 2 : c >= 0xC0 ? 1 : 0;
+            if (extra == 0 || i + extra > s.size()) {
+                return c;
+            }
+            char32_t cp = c & (0x3F >> extra);
+            for (int k = 0; k < extra; ++k) {
+                cp = (cp << 6) | (static_cast<unsigned char>(s[i++]) & 0x3F);
+            }
+            return cp;
         }
 
         std::string Unescape(std::string_view s) {
@@ -156,6 +171,62 @@ namespace mtfui::io {
     const char* Translations::English(const char* key) const {
         const auto it = english_.find(std::string_view(key));
         return it != english_.end() ? it->second.c_str() : key;
+    }
+
+    std::vector<char32_t> Translations::ActiveCodepoints() const {
+        std::vector<char32_t> out;
+        for (const auto& [key, text] : active_) {
+            for (std::size_t i = 0; i < text.size();) {
+                if (const auto cp = NextCodepoint(text, i); cp > 0x7E) {
+                    out.push_back(cp);
+                }
+            }
+        }
+        std::sort(out.begin(), out.end());
+        out.erase(std::unique(out.begin(), out.end()), out.end());
+        return out;
+    }
+
+    void Translations::ReplaceInActive(char32_t from, std::string_view to) {
+        for (auto& [key, text] : active_) {
+            std::string out;
+            out.reserve(text.size());
+            for (std::size_t i = 0; i < text.size();) {
+                const auto start = i;
+                if (NextCodepoint(text, i) == from) {
+                    out += to;
+                } else {
+                    out.append(text, start, i - start);
+                }
+            }
+            text = std::move(out);
+        }
+    }
+
+    std::string_view PlainStandIn(char32_t cp) {
+        switch (cp) {
+            case 0x00A0:  // no-break space
+            case 0x202F:  // narrow no-break space
+            case 0x2009:  // thin space
+                return " ";
+            case 0x2018:
+            case 0x2019:
+                return "'";
+            case 0x201C:
+            case 0x201D:
+            case 0x201E:
+                return "\"";
+            case 0x2010:
+            case 0x2011:
+            case 0x2013:
+            case 0x2014:
+            case 0x2212:
+                return "-";
+            case 0x2026:
+                return "...";
+            default:
+                return {};
+        }
     }
 
     std::string FormatTranslated(const char* key, std::format_args args) {

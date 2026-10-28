@@ -31,7 +31,7 @@ namespace mtfui::ui {
 
         // English is built into the DLL, so a missing or partial file never shows raw keys. A file in
         // Interface/Translations for the game's language (English included) goes over it.
-        void LoadTranslations(const fs::path& data) {
+        std::string LoadTranslations(const fs::path& data) {
             auto& tr = io::Translations::Get();
             tr.SetEnglish(EmbeddedEnglish());
             const auto* setting = RE::GetINISetting("sLanguage:General");
@@ -44,7 +44,7 @@ namespace mtfui::ui {
             const auto bytes = io::ReadText(file);
             if (!bytes) {
                 logger::info("UI language {}: no {}, using English ({} strings)", language, io::PathText(file.filename()), tr.EnglishTable().size());
-                return;
+                return language;
             }
             const auto result = tr.Overlay(*bytes);
             logger::info("UI language {}: {} of {} strings from {}", language, result.loaded, tr.EnglishTable().size(), io::PathText(file.filename()));
@@ -54,7 +54,60 @@ namespace mtfui::ui {
             for (const auto& key : result.unknown) {
                 logger::warn("Ignored {}: not a Magic Tattoos UI string (renamed or removed?)", key);
             }
+            return language;
         }
+
+        // The SKSEMenuFramework.ini [Fonts] switch that adds a language's letters to the menu font.
+        const char* FontSwitch(std::string_view language) {
+            static constexpr std::pair<std::string_view, const char*> kSwitches[] = { { "RUSSIAN", "EnableCyrillic" }, { "UKRAINIAN", "EnableCyrillic" },
+                { "BULGARIAN", "EnableCyrillic" }, { "POLISH", "EnablePolish" }, { "CZECH", "EnablePolish" }, { "TURKISH", "EnableTurkish" },
+                { "CHINESE", "EnableChinese" }, { "JAPANESE", "EnableJapanese" }, { "KOREAN", "EnableKorean" }, { "THAI", "EnableThai" } };
+            for (const auto& [name, key] : kSwitches) {
+                if (language == name) {
+                    return key;
+                }
+            }
+            return nullptr;
+        }
+    }
+
+    void App::CheckTranslationFont() {
+        auto& tr = io::Translations::Get();
+        auto* font = GetFont();
+        if (!font) {
+            return;
+        }
+        std::vector<char32_t> missing;
+        for (const auto cp : tr.ActiveCodepoints()) {
+            if (cp <= 0xFFFF && ImFontManger::FindGlyphNoFallback(font, static_cast<ImWchar>(cp))) {
+                continue;
+            }
+            if (const auto plain = io::PlainStandIn(cp); !plain.empty()) {
+                tr.ReplaceInActive(cp, plain);
+                logger::info("The menu font has no U+{:04X}; using '{}' instead", static_cast<std::uint32_t>(cp), plain);
+            } else {
+                missing.push_back(cp);
+            }
+        }
+        if (missing.empty()) {
+            return;
+        }
+        std::string list;
+        for (std::size_t i = 0; i < missing.size() && i < 12; ++i) {
+            list += std::format("{}U+{:04X}", i ? " " : "", static_cast<std::uint32_t>(missing[i]));
+        }
+        logger::warn("The menu font can't draw {} character(s) of the {} text ({}...), so the UI stays in English", missing.size(), language_, list);
+        tr.DropActive();
+        if (targetId == 0x14) {
+            targetName = T("$MTFUI_Target_You");
+        }
+        Relint();
+        std::string name = language_;
+        std::transform(name.begin() + 1, name.end(), name.begin() + 1, [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+        fontNotice_ = TF("$MTFUI_Font_Missing", name);
+        const char* key = FontSwitch(language_);
+        fontFix_ = key ? TF("$MTFUI_Font_FixSwitch", key) : std::string(T("$MTFUI_Font_FixFont"));
+        logger::warn("{}", fontFix_);
     }
 
     fs::path GameDataDir() {
@@ -102,7 +155,7 @@ namespace mtfui::ui {
         paths.data = GameDataDir();
         paths.mtfRoot = paths.data / "SKSE" / "Plugins" / "StorageUtilData" / "MagicTattoosFramework";
         paths.uiDir = paths.data / "SKSE" / "Plugins" / "MagicTattoosUI";
-        LoadTranslations(paths.data);
+        language_ = LoadTranslations(paths.data);
         targetName = T("$MTFUI_Target_You");
         settings.Load(paths.uiDir / "settings.json");
         std::erase_if(settings.panels, [](const auto& kv) {
@@ -642,6 +695,10 @@ namespace mtfui::ui {
             return;
         }
         beganFrame_ = GetFrameCount();
+        if (!fontChecked_) {
+            fontChecked_ = true;
+            CheckTranslationFont();
+        }
         HoldVanityCamera(true);
         HoldActor(settings.holdTarget ? targetId : 0);
         if (holdWanted_ != 0 && GetTime() - lastHoldCheck_ > 0.25) {

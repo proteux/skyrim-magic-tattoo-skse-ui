@@ -35,12 +35,23 @@ namespace mtfui::io {
         const char* English(const char* key) const;
         const auto& EnglishTable() const { return english_; }
 
+        // Characters above ASCII in the translated text, for checking that the menu font can draw them.
+        std::vector<char32_t> ActiveCodepoints() const;
+        // Swaps a character the font can't draw for one it can, in every translated string.
+        void ReplaceInActive(char32_t from, std::string_view to);
+        // Back to English only, for when the font can't draw the translation.
+        void DropActive() { active_.clear(); }
+
     private:
         std::map<std::string, std::string, std::less<>> english_;
         std::map<std::string, std::string, std::less<>> active_;
     };
 
     std::string FormatTranslated(const char* key, std::format_args args);
+
+    // A plain stand-in for a typographic character (non-breaking space, curly apostrophe, dash, ellipsis), or empty
+    // when there is none and the font has to have the character itself.
+    std::string_view PlainStandIn(char32_t cp);
 }
 
 namespace mtfui {

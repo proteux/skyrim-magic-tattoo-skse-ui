@@ -146,6 +146,11 @@ namespace mtfui::ui {
                 TextColored(kAccent, "%s", TF("$MTFUI_Status_PreviewOn", lp.Status(), targetName).c_str());
             } else if (pending > 0) {
                 TextDisabled("%s", TF("$MTFUI_Status_LoadingTextures", pending).c_str());
+            } else if (!fontNotice_.empty()) {
+                TextColored(kWarn, "%s", fontNotice_.c_str());
+                if (IsItemHovered()) {
+                    SetTooltip("%s", fontFix_.c_str());
+                }
             } else {
                 TextDisabled("Magic Tattoos UI %s", kVersion);
                 if (IsItemHovered()) {
