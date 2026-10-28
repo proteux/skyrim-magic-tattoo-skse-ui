@@ -3,3 +3,4 @@ dist/
 vcpkg_installed/
 .vs/
 *.user
+build.local.sh

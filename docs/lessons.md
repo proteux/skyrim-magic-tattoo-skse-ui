@@ -18,7 +18,7 @@ Notes for whoever works on Magic Tattoos UI next. Section 1 is carried over from
 ## 2. Build machine
 
 - No full Visual Studio is needed. The standalone "Build Tools for Visual Studio" with the C++ workload is enough. `tools/msvc.cmd` finds it with `vswhere` and runs `vcvars64.bat` before CMake.
-- vcpkg lives at `M:/Repositories/vcpkg` (override with `VCPKG_ROOT`). CMake and Ninja come from `vcpkg fetch`, so they don't need a separate install.
+- `build.sh` finds vcpkg through `VCPKG_ROOT` or `PATH`. Machine-specific paths go in the gitignored `build.local.sh`. CMake and Ninja come from `vcpkg fetch`, so they don't need a separate install.
 - CommonLibSSE-NG comes from the overlay port in `ports/commonlibsse-ng`. Its `rapidcsv` dependency must be a plain name. A `version>=` constraint conflicts with the registry's version scheme.
 - The first configure builds every dependency and takes a long time. Later builds are incremental.
 

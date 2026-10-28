@@ -1,16 +1,22 @@
 #!/usr/bin/env bash
 # Build Magic Tattoos UI and copy it to the game Data folder (default), Vortex staging, or a release zip.
 # Usage: build.sh [live|staging|package|test|uninstall-staging|uninstall-live]
-# Set SKYRIM_DIR, VORTEX_STAGING, or VCPKG_ROOT to override the paths below.
+# Set SKYRIM_DIR, VORTEX_STAGING, or VCPKG_ROOT to override the paths below, in the environment or in build.local.sh.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 TARGET="${1:-live}"
+if [[ -f "$ROOT/build.local.sh" ]]; then
+  source "$ROOT/build.local.sh"
+fi
 GAME="${SKYRIM_DIR:-/c/Program Files (x86)/Steam/steamapps/common/Skyrim Special Edition}"
 DATA="$GAME/Data"
-STAGING="${VORTEX_STAGING:-/c/Users/white/AppData/Roaming/Vortex/skyrimse/mods/Magic Tattoos UI}"
+STAGING="${VORTEX_STAGING:-$(cygpath -u "$APPDATA")/Vortex/skyrimse/mods/Magic Tattoos UI}"
 DIST="$ROOT/dist"
-export VCPKG_ROOT="${VCPKG_ROOT:-M:/Repositories/vcpkg}"
+if [[ -z "${VCPKG_ROOT:-}" ]] && command -v vcpkg > /dev/null; then
+  VCPKG_ROOT="$(dirname "$(command -v vcpkg)")"
+fi
+export VCPKG_ROOT="${VCPKG_ROOT:-}"
 
 case "$TARGET" in
   uninstall-live)
@@ -50,6 +56,11 @@ QUIT_MSG="Skyrim is running and has MagicTattoosUI.dll locked. Quit Skyrim to de
 if [[ "$TARGET" == "live" ]] && skyrim_holds_dll; then
   echo "$QUIT_MSG" >&2
   exit 2
+fi
+
+if [[ ! -x "$VCPKG_ROOT/vcpkg.exe" ]]; then
+  echo "vcpkg not found. Set VCPKG_ROOT to your vcpkg folder, in the environment or in build.local.sh." >&2
+  exit 1
 fi
 
 # Use the CMake and Ninja that vcpkg downloads when they aren't installed system-wide.
