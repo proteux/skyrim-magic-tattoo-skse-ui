@@ -124,6 +124,9 @@ case "$TARGET" in
     mkdir -p "$PACKAGE/SKSE/Plugins"
     cp -f "$DIST/SKSE/Plugins/MagicTattoosUI.dll" "$PACKAGE/SKSE/Plugins/"
     cp -rf "$DIST/Interface" "$PACKAGE/"
+    mkdir -p "$PACKAGE/SKSE/Plugins/MagicTattoosUI"
+    cp -f "$ROOT/LICENSE" "$PACKAGE/SKSE/Plugins/MagicTattoosUI/LICENSE.txt"
+    cp -f "$ROOT/release/README.txt" "$PACKAGE/SKSE/Plugins/MagicTattoosUI/README.txt"
     # Windows bsdtar, not Git Bash's GNU tar, which cannot write zips. Compress-Archive in Windows PowerShell writes backslash paths.
     "$(cygpath -u "$SYSTEMROOT")/System32/tar.exe" -a -cf "$(cygpath -w "$ZIP")" -C "$(cygpath -w "$PACKAGE")" SKSE Interface
     ;;

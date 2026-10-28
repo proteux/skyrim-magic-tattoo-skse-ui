@@ -121,3 +121,11 @@ See `docs/lessons.md` for how MTF applies preset changes and other notes for wor
 - [Lyru](https://www.nexusmods.com/profile/ItsLyru/mods?gameId=1704), for the tattoo packs shown in the screenshots
 - [Caenarvon](https://www.nexusmods.com/profile/Caenarvon/mods?gameId=1704), for the clothing in the sample screenshot
 - The CommonLibSSE-NG contributors
+
+## License
+
+Copyright (C) 2026 Jack Whitehouse (proteux)
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. It is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See [`LICENSE`](LICENSE) for the full text of the GPL-3.0.
+
+The release zip includes the license and this notice as `SKSE/Plugins/MagicTattoosUI/LICENSE.txt` and `README.txt`.
