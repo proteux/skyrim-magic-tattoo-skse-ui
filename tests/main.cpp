@@ -202,14 +202,14 @@ namespace {
         const auto dragon = model::PresetFromJson("B_H_-_DRAGON", *io::ReadJson(fixtures / "presets" / "B_H_-_DRAGON.json"));
         auto p = dragon;
         spec.below = true;
-        spec.steps = 20;
+        spec.steps = 7;
         spec.emissiveMult = model::Ramp{ 0.5, 2.0 };
         spec.pulseRate = model::Ramp{ 3.0, 0.5 };
         spec.pulseDepth = model::Ramp{ 80.0, 20.0 };
         spec.pulsePause = model::Ramp{ 0.0, 1.2 };
         spec.lowWaveform = "heartbeat";
-        model::ApplyGradient(cat, p, spec, model::kMaxSlotsFallback);
-        Check(p.slots.size() == 21, "20 steps make Default plus 20 tiers");
+        model::ApplyGradient(cat, p, spec, model::kSlotCount);
+        Check(p.slots.size() == model::kSlotCount && p.slots.back().Configured(), "7 steps fill Default plus 7 tiers");
         Check(p.slots[0].packId == dragon.slots[0].packId && p.slots[0].effects == dragon.slots[0].effects, "Default keeps its tattoo and effects");
         Check(p.slots[0].layers[0].tint == 0x00FF00 && p.slots[1].layers[0].tint == 0xFF0000, "Default and tier 1 take the end tints");
         Check(p.slots[0].layers[0].emissive == 0xFFFFFF && p.slots[1].layers[0].emissive == 0x0000FF, "glow colors follow their own stops");
@@ -217,14 +217,14 @@ namespace {
         auto glowOnly = dragon;
         auto glowSpec = spec;
         glowSpec.tintStops.clear();
-        model::ApplyGradient(cat, glowOnly, glowSpec, model::kMaxSlotsFallback);
+        model::ApplyGradient(cat, glowOnly, glowSpec, model::kSlotCount);
         Check(glowOnly.slots[1].layers[0].tint == dragon.slots[0].layers[0].tint && glowOnly.slots[1].layers[0].emissive == 0x0000FF,
             "without tint stops, tiers keep Default's tint");
         Check(std::abs(p.slots[1].layers[0].emissiveMult - 0.5) < 1e-9 && std::abs(p.slots[0].layers[0].emissiveMult - 2.0) < 1e-9, "glow ramp");
         Check(p.slots[1].pulse.rate == 3.0 && p.slots[1].pulse.depth == 80 && p.slots[1].pulse.pause == 0.0, "tier 1 takes the low-end pulse");
         Check(p.slots[0].pulse.rate == 0.5 && p.slots[0].pulse.depth == 20 && p.slots[0].pulse.pause == static_cast<float>(1.2),
             "Default takes the high-end pulse");
-        Check(p.slots[6].pulse.waveform == "heartbeat" && p.slots[7].pulse.waveform == dragon.slots[0].pulse.waveform,
+        Check(p.slots[2].pulse.waveform == "heartbeat" && p.slots[3].pulse.waveform == dragon.slots[0].pulse.waveform,
             "the low-end waveform stops at its cutoff");
         bool inherit = true;
         for (std::size_t i = 1; i < p.slots.size(); ++i) {
@@ -234,21 +234,21 @@ namespace {
         for (const auto& issue : model::LintPreset(cat, p, {})) {
             Check(issue.severity == model::Severity::Info, "no warnings on a generated gradient: " + issue.message);
         }
-        Check(model::PresetFromJson(p.name, nlohmann::json::parse(io::WriteStyled(model::PresetToJson(p)))) == p, "20-tier preset round-trips");
+        Check(model::PresetFromJson(p.name, nlohmann::json::parse(io::WriteStyled(model::PresetToJson(p)))) == p, "generated preset round-trips");
 
         auto capped = dragon;
-        model::ApplyGradient(cat, capped, spec, model::kSlotCount);
+        auto many = spec;
+        many.steps = 20;
+        model::ApplyGradient(cat, capped, many, model::kSlotCount);
         Check(capped.slots.size() == model::kSlotCount, "the tier cap limits the steps");
 
         auto lint = p;
-        lint.slots.resize(12);
-        model::LintContext ctx;
-        ctx.maxSlots = 10;
+        lint.slots.push_back(p.slots[1]);
         bool past = false;
-        for (const auto& issue : model::LintPreset(cat, lint, ctx)) {
-            past = past || (issue.slot == 10 && issue.severity == model::Severity::Warning);
+        for (const auto& issue : model::LintPreset(cat, lint, {})) {
+            past = past || (issue.slot == model::kSlotCount && issue.severity == model::Severity::Warning);
         }
-        Check(past, "lint flags tiers past iMaxConditions");
+        Check(past, "lint flags tiers past the 7 MTF uses");
 
         auto trimmed = dragon;
         trimmed.slots.resize(11, model::DefaultSlot());

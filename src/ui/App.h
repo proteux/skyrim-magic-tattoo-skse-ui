@@ -57,7 +57,8 @@ namespace mtfui::ui {
         Paths paths;
         model::Catalogs cat;
         io::UiSettings settings;
-        int maxSlots = model::kMaxSlotsFallback;  // Default + tiers MTF evaluates, from its iMaxConditions
+        // Default + the tiers MTF uses. Its ini allows more (iMaxConditions), but tiers past 7 didn't activate in game.
+        int maxSlots = model::kSlotCount;
         std::vector<model::PresetFileInfo> library;
         std::vector<model::PresetFileInfo> hiddenPresets;  // soft-deleted user presets
         model::UsageIndex usage;  // user presets only
