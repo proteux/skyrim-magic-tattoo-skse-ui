@@ -677,6 +677,9 @@ namespace mtfui::ui {
                 SliderInt(T("$MTFUI_Gradient_Steps"), &grad.steps, 1, maxSteps, "%d", ImGuiSliderFlags_AlwaysClamp);
                 const auto planned = model::PlanGradient(GradientSpecFromState()).tiers.size();
                 TextDisabled("%s", TF("$MTFUI_Gradient_StepsInfo", planned, std::format("{:.1f}", std::abs(grad.hi - grad.lo) / (planned + 1.0))).c_str());
+                if (static_cast<int>(planned) > model::kSlotCount - 1) {
+                    TextColored(kWarn, "%s", TF("$MTFUI_Gradient_PastMenu", model::kSlotCount - 1).c_str());
+                }
             }
 
             const auto spec = GradientSpecFromState();
@@ -964,6 +967,15 @@ namespace mtfui::ui {
             }
             DrawTierRow(app, i, rowWidth);
         }
+        auto& p = app.Preset();
+        const bool full = static_cast<int>(p.slots.size()) >= app.maxSlots;
+        BeginDisabled(full);
+        if (Button(T("$MTFUI_Tiers_Add"))) {
+            p.slots.push_back(model::DefaultSlot());
+            app.ed.slot = static_cast<int>(p.slots.size()) - 1;
+        }
+        EndDisabled();
+        HelpMarker(full ? TF("$MTFUI_Tiers_AddFull", app.maxSlots - 1).c_str() : TF("$MTFUI_Tiers_AddHelp", model::kSlotCount - 1, app.maxSlots - 1).c_str());
         SeparatorText(T("$MTFUI_Checks_Title"));
         DrawIssues(app);
     }

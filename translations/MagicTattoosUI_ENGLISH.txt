@@ -395,8 +395,9 @@ $MTFUI_Tiers_Base	Base
 $MTFUI_Tiers_BaseHelp	Default sets the base look. Tiers that leave their tattoo as "Same as Default" build on it, and it is shown whenever no tier matches.
 $MTFUI_Tiers_Header	Tiers (top wins)
 $MTFUI_Tiers_HeaderHelp	Drag tiers to change priority, or select one and press Alt+Up / Alt+Down. Right-click a tier to copy, paste or clear it. The first tier whose conditions are true is shown; Default applies when none are.
-$MTFUI_Tiers_Extra	Extra tiers (not used by MTF)
-$MTFUI_Tiers_ExtraHelp	MTF only uses the first {} tiers, so these never activate. Move the ones you want above them, or right-click and clear them.
+$MTFUI_Tiers_Extra	Extra tiers (not in MTF's menu)
+$MTFUI_Tiers_ExtraHelp	MTF checks these like any other tier, but its own menu only shows the first {}, so edit them here. Saving from MTF's menu keeps them.
+$MTFUI_Tiers_Add	Add tier
 $MTFUI_Gradient_TierName	{} {}
 $MTFUI_Gradient_Open	Gradient tiers...
 $MTFUI_Gradient_OpenHelp	Builds a ladder of tiers from one value, such as health, so the tattoo's color follows it like a health bar.
@@ -412,6 +413,7 @@ $MTFUI_Gradient_From_Fmt	from %d
 $MTFUI_Gradient_To_Fmt	to %d
 $MTFUI_Gradient_Steps	Tiers
 $MTFUI_Gradient_StepsInfo	{} tiers plus Default, about {} each
+$MTFUI_Gradient_PastMenu	MTF's own menu only shows the first {} tiers. The rest work; edit them here.
 $MTFUI_Gradient_TintSection	Tint
 $MTFUI_Gradient_GlowSection	Glow
 $MTFUI_Gradient_ColorsHelp	From the low end of the range (top, left in the strip) to the high end. Two to four colors, evenly spaced. Turned off, the tiers keep Default's color.
@@ -449,6 +451,8 @@ $MTFUI_Gradient_SetTransition	Set transition to 1 s
 $MTFUI_Gradient_Replaces	Replaces all tiers. Default keeps its tattoo and effects. Undo brings them back.
 $MTFUI_Gradient_Create	Make tiers
 $MTFUI_Toast_GradientMade	Made {} gradient tiers. Save to keep them.
+$MTFUI_Tiers_AddHelp	Adds a tier at the bottom. MTF's menu shows {} tiers; MTF itself checks up to {} (iMaxConditions in MagicTattoosFramework.ini).
+$MTFUI_Tiers_AddFull	MTF checks at most {} tiers. Raise iMaxConditions in Data/SKSE/Plugins/MagicTattoosFramework.ini and restart the game for more.
 $MTFUI_Header_Revert	Revert
 $MTFUI_Header_Undo	Undo
 $MTFUI_Header_Redo	Redo
@@ -496,7 +500,7 @@ $MTFUI_Lint_NotAnOption	{}: '{}' is not an option for {}
 $MTFUI_Lint_BadFileName	File name must be 1-32 characters of letters, digits, '_' or '-'
 $MTFUI_Lint_NoDisplayName	Display name is empty; MTF will show the file name
 $MTFUI_Lint_NoCondition	{} has a look or effects but no condition, so it never activates
-$MTFUI_Lint_PastLimit	{} is past the {} tiers MTF uses, so it never activates
+$MTFUI_Lint_PastLimit	{} is past the {} tiers MTF checks, so it never activates. Raise iMaxConditions in MagicTattoosFramework.ini.
 $MTFUI_Lint_Shadowed	{} can never activate: {} is higher in the list and always matches first. Move it up.
 $MTFUI_Lint_ConditionMissing	Condition '{}' is not installed; this tier will not activate
 $MTFUI_Lint_ConditionDisabled	{} is disabled in MTF; '{}' will never be true

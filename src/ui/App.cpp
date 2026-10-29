@@ -175,6 +175,11 @@ namespace mtfui::ui {
         // Only until RaceMenu itself answers, after a save loads.
         logger::info("Overlay slots in the ini files: Body {}, Face {}, Hands {}, Feet {}", overlayCapacity_["Body"], overlayCapacity_["Face"], overlayCapacity_["Hands"],
             overlayCapacity_["Feet"]);
+        // MTF falls back to 32 for values outside 1..256 too.
+        const int conditions = IniInt(paths.data / "SKSE" / "Plugins" / "MagicTattoosFramework.ini", L"General", L"iMaxConditions", model::kMaxSlotsFallback);
+        maxSlots = std::max(model::kSlotCount, conditions >= 1 && conditions <= 256 ? conditions : model::kMaxSlotsFallback);
+        logger::info("MTF evaluates up to {} condition slots (iMaxConditions {})", maxSlots, conditions);
+
         game::LivePreview::Get().Init(paths.mtfRoot / "presets_builtin", settings.previewActors, [this](const std::vector<RE::FormID>& ids) {
             settings.previewActors = ids;
             SaveSettings();

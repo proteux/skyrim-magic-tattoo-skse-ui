@@ -129,7 +129,7 @@ namespace mtfui::model {
                 }
                 continue;
             }
-            if (i >= ctx.maxSlots) {
+            if (ctx.maxSlots > 0 && i >= ctx.maxSlots) {
                 out.push_back({ Severity::Warning, i, TF("$MTFUI_Lint_PastLimit", label, ctx.maxSlots - 1) });
                 continue;
             }
