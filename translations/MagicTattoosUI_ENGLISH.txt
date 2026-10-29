@@ -421,6 +421,8 @@ $MTFUI_Gradient_SameAsTint	Same as tint
 $MTFUI_Gradient_RemoveColor	Remove
 $MTFUI_Gradient_AddColor	Add color
 $MTFUI_Gradient_Reverse	Reverse
+$MTFUI_Gradient_Swap	Swap
+$MTFUI_Gradient_SwapTip	Swap the low-end and high-end values
 $MTFUI_Gradient_HealthBar	Health bar
 $MTFUI_Gradient_Tint	Change tint
 $MTFUI_Gradient_Emissive	Change glow color
@@ -431,6 +433,19 @@ $MTFUI_Gradient_HighEnd_Fmt	high end %.1f
 $MTFUI_Gradient_Opacity	Opacity ramp
 $MTFUI_Gradient_LowEndPct_Fmt	low end %d%%
 $MTFUI_Gradient_HighEndPct_Fmt	high end %d%%
+$MTFUI_Gradient_PulseSection	Pulse
+$MTFUI_Gradient_PulseHelp	Ramps the pulse along the range, like a heartbeat that speeds up as health drops. Off, the tiers keep Default's pulse. MTF may restart the pulse when the tier changes, so fewer, wider tiers can look smoother.
+$MTFUI_Gradient_PulseSpeed	Speed ramp
+$MTFUI_Gradient_PulseDepth	Depth ramp
+$MTFUI_Gradient_PulsePause	Pause ramp
+$MTFUI_Gradient_LowEndRate_Fmt	low end %.2f/s
+$MTFUI_Gradient_HighEndRate_Fmt	high end %.2f/s
+$MTFUI_Gradient_LowEndSec_Fmt	low end %.1f s
+$MTFUI_Gradient_HighEndSec_Fmt	high end %.1f s
+$MTFUI_Gradient_LowShape	Different shape at the low end
+$MTFUI_Gradient_LowShapeHelp	Tiers in the lowest part of the range use this pulse shape; the rest keep Default's.
+$MTFUI_Gradient_LowShapeUpTo_Fmt	lowest %d%%
+$MTFUI_Gradient_PulseNoGlow	The pulse only animates glow, and Default has no glow strength. Turn on the glow strength ramp or give Default some glow.
 $MTFUI_Gradient_TransitionHint	The transition is short, so the color jumps from tier to tier. A second or so makes it slide.
 $MTFUI_Gradient_SetTransition	Set transition to 1 s
 $MTFUI_Gradient_Replaces	Replaces all tiers. Default keeps its tattoo and effects. Undo brings them back.

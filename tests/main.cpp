@@ -204,6 +204,10 @@ namespace {
         spec.below = true;
         spec.steps = 20;
         spec.emissiveMult = model::Ramp{ 0.5, 2.0 };
+        spec.pulseRate = model::Ramp{ 3.0, 0.5 };
+        spec.pulseDepth = model::Ramp{ 80.0, 20.0 };
+        spec.pulsePause = model::Ramp{ 0.0, 1.2 };
+        spec.lowWaveform = "heartbeat";
         model::ApplyGradient(cat, p, spec, model::kMaxSlotsFallback);
         Check(p.slots.size() == 21, "20 steps make Default plus 20 tiers");
         Check(p.slots[0].packId == dragon.slots[0].packId && p.slots[0].effects == dragon.slots[0].effects, "Default keeps its tattoo and effects");
@@ -217,6 +221,11 @@ namespace {
         Check(glowOnly.slots[1].layers[0].tint == dragon.slots[0].layers[0].tint && glowOnly.slots[1].layers[0].emissive == 0x0000FF,
             "without tint stops, tiers keep Default's tint");
         Check(std::abs(p.slots[1].layers[0].emissiveMult - 0.5) < 1e-9 && std::abs(p.slots[0].layers[0].emissiveMult - 2.0) < 1e-9, "glow ramp");
+        Check(p.slots[1].pulse.rate == 3.0 && p.slots[1].pulse.depth == 80 && p.slots[1].pulse.pause == 0.0, "tier 1 takes the low-end pulse");
+        Check(p.slots[0].pulse.rate == 0.5 && p.slots[0].pulse.depth == 20 && p.slots[0].pulse.pause == static_cast<float>(1.2),
+            "Default takes the high-end pulse");
+        Check(p.slots[6].pulse.waveform == "heartbeat" && p.slots[7].pulse.waveform == dragon.slots[0].pulse.waveform,
+            "the low-end waveform stops at its cutoff");
         bool inherit = true;
         for (std::size_t i = 1; i < p.slots.size(); ++i) {
             inherit = inherit && p.slots[i].packId.empty() && p.slots[i].effects.empty() && p.slots[i].Configured();

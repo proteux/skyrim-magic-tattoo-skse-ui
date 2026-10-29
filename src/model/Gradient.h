@@ -33,6 +33,12 @@ namespace mtfui::model {
         std::vector<ColorStop> emissiveStops;  // empty = keep Default's glow color
         std::optional<Ramp> emissiveMult;
         std::optional<Ramp> alpha;  // percent
+        // The pulse only scales emission, so these need some glow to show.
+        std::optional<Ramp> pulseRate;  // cycles per second
+        std::optional<Ramp> pulseDepth;  // percent
+        std::optional<Ramp> pulsePause;  // seconds
+        std::optional<std::string> lowWaveform;  // for bands at or below lowWaveformUpTo; "" = built-in cosine
+        double lowWaveformUpTo = 0.25;
     };
 
     struct GradientTier {
@@ -63,6 +69,7 @@ namespace mtfui::model {
     std::vector<GradientCondition> GradientConditions(const Catalogs& cat);
 
     // Replaces every tier with the gradient. Default keeps its tattoo and effects and takes the color of the band
-    // no tier covers; tiers inherit Default's tattoo, layers and pulse with the colors and ramps applied.
+    // no tier covers; tiers inherit Default's tattoo, layers and pulse with the colors and ramps applied. Default
+    // gets the ramps too, at its end of the range.
     void ApplyGradient(const Catalogs& cat, Preset& preset, GradientSpec spec, int maxSlots);
 }

@@ -42,6 +42,18 @@ namespace mtfui::ui {
             bool fade = false;
             int alphaLow = 100;
             int alphaHigh = 100;
+            bool pulseRate = false;
+            float rateLow = 3.0f;
+            float rateHigh = 0.5f;
+            bool pulseDepth = false;
+            int depthLow = 80;
+            int depthHigh = 20;
+            bool pulsePause = false;
+            float pauseLow = 0.0f;
+            float pauseHigh = 1.0f;
+            bool lowWave = false;
+            std::string lowWaveform = "heartbeat";
+            int lowWaveUpTo = 25;  // percent of the range
         };
         GradientState grad;
         const std::vector<std::uint32_t> kHealthBar{ 0xE02020, 0xF0D020, 0x30C040 };
@@ -537,6 +549,19 @@ namespace mtfui::ui {
             if (grad.fade) {
                 spec.alpha = model::Ramp{ static_cast<double>(grad.alphaLow), static_cast<double>(grad.alphaHigh) };
             }
+            if (grad.pulseRate) {
+                spec.pulseRate = model::Ramp{ grad.rateLow, grad.rateHigh };
+            }
+            if (grad.pulseDepth) {
+                spec.pulseDepth = model::Ramp{ static_cast<double>(grad.depthLow), static_cast<double>(grad.depthHigh) };
+            }
+            if (grad.pulsePause) {
+                spec.pulsePause = model::Ramp{ grad.pauseLow, grad.pauseHigh };
+            }
+            if (grad.lowWave) {
+                spec.lowWaveform = grad.lowWaveform;
+                spec.lowWaveformUpTo = grad.lowWaveUpTo / 100.0;
+            }
             return spec;
         }
 
@@ -596,11 +621,16 @@ namespace mtfui::ui {
         }
 
         void DrawGradientModal(App& app, const char* title, const std::vector<model::GradientCondition>& conditions) {
-            if (!BeginPopupModal(title, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+            SetNextWindowSize(ImVec2{ 460, 640 }, ImGuiCond_FirstUseEver);
+            SetNextWindowSizeConstraints(ImVec2{ 400, 320 }, ImVec2{ 4096, 4096 });
+            if (!BeginPopupModal(title, nullptr, 0)) {
                 return;
             }
             auto& p = app.Preset();
-            const float width = 380.0f;
+            // The settings scroll; the warning and the buttons stay at the bottom.
+            const float footer = GetTextLineHeightWithSpacing() * 2.0f + GetFrameHeightWithSpacing() + GetStyle()->ItemSpacing.y;
+            BeginChild("##gradientbody", ImVec2{ 0, -footer }, 0);
+            const float width = std::max(300.0f, GetContentRegionAvail().x - GetStyle()->ScrollbarSize);
             TextWrapped("%s", T("$MTFUI_Gradient_Intro"));
             Spacing();
 
@@ -672,22 +702,81 @@ namespace mtfui::ui {
                 DrawColorList("##glow", grad.glowColors, width);
                 DrawGradientStrip(spec, EvenStops(grad.glowColors), width);
             }
+            // Low-end and high-end sliders on one line, then a button that swaps them.
+            auto rampPair = [&](const char* id, auto& low, auto& high, auto min, auto max, const char* lowFmt, const char* highFmt) {
+                PushID(id);
+                const float gap = GetStyle()->ItemInnerSpacing.x;
+                const char* swap = T("$MTFUI_Gradient_Swap");
+                const float slider = (width - CalcTextSize(swap).x - GetStyle()->FramePadding.x * 2.0f - gap * 2.0f) * 0.5f;
+                SetNextItemWidth(slider);
+                if constexpr (std::is_same_v<std::decay_t<decltype(low)>, float>) {
+                    SliderFloat("##lo", &low, min, max, lowFmt);
+                    SameLine(0, gap);
+                    SetNextItemWidth(slider);
+                    SliderFloat("##hi", &high, min, max, highFmt);
+                } else {
+                    SliderInt("##lo", &low, min, max, lowFmt);
+                    SameLine(0, gap);
+                    SetNextItemWidth(slider);
+                    SliderInt("##hi", &high, min, max, highFmt);
+                }
+                SameLine(0, gap);
+                if (Button(swap)) {
+                    std::swap(low, high);
+                }
+                if (IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
+                    SetTooltip("%s", T("$MTFUI_Gradient_SwapTip"));
+                }
+                PopID();
+            };
             Checkbox(T("$MTFUI_Gradient_Glow"), &grad.glow);
             HelpMarker(T("$MTFUI_Gradient_GlowHelp"));
             if (grad.glow) {
-                SetNextItemWidth(width * 0.5f - GetStyle()->ItemInnerSpacing.x);
-                SliderFloat("##glowlo", &grad.glowLow, 0.0f, 10.0f, T("$MTFUI_Gradient_LowEnd_Fmt"));
-                SameLine(0, GetStyle()->ItemInnerSpacing.x);
-                SetNextItemWidth(width * 0.5f);
-                SliderFloat("##glowhi", &grad.glowHigh, 0.0f, 10.0f, T("$MTFUI_Gradient_HighEnd_Fmt"));
+                rampPair("glow", grad.glowLow, grad.glowHigh, 0.0f, 10.0f, T("$MTFUI_Gradient_LowEnd_Fmt"), T("$MTFUI_Gradient_HighEnd_Fmt"));
             }
             Checkbox(T("$MTFUI_Gradient_Opacity"), &grad.fade);
             if (grad.fade) {
+                rampPair("alpha", grad.alphaLow, grad.alphaHigh, 0, 100, T("$MTFUI_Gradient_LowEndPct_Fmt"), T("$MTFUI_Gradient_HighEndPct_Fmt"));
+            }
+
+            SeparatorText(T("$MTFUI_Gradient_PulseSection"));
+            HelpMarker(T("$MTFUI_Gradient_PulseHelp"));
+            Checkbox(T("$MTFUI_Gradient_PulseSpeed"), &grad.pulseRate);
+            if (grad.pulseRate) {
+                rampPair("rate", grad.rateLow, grad.rateHigh, 0.0f, 5.0f, T("$MTFUI_Gradient_LowEndRate_Fmt"), T("$MTFUI_Gradient_HighEndRate_Fmt"));
+            }
+            Checkbox(T("$MTFUI_Gradient_PulseDepth"), &grad.pulseDepth);
+            if (grad.pulseDepth) {
+                rampPair("depth", grad.depthLow, grad.depthHigh, 0, 100, T("$MTFUI_Gradient_LowEndPct_Fmt"), T("$MTFUI_Gradient_HighEndPct_Fmt"));
+            }
+            Checkbox(T("$MTFUI_Gradient_PulsePause"), &grad.pulsePause);
+            if (grad.pulsePause) {
+                rampPair("pause", grad.pauseLow, grad.pauseHigh, 0.0f, 5.0f, T("$MTFUI_Gradient_LowEndSec_Fmt"), T("$MTFUI_Gradient_HighEndSec_Fmt"));
+            }
+            Checkbox(T("$MTFUI_Gradient_LowShape"), &grad.lowWave);
+            HelpMarker(T("$MTFUI_Gradient_LowShapeHelp"));
+            if (grad.lowWave) {
                 SetNextItemWidth(width * 0.5f - GetStyle()->ItemInnerSpacing.x);
-                SliderInt("##alphalo", &grad.alphaLow, 0, 100, T("$MTFUI_Gradient_LowEndPct_Fmt"));
+                if (BeginCombo("##lowshape", grad.lowWaveform.empty() ? T("$MTFUI_Pulse_Smooth") : grad.lowWaveform.c_str())) {
+                    if (Selectable(T("$MTFUI_Pulse_Smooth"), grad.lowWaveform.empty())) {
+                        grad.lowWaveform.clear();
+                    }
+                    for (const auto& w : app.cat.waveforms) {
+                        if (Selectable(w.name.c_str(), model::IEquals(w.name, grad.lowWaveform))) {
+                            grad.lowWaveform = w.name;
+                        }
+                    }
+                    EndCombo();
+                }
                 SameLine(0, GetStyle()->ItemInnerSpacing.x);
                 SetNextItemWidth(width * 0.5f);
-                SliderInt("##alphahi", &grad.alphaHigh, 0, 100, T("$MTFUI_Gradient_HighEndPct_Fmt"));
+                SliderInt("##lowshapeupto", &grad.lowWaveUpTo, 0, 100, T("$MTFUI_Gradient_LowShapeUpTo_Fmt"), ImGuiSliderFlags_AlwaysClamp);
+            }
+            if (grad.pulseRate || grad.pulseDepth || grad.pulsePause || grad.lowWave) {
+                const bool baseGlows = std::any_of(p.slots[0].layers.begin(), p.slots[0].layers.end(), [](const model::Layer& l) { return l.emissiveMult > 0.0; });
+                if (!grad.glow && !baseGlows) {
+                    TextColored(kWarn, "%s", T("$MTFUI_Gradient_PulseNoGlow"));
+                }
             }
 
             if (p.transitionDuration < 0.5) {
@@ -697,9 +786,12 @@ namespace mtfui::ui {
                     p.transitionDuration = 1.0;
                 }
             }
+            EndChild();
 
-            Spacing();
-            TextColored(kWarn, "%s", T("$MTFUI_Gradient_Replaces"));
+            Separator();
+            PushStyleColor(ImGuiCol_Text, kWarn);
+            TextWrapped("%s", T("$MTFUI_Gradient_Replaces"));
+            PopStyleColor();
             BeginDisabled(!current);
             if (Button(T("$MTFUI_Gradient_Create"), ImVec2{ 120, 0 })) {
                 model::ApplyGradient(app.cat, p, spec, app.maxSlots);

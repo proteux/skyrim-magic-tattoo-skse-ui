@@ -145,10 +145,29 @@ namespace mtfui::model {
             }
             return layers;
         };
+        const auto basePulse = base.pulse;
+        auto pulse = [&](double t) {
+            auto out = basePulse;
+            // Rate and pause are Papyrus floats too.
+            if (spec.pulseRate) {
+                out.rate = static_cast<float>(std::max(0.0, spec.pulseRate->At(t)));
+            }
+            if (spec.pulseDepth) {
+                out.depth = std::clamp<std::int64_t>(std::llround(spec.pulseDepth->At(t)), 0, 100);
+            }
+            if (spec.pulsePause) {
+                out.pause = static_cast<float>(std::max(0.0, spec.pulsePause->At(t)));
+            }
+            if (spec.lowWaveform && t <= spec.lowWaveformUpTo + 1e-9) {
+                out.waveform = *spec.lowWaveform;
+            }
+            return out;
+        };
 
         std::vector<Slot> slots;
         slots.push_back(base);
         slots[0].layers = look(plan.defaultT);
+        slots[0].pulse = pulse(plan.defaultT);
         for (const auto& tier : plan.tiers) {
             Slot s = DefaultSlot();
             ConditionItem item;
@@ -160,7 +179,7 @@ namespace mtfui::model {
             item.param = tier.threshold;
             s.conditions.push_back(std::move(item));
             s.layers = look(tier.t);
-            s.pulse = base.pulse;
+            s.pulse = pulse(tier.t);
             slots.push_back(std::move(s));
         }
         while (static_cast<int>(slots.size()) < kSlotCount) {
