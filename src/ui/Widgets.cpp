@@ -9,11 +9,12 @@ namespace mtfui::ui {
     bool InputString(const char* label, std::string& value, const char* hint, int flags, std::size_t capacity) {
         std::vector<char> buf(std::max(capacity, value.size() + 1), '\0');
         std::copy(value.begin(), value.end(), buf.begin());
-        const bool changed = hint ? InputTextWithHint(label, hint, buf.data(), buf.size(), flags) : InputText(label, buf.data(), buf.size(), flags);
-        if (changed) {
+        const bool result = hint ? InputTextWithHint(label, hint, buf.data(), buf.size(), flags) : InputText(label, buf.data(), buf.size(), flags);
+        // With EnterReturnsTrue, ImGui still writes every edit to buf but only returns true on Enter.
+        if (value != buf.data()) {
             value = buf.data();
         }
-        return changed;
+        return result;
     }
 
     namespace {
