@@ -31,6 +31,16 @@ namespace mtfui::ui {
         enum class GradientSource { Fresh, Saved, SavedEdited, Inferred };
         GradientSource gradSource = GradientSource::Fresh;
         const std::vector<std::uint32_t> kHealthBar{ 0xE02020, 0xF0D020, 0x30C040 };
+        std::string gradComboSearch;  // only one combo is open at a time
+
+        // Search box at the top of an open gradient-dialog combo; cleared and focused each time the combo opens.
+        void ComboSearchBox() {
+            if (IsWindowAppearing()) {
+                gradComboSearch.clear();
+                SetKeyboardFocusHere();
+            }
+            SearchBox("##combosearch", gradComboSearch, -1.0f);
+        }
 
         void DrawGroupMenu(const model::PresetFileInfo& info, const std::vector<std::string>& groups) {
             if (!BeginMenu(T("$MTFUI_Library_MoveToGroup"))) {
@@ -568,13 +578,18 @@ namespace mtfui::ui {
                 const model::CatalogEntry* entry = app.cat.FindEffect(r.key);
                 const std::string preview = r.key.empty() ? T("$MTFUI_Common_Choose") : entry ? entry->label : TF("$MTFUI_Picker_NotInstalled", r.key);
                 SetNextItemWidth(width - removeWidth);
-                if (BeginCombo("##effect", preview.c_str(), ImGuiComboFlags_HeightLarge)) {
+                if (BeginCombo("##effect", preview.c_str(), ImGuiComboFlags_HeightLargest)) {
+                    ComboSearchBox();
                     for (const auto& plugin : app.cat.plugins) {
-                        if (plugin.effects.empty()) {
-                            continue;
-                        }
-                        SeparatorText(plugin.label.c_str());
+                        bool header = false;
                         for (const auto& e : plugin.effects) {
+                            if (!MatchesSearch(plugin.label + " " + e.label + " " + e.description, gradComboSearch)) {
+                                continue;
+                            }
+                            if (!header) {
+                                SeparatorText(plugin.label.c_str());
+                                header = true;
+                            }
                             const std::string key = plugin.pluginId + ":" + e.id;
                             if (Selectable((e.label + "##" + key).c_str(), entry == &e)) {
                                 model::Effect fx;
@@ -686,8 +701,12 @@ namespace mtfui::ui {
             }
             auto conditionName = [](const model::GradientCondition& c) { return c.plugin->label + ": " + c.entry->label; };
             SetNextItemWidth(field);
-            if (BeginCombo(T("$MTFUI_Gradient_Condition"), current ? conditionName(*current).c_str() : grad.conditionId.c_str())) {
+            if (BeginCombo(T("$MTFUI_Gradient_Condition"), current ? conditionName(*current).c_str() : grad.conditionId.c_str(), ImGuiComboFlags_HeightLargest)) {
+                ComboSearchBox();
                 for (std::size_t i = 0; i < conditions.size(); ++i) {
+                    if (!MatchesSearch(conditionName(conditions[i]) + " " + conditions[i].entry->description, gradComboSearch)) {
+                        continue;
+                    }
                     PushID(static_cast<int>(i));
                     if (Selectable(conditionName(conditions[i]).c_str(), &conditions[i] == current)) {
                         SetGradientCondition(conditions[i]);
@@ -801,11 +820,15 @@ namespace mtfui::ui {
             HelpMarker(T("$MTFUI_Gradient_LowShapeHelp"));
             if (grad.lowWave) {
                 SetNextItemWidth(width * 0.5f - GetStyle()->ItemInnerSpacing.x);
-                if (BeginCombo("##lowshape", grad.lowWaveform.empty() ? T("$MTFUI_Pulse_Smooth") : grad.lowWaveform.c_str())) {
-                    if (Selectable(T("$MTFUI_Pulse_Smooth"), grad.lowWaveform.empty())) {
+                if (BeginCombo("##lowshape", grad.lowWaveform.empty() ? T("$MTFUI_Pulse_Smooth") : grad.lowWaveform.c_str(), ImGuiComboFlags_HeightLarge)) {
+                    ComboSearchBox();
+                    if (MatchesSearch(T("$MTFUI_Pulse_Smooth"), gradComboSearch) && Selectable(T("$MTFUI_Pulse_Smooth"), grad.lowWaveform.empty())) {
                         grad.lowWaveform.clear();
                     }
                     for (const auto& w : app.cat.waveforms) {
+                        if (!MatchesSearch(w.name, gradComboSearch)) {
+                            continue;
+                        }
                         if (Selectable(w.name.c_str(), model::IEquals(w.name, grad.lowWaveform))) {
                             grad.lowWaveform = w.name;
                         }
