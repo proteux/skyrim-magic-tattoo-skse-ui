@@ -21,6 +21,7 @@ namespace mtfui::model {
     inline constexpr int kSchemaVersion = 9;
     inline constexpr const char* kNoTexture = "<none>";
     inline constexpr const char* kGroupKey = "mtfui_group";  // ours; MTF ignores it
+    inline constexpr const char* kGradientKey = "mtfui_gradient";  // ours too
 
     // A catalog parameter value: sliders and colors are ints, menus and text are string ids.
     using ParamValue = std::variant<std::int64_t, std::string>;
@@ -96,11 +97,13 @@ namespace mtfui::model {
         double transitionDuration = 1.0;
         FadeOnDeath fade;
         std::vector<Slot> slots;  // at least kSlotCount entries
+        // The Gradient tiers settings that made the tiers, null when they weren't. Saving from MTF's menu drops it.
+        Json gradient;
         Json raw = Json::object();
 
         bool operator==(const Preset& o) const {
             return name == o.name && displayName == o.displayName && group == o.group && hidden == o.hidden && transitionDuration == o.transitionDuration &&
-                   fade == o.fade && slots == o.slots;
+                   fade == o.fade && slots == o.slots && gradient == o.gradient;
         }
     };
 
@@ -139,6 +142,7 @@ namespace mtfui::model {
     void CopyLook(Preset& preset, int from, int to);
 
     // Replaces dst's tiers with src's (conditions, timing, looks, effects) and takes Default's effects too. Default's
-    // tattoo, layers and pulse stay dst's, so tiers that inherit the base tattoo show dst's.
+    // tattoo, layers and pulse stay dst's, so tiers that inherit the base tattoo show dst's. src's gradient settings
+    // come along with its tiers.
     void CopyTiers(Preset& dst, const Preset& src);
 }

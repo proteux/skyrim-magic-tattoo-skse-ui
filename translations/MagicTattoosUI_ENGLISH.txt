@@ -403,6 +403,9 @@ $MTFUI_Gradient_Open	Gradient tiers...
 $MTFUI_Gradient_OpenHelp	Builds a ladder of tiers from one value, such as health, so the tattoo's color follows it like a health bar.
 $MTFUI_Gradient_Title	Gradient tiers
 $MTFUI_Gradient_Intro	MTF can't map a value straight to a color, so this makes one tier per step of the value, each a shade along your colors. The preset's transition cross-fades between neighboring tiers.
+$MTFUI_Gradient_FromSaved	These are the settings that made this preset's tiers.
+$MTFUI_Gradient_FromSavedEdited	These are the settings that made this preset's tiers, but the tiers were changed since. Making tiers again replaces those changes.
+$MTFUI_Gradient_FromTiers	Settings read from this preset's tiers. Colors are taken from the ends and middle of the range, so check them before making tiers again.
 $MTFUI_Gradient_Condition	Value
 $MTFUI_Gradient_NoCondition	No installed condition has a threshold slider.
 $MTFUI_Gradient_Below	Below (tier 1 = lowest)

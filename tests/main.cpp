@@ -250,6 +250,41 @@ namespace {
         }
         Check(past, "lint flags tiers past iMaxConditions");
 
+        model::GradientSettings settings;
+        settings.conditionId = "mtf.attributes:health.below";
+        settings.steps = 6;
+        settings.tintColors = { 0xFF0000, 0x00FF00 };
+        settings.pulseRate = true;
+        settings.lowWave = true;
+        auto made = dragon;
+        model::ApplyGradient(cat, made, model::SpecFromSettings(settings), model::kMaxSlotsFallback);
+        made.gradient = model::GradientSettingsToJson(settings, model::TiersFingerprint(made));
+        const auto reloaded = model::PresetFromJson(made.name, nlohmann::json::parse(io::WriteStyled(model::PresetToJson(made))));
+        Check(reloaded == made, "gradient settings survive a save");
+        const auto back = model::GradientSettingsFromJson(reloaded.gradient);
+        Check(back && *back == settings, "gradient settings read back unchanged");
+        Check(!model::GradientTiersEdited(reloaded), "a saved gradient's tiers match their fingerprint");
+        auto edited = reloaded;
+        edited.slots[2].layers[0].tint = 0x123456;
+        Check(model::GradientTiersEdited(edited), "editing a generated tier is noticed");
+        auto newBase = reloaded;
+        newBase.slots[0].packId = "mtf.lyru-1";
+        Check(!model::GradientTiersEdited(newBase), "changing Default's tattoo isn't an edit to the tiers");
+        Check(!model::PresetToJson(dragon).contains(model::kGradientKey), "presets without gradient settings write no key");
+
+        auto copied = dragon;
+        model::CopyTiers(copied, made);
+        Check(copied.gradient == made.gradient, "copied tiers bring their gradient settings");
+
+        const auto inferred = model::InferGradient(cat, made);
+        Check(inferred && inferred->below && inferred->steps == 6 && inferred->lo == 0 && inferred->hi == 100, "inference reads the condition and range");
+        Check(inferred && inferred->tint && inferred->tintColors == std::vector<std::uint32_t>{ 0xFF0000, 0x00FF00 }, "inference reads the end colors");
+        Check(inferred && inferred->pulseRate && inferred->rateLow == 3.0f && inferred->rateHigh == 0.5f, "inference reads the pulse ramp");
+        Check(inferred && inferred->lowWave && inferred->lowWaveform == "heartbeat", "inference reads the low-end pulse shape");
+        auto mixed = made;
+        mixed.slots[3].conditions.front().pluginId = "mtf.attributes:health";
+        Check(!model::InferGradient(cat, mixed), "tiers on mixed conditions aren't read as a gradient");
+
         auto trimmed = dragon;
         trimmed.slots.resize(11, model::DefaultSlot());
         model::TrimTrailingEmptySlots(trimmed);

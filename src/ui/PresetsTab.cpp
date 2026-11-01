@@ -26,36 +26,9 @@ namespace mtfui::ui {
         };
         PresetsTabState g;
 
-        struct GradientState {
-            std::string conditionId;
-            bool below = true;
-            int lo = 0;
-            int hi = 100;
-            int steps = 10;
-            std::vector<std::uint32_t> tintColors;  // low end of the range first
-            std::vector<std::uint32_t> glowColors;
-            bool tint = true;
-            bool emissive = true;
-            bool glow = true;
-            float glowLow = 3.0f;
-            float glowHigh = 1.0f;
-            bool fade = false;
-            int alphaLow = 100;
-            int alphaHigh = 100;
-            bool pulseRate = false;
-            float rateLow = 3.0f;
-            float rateHigh = 0.5f;
-            bool pulseDepth = false;
-            int depthLow = 80;
-            int depthHigh = 20;
-            bool pulsePause = false;
-            float pauseLow = 0.0f;
-            float pauseHigh = 1.0f;
-            bool lowWave = false;
-            std::string lowWaveform = "heartbeat";
-            int lowWaveUpTo = 25;  // percent of the range
-        };
-        GradientState grad;
+        model::GradientSettings grad;
+        enum class GradientSource { Fresh, Saved, SavedEdited, Inferred };
+        GradientSource gradSource = GradientSource::Fresh;
         const std::vector<std::uint32_t> kHealthBar{ 0xE02020, 0xF0D020, 0x30C040 };
 
         void DrawGroupMenu(const model::PresetFileInfo& info, const std::vector<std::string>& groups) {
@@ -492,9 +465,21 @@ namespace mtfui::ui {
             grad.hi = static_cast<int>(c.entry->params[0].max);
         }
 
-        // Starts from the open preset's first tier when it already uses a threshold condition.
+        // Reopens with the settings that made the preset's tiers, or reads them from the tiers. Otherwise starts from
+        // the last settings used, on the first tier's condition when it has a threshold.
         void InitGradient(App& app, const std::vector<model::GradientCondition>& conditions) {
             const auto& p = app.Preset();
+            if (auto saved = model::GradientSettingsFromJson(p.gradient)) {
+                grad = *saved;
+                gradSource = model::GradientTiersEdited(p) ? GradientSource::SavedEdited : GradientSource::Saved;
+                return;
+            }
+            if (auto inferred = model::InferGradient(app.cat, p)) {
+                grad = *inferred;
+                gradSource = GradientSource::Inferred;
+                return;
+            }
+            gradSource = GradientSource::Fresh;
             const model::GradientCondition* pick = nullptr;
             for (const auto& c : conditions) {
                 if (p.slots.size() > 1 && p.slots[1].Configured() && model::IEquals(p.slots[1].conditions.front().pluginId, c.key)) {
@@ -513,56 +498,6 @@ namespace mtfui::ui {
             if (pick) {
                 SetGradientCondition(*pick);
             }
-            if (grad.tintColors.empty()) {
-                grad.tintColors = kHealthBar;
-            }
-            if (grad.glowColors.empty()) {
-                grad.glowColors = kHealthBar;
-            }
-        }
-
-        std::vector<model::ColorStop> EvenStops(const std::vector<std::uint32_t>& colors) {
-            std::vector<model::ColorStop> stops;
-            const auto n = colors.size();
-            for (std::size_t i = 0; i < n; ++i) {
-                stops.push_back({ n == 1 ? 0.0 : static_cast<double>(i) / (n - 1), colors[i] });
-            }
-            return stops;
-        }
-
-        model::GradientSpec GradientSpecFromState() {
-            model::GradientSpec spec;
-            spec.conditionId = grad.conditionId;
-            spec.below = grad.below;
-            spec.lo = std::min(grad.lo, grad.hi);
-            spec.hi = std::max(grad.lo, grad.hi);
-            spec.steps = grad.steps;
-            if (grad.tint) {
-                spec.tintStops = EvenStops(grad.tintColors);
-            }
-            if (grad.emissive) {
-                spec.emissiveStops = EvenStops(grad.glowColors);
-            }
-            if (grad.glow) {
-                spec.emissiveMult = model::Ramp{ grad.glowLow, grad.glowHigh };
-            }
-            if (grad.fade) {
-                spec.alpha = model::Ramp{ static_cast<double>(grad.alphaLow), static_cast<double>(grad.alphaHigh) };
-            }
-            if (grad.pulseRate) {
-                spec.pulseRate = model::Ramp{ grad.rateLow, grad.rateHigh };
-            }
-            if (grad.pulseDepth) {
-                spec.pulseDepth = model::Ramp{ static_cast<double>(grad.depthLow), static_cast<double>(grad.depthHigh) };
-            }
-            if (grad.pulsePause) {
-                spec.pulsePause = model::Ramp{ grad.pauseLow, grad.pauseHigh };
-            }
-            if (grad.lowWave) {
-                spec.lowWaveform = grad.lowWaveform;
-                spec.lowWaveformUpTo = grad.lowWaveUpTo / 100.0;
-            }
-            return spec;
         }
 
         void DrawGradientStrip(const model::GradientSpec& spec, const std::vector<model::ColorStop>& stops, float width) {
@@ -623,15 +558,40 @@ namespace mtfui::ui {
         void DrawGradientModal(App& app, const char* title, const std::vector<model::GradientCondition>& conditions) {
             SetNextWindowSize(ImVec2{ 460, 640 }, ImGuiCond_FirstUseEver);
             SetNextWindowSizeConstraints(ImVec2{ 400, 320 }, ImVec2{ 4096, 4096 });
-            if (!BeginPopupModal(title, nullptr, 0)) {
+            if (!BeginPopupModal(title, nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
                 return;
             }
             auto& p = app.Preset();
-            // The settings scroll; the warning and the buttons stay at the bottom.
-            const float footer = GetTextLineHeightWithSpacing() * 2.0f + GetFrameHeightWithSpacing() + GetStyle()->ItemSpacing.y;
+            // The settings scroll; the warning and the buttons stay at the bottom. The footer's height is measured,
+            // since its warning wraps to more lines as the window narrows.
+            static float footer = 0.0f;
+            if (footer <= 0.0f) {
+                footer = GetTextLineHeightWithSpacing() * 2.0f + GetFrameHeightWithSpacing() + GetStyle()->ItemSpacing.y;
+            }
             BeginChild("##gradientbody", ImVec2{ 0, -footer }, 0);
-            const float width = std::max(300.0f, GetContentRegionAvail().x - GetStyle()->ScrollbarSize);
+            // Room for the child's scrollbar even before it appears, so the layout doesn't jump.
+            const float width = std::max(200.0f, GetContentRegionAvail().x - GetStyle()->ScrollbarSize);
+            const float labelGap = GetStyle()->ItemInnerSpacing.x;
+            float labels = 0.0f;
+            for (const char* key : { "$MTFUI_Gradient_Condition", "$MTFUI_Gradient_Range", "$MTFUI_Gradient_Steps" }) {
+                labels = std::max(labels, CalcTextSize(T(key)).x);
+            }
+            const float field = std::max(120.0f, width - labels - labelGap);
+            auto warn = [](const std::string& text) {
+                PushStyleColor(ImGuiCol_Text, kWarn);
+                TextWrapped("%s", text.c_str());
+                PopStyleColor();
+            };
             TextWrapped("%s", T("$MTFUI_Gradient_Intro"));
+            if (gradSource == GradientSource::Saved) {
+                TextDisabled("%s", T("$MTFUI_Gradient_FromSaved"));
+            } else if (gradSource == GradientSource::SavedEdited) {
+                PushStyleColor(ImGuiCol_Text, kWarn);
+                TextWrapped("%s", T("$MTFUI_Gradient_FromSavedEdited"));
+                PopStyleColor();
+            } else if (gradSource == GradientSource::Inferred) {
+                TextWrapped("%s", T("$MTFUI_Gradient_FromTiers"));
+            }
             Spacing();
 
             const model::GradientCondition* current = nullptr;
@@ -641,7 +601,7 @@ namespace mtfui::ui {
                 }
             }
             auto conditionName = [](const model::GradientCondition& c) { return c.plugin->label + ": " + c.entry->label; };
-            SetNextItemWidth(width);
+            SetNextItemWidth(field);
             if (BeginCombo(T("$MTFUI_Gradient_Condition"), current ? conditionName(*current).c_str() : grad.conditionId.c_str())) {
                 for (std::size_t i = 0; i < conditions.size(); ++i) {
                     PushID(static_cast<int>(i));
@@ -654,7 +614,7 @@ namespace mtfui::ui {
                 EndCombo();
             }
             if (!current) {
-                TextColored(kWarn, "%s", T("$MTFUI_Gradient_NoCondition"));
+                warn(T("$MTFUI_Gradient_NoCondition"));
             } else {
                 const auto& spec = current->entry->params[0];
                 int dir = grad.below ? 0 : 1;
@@ -664,31 +624,31 @@ namespace mtfui::ui {
                 grad.below = dir == 0;
                 HelpMarker(T("$MTFUI_Gradient_DirectionHelp"));
 
-                SetNextItemWidth(width * 0.5f - GetStyle()->ItemInnerSpacing.x);
+                SetNextItemWidth((field - labelGap) * 0.5f);
                 SliderInt("##lo", &grad.lo, static_cast<int>(spec.min), static_cast<int>(spec.max), T("$MTFUI_Gradient_From_Fmt"), ImGuiSliderFlags_AlwaysClamp);
-                SameLine(0, GetStyle()->ItemInnerSpacing.x);
-                SetNextItemWidth(width * 0.5f);
+                SameLine(0, labelGap);
+                SetNextItemWidth((field - labelGap) * 0.5f);
                 SliderInt(T("$MTFUI_Gradient_Range"), &grad.hi, static_cast<int>(spec.min), static_cast<int>(spec.max), T("$MTFUI_Gradient_To_Fmt"),
                     ImGuiSliderFlags_AlwaysClamp);
 
                 const int maxSteps = std::max(1, std::min(app.maxSlots - 1, std::abs(grad.hi - grad.lo)));
                 grad.steps = std::clamp(grad.steps, 1, maxSteps);
-                SetNextItemWidth(width);
+                SetNextItemWidth(field);
                 SliderInt(T("$MTFUI_Gradient_Steps"), &grad.steps, 1, maxSteps, "%d", ImGuiSliderFlags_AlwaysClamp);
-                const auto planned = model::PlanGradient(GradientSpecFromState()).tiers.size();
+                const auto planned = model::PlanGradient(model::SpecFromSettings(grad)).tiers.size();
                 TextDisabled("%s", TF("$MTFUI_Gradient_StepsInfo", planned, std::format("{:.1f}", std::abs(grad.hi - grad.lo) / (planned + 1.0))).c_str());
                 if (static_cast<int>(planned) > model::kSlotCount - 1) {
-                    TextColored(kWarn, "%s", TF("$MTFUI_Gradient_PastMenu", model::kSlotCount - 1).c_str());
+                    warn(TF("$MTFUI_Gradient_PastMenu", model::kSlotCount - 1));
                 }
             }
 
-            const auto spec = GradientSpecFromState();
+            const auto spec = model::SpecFromSettings(grad);
             SeparatorText(T("$MTFUI_Gradient_TintSection"));
             HelpMarker(T("$MTFUI_Gradient_ColorsHelp"));
             Checkbox(T("$MTFUI_Gradient_Tint"), &grad.tint);
             if (grad.tint) {
                 DrawColorList("##tint", grad.tintColors, width);
-                DrawGradientStrip(spec, EvenStops(grad.tintColors), width);
+                DrawGradientStrip(spec, model::EvenStops(grad.tintColors), width);
             }
 
             SeparatorText(T("$MTFUI_Gradient_GlowSection"));
@@ -700,7 +660,7 @@ namespace mtfui::ui {
                     grad.glowColors = grad.tintColors;
                 }
                 DrawColorList("##glow", grad.glowColors, width);
-                DrawGradientStrip(spec, EvenStops(grad.glowColors), width);
+                DrawGradientStrip(spec, model::EvenStops(grad.glowColors), width);
             }
             // Low-end and high-end sliders on one line, then a button that swaps them.
             auto rampPair = [&](const char* id, auto& low, auto& high, auto min, auto max, const char* lowFmt, const char* highFmt) {
@@ -775,7 +735,7 @@ namespace mtfui::ui {
             if (grad.pulseRate || grad.pulseDepth || grad.pulsePause || grad.lowWave) {
                 const bool baseGlows = std::any_of(p.slots[0].layers.begin(), p.slots[0].layers.end(), [](const model::Layer& l) { return l.emissiveMult > 0.0; });
                 if (!grad.glow && !baseGlows) {
-                    TextColored(kWarn, "%s", T("$MTFUI_Gradient_PulseNoGlow"));
+                    warn(T("$MTFUI_Gradient_PulseNoGlow"));
                 }
             }
 
@@ -788,13 +748,13 @@ namespace mtfui::ui {
             }
             EndChild();
 
+            const float footerTop = GetCursorPosY();
             Separator();
-            PushStyleColor(ImGuiCol_Text, kWarn);
-            TextWrapped("%s", T("$MTFUI_Gradient_Replaces"));
-            PopStyleColor();
+            warn(T("$MTFUI_Gradient_Replaces"));
             BeginDisabled(!current);
             if (Button(T("$MTFUI_Gradient_Create"), ImVec2{ 120, 0 })) {
                 model::ApplyGradient(app.cat, p, spec, app.maxSlots);
+                p.gradient = model::GradientSettingsToJson(grad, model::TiersFingerprint(p));
                 app.ed.slot = p.slots.size() > 1 ? 1 : 0;
                 app.Toast(TF("$MTFUI_Toast_GradientMade", static_cast<int>(p.slots.size()) - 1));
                 CloseCurrentPopup();
@@ -804,6 +764,7 @@ namespace mtfui::ui {
             if (Button(T("$MTFUI_Common_Cancel"), ImVec2{ 100, 0 }) || IsKeyPressed(ImGuiKey_Escape, false)) {
                 CloseCurrentPopup();
             }
+            footer = GetCursorPosY() - footerTop;
             EndPopup();
         }
 

@@ -72,4 +72,53 @@ namespace mtfui::model {
     // no tier covers; tiers inherit Default's tattoo, layers and pulse with the colors and ramps applied. Default
     // gets the ramps too, at its end of the range.
     void ApplyGradient(const Catalogs& cat, Preset& preset, GradientSpec spec, int maxSlots);
+
+    // What the Gradient tiers window is set to. Options that are switched off keep their values, so a preset's
+    // window reopens the way it was left.
+    struct GradientSettings {
+        std::string conditionId;
+        bool below = true;
+        int lo = 0;
+        int hi = 100;
+        int steps = 10;
+        bool tint = true;
+        std::vector<std::uint32_t> tintColors{ 0xE02020, 0xF0D020, 0x30C040 };  // low end of the range first
+        bool emissive = true;
+        std::vector<std::uint32_t> glowColors{ 0xE02020, 0xF0D020, 0x30C040 };
+        bool glow = true;
+        float glowLow = 3.0f;
+        float glowHigh = 1.0f;
+        bool fade = false;
+        int alphaLow = 100;
+        int alphaHigh = 100;
+        bool pulseRate = false;
+        float rateLow = 3.0f;
+        float rateHigh = 0.5f;
+        bool pulseDepth = false;
+        int depthLow = 80;
+        int depthHigh = 20;
+        bool pulsePause = false;
+        float pauseLow = 0.0f;
+        float pauseHigh = 1.0f;
+        bool lowWave = false;
+        std::string lowWaveform = "heartbeat";
+        int lowWaveUpTo = 25;  // percent of the range
+        bool operator==(const GradientSettings&) const = default;
+    };
+
+    // Colors spread evenly from 0 to 1.
+    std::vector<ColorStop> EvenStops(const std::vector<std::uint32_t>& colors);
+    GradientSpec SpecFromSettings(const GradientSettings& s);
+
+    // A fingerprint of the tiers (not Default), so the window can tell when they were edited after it made them.
+    std::string TiersFingerprint(const Preset& preset);
+    // Stored as preset.gradient after Make tiers, with the fingerprint of the tiers it made.
+    Json GradientSettingsToJson(const GradientSettings& s, const std::string& fingerprint);
+    std::optional<GradientSettings> GradientSettingsFromJson(const Json& j);
+    // The preset has stored settings, but its tiers no longer match what they made.
+    bool GradientTiersEdited(const Preset& preset);
+
+    // For presets without stored settings (made before they were stored, or saved from MTF's menu): reads them back
+    // from tiers that form a ladder on one threshold condition. Colors come from the ends and middle of the range.
+    std::optional<GradientSettings> InferGradient(const Catalogs& cat, const Preset& preset);
 }

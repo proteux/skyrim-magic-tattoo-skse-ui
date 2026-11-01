@@ -6,6 +6,9 @@
 
 #include <algorithm>
 #include <cmath>
+#include <format>
+#include <string_view>
+#include <variant>
 
 namespace mtfui::model {
     namespace {
@@ -187,5 +190,328 @@ namespace mtfui::model {
         }
         preset.slots = std::move(slots);
         TrimTrailingEmptySlots(preset);
+    }
+
+    std::vector<ColorStop> EvenStops(const std::vector<std::uint32_t>& colors) {
+        std::vector<ColorStop> stops;
+        const auto n = colors.size();
+        for (std::size_t i = 0; i < n; ++i) {
+            stops.push_back({ n == 1 ? 0.0 : static_cast<double>(i) / (n - 1), colors[i] });
+        }
+        return stops;
+    }
+
+    namespace {
+        Json ColorsToJson(const std::vector<std::uint32_t>& colors) {
+            Json out = Json::array();
+            for (auto c : colors) {
+                out.push_back(FormatHexColor(c));
+            }
+            return out;
+        }
+
+        void ColorsFromJson(const Json& j, std::vector<std::uint32_t>& colors) {
+            if (!j.is_array() || j.size() < 2) {
+                return;
+            }
+            std::vector<std::uint32_t> out;
+            for (const auto& c : j) {
+                if (out.size() < 4) {
+                    out.push_back(ParseHexColor(c, 0xFFFFFF));
+                }
+            }
+            colors = std::move(out);
+        }
+
+        template <class T>
+        void Read(const Json& j, const char* key, T& out) {
+            const auto it = j.find(key);
+            if (it == j.end()) {
+                return;
+            }
+            if constexpr (std::is_same_v<T, bool>) {
+                if (it->is_number()) {
+                    out = it->template get<double>() != 0.0;
+                }
+            } else if constexpr (std::is_same_v<T, std::string>) {
+                if (it->is_string()) {
+                    out = it->template get<std::string>();
+                }
+            } else if (it->is_number()) {
+                out = static_cast<T>(it->template get<double>());
+            }
+        }
+
+        std::uint64_t Fnv1a(std::string_view text) {
+            std::uint64_t h = 0xCBF29CE484222325ull;
+            for (unsigned char c : text) {
+                h = (h ^ c) * 0x100000001B3ull;
+            }
+            return h;
+        }
+
+        bool NearColor(std::uint32_t a, std::uint32_t b) {
+            for (int shift : { 16, 8, 0 }) {
+                if (std::abs(static_cast<int>((a >> shift) & 0xFF) - static_cast<int>((b >> shift) & 0xFF)) > 3) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    GradientSpec SpecFromSettings(const GradientSettings& s) {
+        GradientSpec spec;
+        spec.conditionId = s.conditionId;
+        spec.below = s.below;
+        spec.lo = std::min(s.lo, s.hi);
+        spec.hi = std::max(s.lo, s.hi);
+        spec.steps = s.steps;
+        if (s.tint) {
+            spec.tintStops = EvenStops(s.tintColors);
+        }
+        if (s.emissive) {
+            spec.emissiveStops = EvenStops(s.glowColors);
+        }
+        if (s.glow) {
+            spec.emissiveMult = Ramp{ s.glowLow, s.glowHigh };
+        }
+        if (s.fade) {
+            spec.alpha = Ramp{ static_cast<double>(s.alphaLow), static_cast<double>(s.alphaHigh) };
+        }
+        if (s.pulseRate) {
+            spec.pulseRate = Ramp{ s.rateLow, s.rateHigh };
+        }
+        if (s.pulseDepth) {
+            spec.pulseDepth = Ramp{ static_cast<double>(s.depthLow), static_cast<double>(s.depthHigh) };
+        }
+        if (s.pulsePause) {
+            spec.pulsePause = Ramp{ s.pauseLow, s.pauseHigh };
+        }
+        if (s.lowWave) {
+            spec.lowWaveform = s.lowWaveform;
+            spec.lowWaveformUpTo = s.lowWaveUpTo / 100.0;
+        }
+        return spec;
+    }
+
+    std::string TiersFingerprint(const Preset& preset) {
+        // Floats are rounded so a saved and reloaded preset gives the same text.
+        std::string text;
+        for (std::size_t i = 1; i < preset.slots.size(); ++i) {
+            const Slot& s = preset.slots[i];
+            text += std::format("|{}:{}:{}:{}:{}", i, s.op, s.packId, s.entryId, s.effects.size());
+            for (const auto& c : s.conditions) {
+                text += std::format(";{}={},{},{}", c.pluginId, ParamToJson(c.param).dump(), ParamToJson(c.param2).dump(), ParamToJson(c.param3).dump());
+            }
+            for (const auto& l : s.layers) {
+                text += std::format(";{:06X},{:06X},{:.4f},{}", l.tint, l.emissive, l.emissiveMult, l.alpha);
+            }
+            text += std::format(";{:.4f},{},{:.4f},{}", s.pulse.rate, s.pulse.depth, s.pulse.pause, s.pulse.waveform);
+        }
+        return std::format("{:016x}", Fnv1a(text));
+    }
+
+    Json GradientSettingsToJson(const GradientSettings& s, const std::string& fingerprint) {
+        return Json{
+            { "condition", s.conditionId },
+            { "below", s.below ? 1 : 0 },
+            { "lo", s.lo },
+            { "hi", s.hi },
+            { "steps", s.steps },
+            { "tint", s.tint ? 1 : 0 },
+            { "tintcolors", ColorsToJson(s.tintColors) },
+            { "emissive", s.emissive ? 1 : 0 },
+            { "emissivecolors", ColorsToJson(s.glowColors) },
+            { "glow", s.glow ? 1 : 0 },
+            { "glowlow", s.glowLow },
+            { "glowhigh", s.glowHigh },
+            { "alpha", s.fade ? 1 : 0 },
+            { "alphalow", s.alphaLow },
+            { "alphahigh", s.alphaHigh },
+            { "rate", s.pulseRate ? 1 : 0 },
+            { "ratelow", s.rateLow },
+            { "ratehigh", s.rateHigh },
+            { "depth", s.pulseDepth ? 1 : 0 },
+            { "depthlow", s.depthLow },
+            { "depthhigh", s.depthHigh },
+            { "pause", s.pulsePause ? 1 : 0 },
+            { "pauselow", s.pauseLow },
+            { "pausehigh", s.pauseHigh },
+            { "lowwave", s.lowWave ? 1 : 0 },
+            { "lowwaveform", s.lowWaveform },
+            { "lowwaveupto", s.lowWaveUpTo },
+            { "tiers", fingerprint },
+        };
+    }
+
+    std::optional<GradientSettings> GradientSettingsFromJson(const Json& j) {
+        if (!j.is_object() || !j.contains("condition") || !j["condition"].is_string()) {
+            return std::nullopt;
+        }
+        GradientSettings s;
+        Read(j, "condition", s.conditionId);
+        Read(j, "below", s.below);
+        Read(j, "lo", s.lo);
+        Read(j, "hi", s.hi);
+        Read(j, "steps", s.steps);
+        Read(j, "tint", s.tint);
+        ColorsFromJson(j.value("tintcolors", Json()), s.tintColors);
+        Read(j, "emissive", s.emissive);
+        ColorsFromJson(j.value("emissivecolors", Json()), s.glowColors);
+        Read(j, "glow", s.glow);
+        Read(j, "glowlow", s.glowLow);
+        Read(j, "glowhigh", s.glowHigh);
+        Read(j, "alpha", s.fade);
+        Read(j, "alphalow", s.alphaLow);
+        Read(j, "alphahigh", s.alphaHigh);
+        Read(j, "rate", s.pulseRate);
+        Read(j, "ratelow", s.rateLow);
+        Read(j, "ratehigh", s.rateHigh);
+        Read(j, "depth", s.pulseDepth);
+        Read(j, "depthlow", s.depthLow);
+        Read(j, "depthhigh", s.depthHigh);
+        Read(j, "pause", s.pulsePause);
+        Read(j, "pauselow", s.pauseLow);
+        Read(j, "pausehigh", s.pauseHigh);
+        Read(j, "lowwave", s.lowWave);
+        Read(j, "lowwaveform", s.lowWaveform);
+        Read(j, "lowwaveupto", s.lowWaveUpTo);
+        s.steps = std::max(1, s.steps);
+        return s;
+    }
+
+    bool GradientTiersEdited(const Preset& preset) {
+        if (!preset.gradient.is_object()) {
+            return false;
+        }
+        const auto it = preset.gradient.find("tiers");
+        return it == preset.gradient.end() || !it->is_string() || it->get<std::string>() != TiersFingerprint(preset);
+    }
+
+    std::optional<GradientSettings> InferGradient(const Catalogs& cat, const Preset& preset) {
+        int n = 0;
+        while (n + 1 < static_cast<int>(preset.slots.size()) && preset.slots[n + 1].Configured()) {
+            ++n;
+        }
+        for (std::size_t i = n + 1; i < preset.slots.size(); ++i) {
+            if (preset.slots[i].Configured()) {
+                return std::nullopt;
+            }
+        }
+        if (n < 2) {
+            return std::nullopt;
+        }
+        const std::string id = preset.slots[1].conditions.front().pluginId;
+        const auto* entry = cat.FindCondition(id);
+        if (!entry || entry->params[0].kind != ParamKind::Slider) {
+            return std::nullopt;
+        }
+        std::vector<std::int64_t> thresholds;
+        for (int k = 1; k <= n; ++k) {
+            const auto& conds = preset.slots[k].conditions;
+            if (conds.size() != 1 || !IEquals(conds.front().pluginId, id) || !std::holds_alternative<std::int64_t>(conds.front().param)) {
+                return std::nullopt;
+            }
+            thresholds.push_back(ParamInt(conds.front().param));
+        }
+        bool rising = true, falling = true;
+        for (int k = 1; k < n; ++k) {
+            rising = rising && thresholds[k] > thresholds[k - 1];
+            falling = falling && thresholds[k] < thresholds[k - 1];
+        }
+        if (!rising && !falling) {
+            return std::nullopt;
+        }
+
+        GradientSettings s;
+        s.conditionId = id;
+        s.below = rising;
+        s.steps = n;
+        const auto [first, last] = std::minmax(thresholds.front(), thresholds.back());
+        const double gap = static_cast<double>(last - first) / (n - 1);
+        const auto& param = entry->params[0];
+        s.lo = static_cast<int>(std::clamp<std::int64_t>(std::llround(first - gap), param.min, param.max));
+        s.hi = static_cast<int>(std::clamp<std::int64_t>(std::llround(last + gap), param.min, param.max));
+
+        // The slot holding the band at t: tier k sits at (k - 1) / n when below, (n - k + 1) / n when above.
+        auto at = [&](double t) -> const Slot& {
+            const auto j = static_cast<int>(std::lround(t * n));
+            const int k = s.below ? j + 1 : n - j + 1;
+            return preset.slots[k >= 1 && k <= n ? k : 0];
+        };
+        auto varies = [&](auto get) {
+            for (int k = 1; k <= n; ++k) {
+                if (get(preset.slots[k]) != get(preset.slots[0])) {
+                    return true;
+                }
+            }
+            return false;
+        };
+        auto colors = [&](auto get) {
+            const auto low = get(at(0.0));
+            const auto mid = get(at(0.5));
+            const auto high = get(at(1.0));
+            if (NearColor(SampleGradient({ { 0.0, low }, { 1.0, high } }, 0.5), mid)) {
+                return std::vector<std::uint32_t>{ low, high };
+            }
+            return std::vector<std::uint32_t>{ low, mid, high };
+        };
+
+        auto tint = [](const Slot& x) { return x.layers[0].tint; };
+        auto glowColor = [](const Slot& x) { return x.layers[0].emissive; };
+        auto mult = [](const Slot& x) { return x.layers[0].emissiveMult; };
+        auto alpha = [](const Slot& x) { return x.layers[0].alpha; };
+        auto rate = [](const Slot& x) { return x.pulse.rate; };
+        auto depth = [](const Slot& x) { return x.pulse.depth; };
+        auto pause = [](const Slot& x) { return x.pulse.pause; };
+        auto wave = [](const Slot& x) { return x.pulse.waveform; };
+
+        s.tint = varies(tint);
+        if (s.tint) {
+            s.tintColors = colors(tint);
+        }
+        s.emissive = varies(glowColor);
+        if (s.emissive) {
+            s.glowColors = colors(glowColor);
+        }
+        s.glow = varies(mult);
+        if (s.glow) {
+            s.glowLow = static_cast<float>(mult(at(0.0)));
+            s.glowHigh = static_cast<float>(mult(at(1.0)));
+        }
+        s.fade = varies(alpha);
+        if (s.fade) {
+            s.alphaLow = static_cast<int>(alpha(at(0.0)));
+            s.alphaHigh = static_cast<int>(alpha(at(1.0)));
+        }
+        s.pulseRate = varies(rate);
+        if (s.pulseRate) {
+            s.rateLow = static_cast<float>(rate(at(0.0)));
+            s.rateHigh = static_cast<float>(rate(at(1.0)));
+        }
+        s.pulseDepth = varies(depth);
+        if (s.pulseDepth) {
+            s.depthLow = static_cast<int>(depth(at(0.0)));
+            s.depthHigh = static_cast<int>(depth(at(1.0)));
+        }
+        s.pulsePause = varies(pause);
+        if (s.pulsePause) {
+            s.pauseLow = static_cast<float>(pause(at(0.0)));
+            s.pauseHigh = static_cast<float>(pause(at(1.0)));
+        }
+        s.lowWave = varies(wave);
+        if (s.lowWave) {
+            s.lowWaveform = wave(at(0.0));
+            double upTo = 0.0;
+            for (int k = 1; k <= n; ++k) {
+                const double t = s.below ? static_cast<double>(k - 1) / n : static_cast<double>(n - k + 1) / n;
+                if (preset.slots[k].pulse.waveform == s.lowWaveform) {
+                    upTo = std::max(upTo, t);
+                }
+            }
+            s.lowWaveUpTo = static_cast<int>(std::lround(upTo * 100.0));
+        }
+        return s;
     }
 }
