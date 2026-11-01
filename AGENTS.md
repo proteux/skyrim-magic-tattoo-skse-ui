@@ -2,7 +2,12 @@
 
 ## Versioning
 
-- **Bump `VERSION` whenever you change the plugin.** Every build that may go into the game gets a new version, so the first line of `MagicTattoosUI.log` shows which build is running. Bump the patch number (`0.1.0` to `0.1.1`) for fixes and small changes, and the minor number for new features.
+- **Bump `VERSION` whenever you change the plugin.** Every build that may go into the game gets a new version, so the first line of `MagicTattoosUI.log` shows which build is running.
+- The format is `<major>.<feature>.<patch>`:
+  - **major** is only for breaking changes (for example, presets or saved data that older builds can't read). Never bump it without the user asking.
+  - **feature** is for a genuinely new feature. Reset patch to 0.
+  - **patch** is for any update to an existing feature: fixes, tweaks, extensions, and follow-up work on a feature that's already in. Most changes are patches.
+- Each number can go past 9, so `1.56.3` or `1.6.14` is fine. Don't roll a long run of patches over into a feature bump.
 - `VERSION` is the only place the version lives. CMake, the DLL's version info, the log, the status line, the Vortex `meta.ini`, and the package name all read it.
 - Bump once per change you hand to the user, not once per rebuild while you're still working on it.
 
