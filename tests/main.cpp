@@ -285,6 +285,70 @@ namespace {
         mixed.slots[3].conditions.front().pluginId = "mtf.attributes:health";
         Check(!model::InferGradient(cat, mixed), "tiers on mixed conditions aren't read as a gradient");
 
+        model::GradientSettings bodySettings;
+        bodySettings.conditionId = "mtf.attributes:health.below";
+        bodySettings.steps = 4;
+        model::EffectRamp scale;
+        scale.key = "test.ramp:size";
+        scale.low = { std::int64_t{ 150 }, std::int64_t{ 5 }, std::int64_t{ 0 }, std::int64_t{ 0 }, std::int64_t{ 0 } };
+        scale.high = { std::int64_t{ 100 }, std::int64_t{ 5 }, std::int64_t{ 0 }, std::int64_t{ 0 }, std::int64_t{ 0 } };
+        model::EffectRamp shape;
+        shape.key = "test.ramp:shape";
+        shape.low = { std::string("a"), std::int64_t{ 100 }, std::int64_t{ 5 }, std::int64_t{ 0 }, std::int64_t{ 0 } };
+        shape.high = { std::string("b"), std::int64_t{ 20 }, std::int64_t{ 5 }, std::int64_t{ 0 }, std::int64_t{ 0 } };
+        bodySettings.effects = { scale, shape };
+        auto body = dragon;
+        model::ApplyGradient(cat, body, model::SpecFromSettings(bodySettings), model::kMaxSlotsFallback);
+        auto fxParam = [&](int slot, std::size_t fx, int param) { return body.slots[slot].effects[fx].params[param]; };
+        const auto defaultFx = dragon.slots[0].effects.size();
+        const bool fourTiers = body.slots[4].Configured() && !body.slots[5].Configured();
+        Check(fourTiers && body.slots[1].effects.size() == 2 && body.slots[4].effects.size() == 2 && body.slots[5].effects.empty(),
+            "every tier gets the ramped effects");
+        if (fourTiers && body.slots[4].effects.size() == 2 && body.slots[0].effects.size() == defaultFx + 2) {
+            Check(model::ParamInt(fxParam(1, 0, 0)) == 150 && model::ParamInt(fxParam(4, 0, 0)) == 115, "effect sliders ramp and snap to their step");
+            Check(model::ParamInt(fxParam(2, 1, 1)) == 80 && model::ParamInt(fxParam(4, 1, 1)) == 40, "each slider ramps on its own");
+            Check(model::ParamStr(fxParam(4, 1, 0)) == "a", "menu parameters keep the low end's choice");
+            Check(model::ParamInt(fxParam(0, defaultFx, 0)) == 100 && model::ParamInt(fxParam(0, defaultFx + 1, 1)) == 20,
+                "Default gets the effects at its end of the range");
+            Check(std::equal(dragon.slots[0].effects.begin(), dragon.slots[0].effects.end(), body.slots[0].effects.begin()), "Default keeps its other effects");
+        } else {
+            Check(false, "Default gets the ramped effects added");
+        }
+        auto again = body;
+        model::ApplyGradient(cat, again, model::SpecFromSettings(bodySettings), model::kMaxSlotsFallback);
+        Check(again.slots[0].effects == body.slots[0].effects, "making the tiers again replaces Default's ramped effects");
+        for (const auto& issue : model::LintPreset(cat, body, {})) {
+            Check(issue.severity == model::Severity::Info, "no warnings on a gradient with effects: " + issue.message);
+        }
+
+        body.gradient = model::GradientSettingsToJson(bodySettings, model::TiersFingerprint(body));
+        const auto bodyReloaded = model::PresetFromJson(body.name, nlohmann::json::parse(io::WriteStyled(model::PresetToJson(body))));
+        const auto bodyBack = model::GradientSettingsFromJson(bodyReloaded.gradient);
+        Check(bodyBack && *bodyBack == bodySettings, "effect ramps survive a save");
+        Check(!model::GradientTiersEdited(bodyReloaded), "a gradient with effects matches its fingerprint");
+        auto bodyEdited = bodyReloaded;
+        bodyEdited.slots[2].effects[0].params[0] = std::int64_t{ 145 };
+        Check(model::GradientTiersEdited(bodyEdited), "editing a generated effect is noticed");
+
+        auto bodyBare = body;
+        bodyBare.gradient = nullptr;
+        const auto bodyInferred = model::InferGradient(cat, bodyBare);
+        Check(bodyInferred && bodyInferred->effects.size() == 2 && bodyInferred->effectsOnDefault, "inference reads the effects");
+        if (bodyInferred && bodyInferred->effects.size() == 2) {
+            const auto& s = bodyInferred->effects[0];
+            const auto& b = bodyInferred->effects[1];
+            Check(model::ParamInt(s.low[0]) == 150 && model::ParamInt(s.high[0]) == 100, "inference reads an effect ramp's ends");
+            Check(model::ParamStr(b.low[0]) == "a" && model::ParamInt(b.low[1]) == 100 && model::ParamInt(b.high[1]) == 20, "inference reads every parameter");
+        }
+        auto tiersOnly = dragon;
+        bodySettings.effectsOnDefault = false;
+        model::ApplyGradient(cat, tiersOnly, model::SpecFromSettings(bodySettings), model::kMaxSlotsFallback);
+        Check(tiersOnly.slots[0].effects == dragon.slots[0].effects, "Default can be left without the effects");
+        const auto tiersOnlyInferred = model::InferGradient(cat, tiersOnly);
+        Check(tiersOnlyInferred && !tiersOnlyInferred->effectsOnDefault && tiersOnlyInferred->effects.size() == 2 &&
+                  model::ParamInt(tiersOnlyInferred->effects[1].high[1]) == 20,
+            "without Default, inference extends the ramp from the outer tiers");
+
         auto trimmed = dragon;
         trimmed.slots.resize(11, model::DefaultSlot());
         model::TrimTrailingEmptySlots(trimmed);

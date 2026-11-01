@@ -1,5 +1,6 @@
 #include "model/Describe.h"
 #include "model/Gradient.h"
+#include "model/Text.h"
 #include "render/DdsCache.h"
 #include "render/Preview2D.h"
 #include "ui/App.h"
@@ -555,6 +556,89 @@ namespace mtfui::ui {
             PopID();
         }
 
+        // Each effect's sliders get a low-end and high-end value; its other parameters are the same on every tier.
+        template <class RampPair>
+        void DrawEffectRamps(App& app, float width, RampPair& rampPair) {
+            const char* removeLabel = T("$MTFUI_Gradient_RemoveColor");
+            const float removeWidth = CalcTextSize(removeLabel).x + GetStyle()->FramePadding.x * 2.0f + GetStyle()->ItemSpacing.x;
+            int remove = -1;
+            for (std::size_t i = 0; i < grad.effects.size(); ++i) {
+                auto& r = grad.effects[i];
+                PushID(static_cast<int>(i) + 1000);
+                const model::CatalogEntry* entry = app.cat.FindEffect(r.key);
+                const std::string preview = r.key.empty() ? T("$MTFUI_Common_Choose") : entry ? entry->label : TF("$MTFUI_Picker_NotInstalled", r.key);
+                SetNextItemWidth(width - removeWidth);
+                if (BeginCombo("##effect", preview.c_str(), ImGuiComboFlags_HeightLarge)) {
+                    for (const auto& plugin : app.cat.plugins) {
+                        if (plugin.effects.empty()) {
+                            continue;
+                        }
+                        SeparatorText(plugin.label.c_str());
+                        for (const auto& e : plugin.effects) {
+                            const std::string key = plugin.pluginId + ":" + e.id;
+                            if (Selectable((e.label + "##" + key).c_str(), entry == &e)) {
+                                model::Effect fx;
+                                model::ApplyEffectDefaults(e, fx);
+                                r.key = key;
+                                r.low = fx.params;
+                                r.high = fx.params;
+                            }
+                            if (IsItemHovered(ImGuiHoveredFlags_DelayShort) && !e.description.empty()) {
+                                SetTooltip("%s", e.description.c_str());
+                            }
+                        }
+                    }
+                    EndCombo();
+                }
+                SameLine();
+                if (SmallButton(removeLabel)) {
+                    remove = static_cast<int>(i);
+                }
+                entry = app.cat.FindEffect(r.key);
+                if (entry) {
+                    for (int k = 0; k < 5; ++k) {
+                        const auto& spec = entry->params[k];
+                        const std::string id = "p" + std::to_string(k);
+                        if (spec.kind == model::ParamKind::Slider) {
+                            TextDisabled("%s", spec.label.c_str());
+                            const auto fmt = model::SliderPrintfFormat(spec.format);
+                            const auto lowFmt = TF("$MTFUI_Gradient_LowEndParam", fmt);
+                            const auto highFmt = TF("$MTFUI_Gradient_HighEndParam", fmt);
+                            int lo = static_cast<int>(model::ParamInt(spec.Coerce(r.low[k])));
+                            int hi = static_cast<int>(model::ParamInt(spec.Coerce(r.high[k])));
+                            rampPair(id.c_str(), lo, hi, static_cast<int>(spec.min), static_cast<int>(spec.max), lowFmt.c_str(), highFmt.c_str());
+                            auto snap = [&](int v) {
+                                const auto step = std::max<std::int64_t>(1, spec.step);
+                                return std::clamp<std::int64_t>(spec.min + ((v - spec.min + step / 2) / step) * step, spec.min, spec.max);
+                            };
+                            r.low[k] = snap(lo);
+                            r.high[k] = snap(hi);
+                        } else if (spec.kind != model::ParamKind::None) {
+                            auto v = spec.Coerce(r.low[k]);
+                            if (ParamEditor(id.c_str(), spec, v, width * 0.6f)) {
+                                r.low[k] = v;
+                                r.high[k] = v;
+                            }
+                        }
+                    }
+                }
+                Separator();
+                PopID();
+            }
+            if (remove >= 0) {
+                grad.effects.erase(grad.effects.begin() + remove);
+            }
+            BeginDisabled(static_cast<int>(grad.effects.size()) >= model::kEffectCap);
+            if (SmallButton(T("$MTFUI_Gradient_AddEffect"))) {
+                grad.effects.push_back({});
+            }
+            EndDisabled();
+            if (!grad.effects.empty()) {
+                Checkbox(T("$MTFUI_Gradient_EffectsOnDefault"), &grad.effectsOnDefault);
+                HelpMarker(T("$MTFUI_Gradient_EffectsOnDefaultHelp"));
+            }
+        }
+
         void DrawGradientModal(App& app, const char* title, const std::vector<model::GradientCondition>& conditions) {
             SetNextWindowSize(ImVec2{ 460, 640 }, ImGuiCond_FirstUseEver);
             SetNextWindowSizeConstraints(ImVec2{ 400, 320 }, ImVec2{ 4096, 4096 });
@@ -739,6 +823,10 @@ namespace mtfui::ui {
                 }
             }
 
+            SeparatorText(T("$MTFUI_Gradient_EffectsSection"));
+            HelpMarker(T("$MTFUI_Gradient_EffectsHelp"));
+            DrawEffectRamps(app, width, rampPair);
+
             if (p.transitionDuration < 0.5) {
                 Spacing();
                 TextWrapped("%s", T("$MTFUI_Gradient_TransitionHint"));
@@ -750,7 +838,7 @@ namespace mtfui::ui {
 
             const float footerTop = GetCursorPosY();
             Separator();
-            warn(T("$MTFUI_Gradient_Replaces"));
+            warn(T(!grad.effects.empty() && grad.effectsOnDefault ? "$MTFUI_Gradient_ReplacesWithDefaultEffects" : "$MTFUI_Gradient_Replaces"));
             BeginDisabled(!current);
             if (Button(T("$MTFUI_Gradient_Create"), ImVec2{ 120, 0 })) {
                 model::ApplyGradient(app.cat, p, spec, app.maxSlots);

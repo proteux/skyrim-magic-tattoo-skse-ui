@@ -449,9 +449,17 @@ $MTFUI_Gradient_LowShape	Different shape at the low end
 $MTFUI_Gradient_LowShapeHelp	Tiers in the lowest part of the range use this pulse shape; the rest keep Default's.
 $MTFUI_Gradient_LowShapeUpTo_Fmt	lowest %d%%
 $MTFUI_Gradient_PulseNoGlow	The pulse only animates glow, and Default has no glow strength. Turn on the glow strength ramp or give Default some glow.
+$MTFUI_Gradient_EffectsSection	Effects
+$MTFUI_Gradient_EffectsHelp	Gives every tier these effects, with each slider set along the range, such as RaceMenu's Actor scale growing from 100% to 150% as health drops. Menus and other settings are the same on every tier. Each tier's effects run while it shows, so the value steps from tier to tier; effects with their own transition, like RaceMenu's, ease between the steps.
+$MTFUI_Gradient_AddEffect	Add effect
+$MTFUI_Gradient_LowEndParam	low end {}
+$MTFUI_Gradient_HighEndParam	high end {}
+$MTFUI_Gradient_EffectsOnDefault	Default gets them too
+$MTFUI_Gradient_EffectsOnDefaultHelp	Default shows outside the tiers, at its end of the range. On, it gets each effect at that end, replacing an effect of the same kind it already has. Off, Default's effects stay as they are, so the effects stop outside the tiers.
 $MTFUI_Gradient_TransitionHint	The transition is short, so the color jumps from tier to tier. A second or so makes it slide.
 $MTFUI_Gradient_SetTransition	Set transition to 1 s
 $MTFUI_Gradient_Replaces	Replaces all tiers. Default keeps its tattoo and effects. Undo brings them back.
+$MTFUI_Gradient_ReplacesWithDefaultEffects	Replaces all tiers. Default keeps its tattoo and other effects, and gets the effects above. Undo brings them back.
 $MTFUI_Gradient_Create	Make tiers
 $MTFUI_Toast_GradientMade	Made {} gradient tiers. Save to keep them.
 $MTFUI_Tiers_AddHelp	Adds a tier at the bottom. MTF's menu shows {} tiers; MTF itself checks up to {} (iMaxConditions in MagicTattoosFramework.ini).

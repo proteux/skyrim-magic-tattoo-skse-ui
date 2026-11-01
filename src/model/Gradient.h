@@ -3,6 +3,7 @@
 #include "model/Catalogs.h"
 #include "model/Preset.h"
 
+#include <array>
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -19,6 +20,15 @@ namespace mtfui::model {
         double low = 0.0;  // value at the low end of the range
         double high = 0.0;
         double At(double t) const { return low + (high - low) * t; }
+    };
+
+    // An effect every tier gets. Slider parameters go from low at the low end of the range to high at the high end;
+    // the others take low's value.
+    struct EffectRamp {
+        std::string key;  // "<plugin>:<effect>"
+        std::array<ParamValue, 5> low{ std::int64_t{ 0 }, std::int64_t{ 0 }, std::int64_t{ 0 }, std::int64_t{ 0 }, std::int64_t{ 0 } };
+        std::array<ParamValue, 5> high{ std::int64_t{ 0 }, std::int64_t{ 0 }, std::int64_t{ 0 }, std::int64_t{ 0 }, std::int64_t{ 0 } };
+        bool operator==(const EffectRamp&) const = default;
     };
 
     // Evenly spaced tiers on one threshold condition. MTF has no value-to-color mapping, so a "health bar" is a
@@ -39,6 +49,8 @@ namespace mtfui::model {
         std::optional<Ramp> pulsePause;  // seconds
         std::optional<std::string> lowWaveform;  // for bands at or below lowWaveformUpTo; "" = built-in cosine
         double lowWaveformUpTo = 0.25;
+        std::vector<EffectRamp> effects;
+        bool effectsOnDefault = true;
     };
 
     struct GradientTier {
@@ -58,6 +70,9 @@ namespace mtfui::model {
     // Interpolated in OKLab, so red to green passes through yellow rather than brown.
     std::uint32_t SampleGradient(const std::vector<ColorStop>& stops, double t);
 
+    // Slider values are rounded to the parameter's step. An effect that isn't installed keeps low's values.
+    Effect SampleEffect(const Catalogs& cat, const EffectRamp& ramp, double t);
+
     bool IsBelowCondition(const CatalogEntry& entry);
 
     struct GradientCondition {
@@ -70,7 +85,8 @@ namespace mtfui::model {
 
     // Replaces every tier with the gradient. Default keeps its tattoo and effects and takes the color of the band
     // no tier covers; tiers inherit Default's tattoo, layers and pulse with the colors and ramps applied. Default
-    // gets the ramps too, at its end of the range.
+    // gets the ramps too, at its end of the range. With effectsOnDefault, each ramped effect replaces Default's first
+    // effect of the same kind, or is added.
     void ApplyGradient(const Catalogs& cat, Preset& preset, GradientSpec spec, int maxSlots);
 
     // What the Gradient tiers window is set to. Options that are switched off keep their values, so a preset's
@@ -103,6 +119,8 @@ namespace mtfui::model {
         bool lowWave = false;
         std::string lowWaveform = "heartbeat";
         int lowWaveUpTo = 25;  // percent of the range
+        std::vector<EffectRamp> effects;
+        bool effectsOnDefault = true;
         bool operator==(const GradientSettings&) const = default;
     };
 
@@ -120,5 +138,7 @@ namespace mtfui::model {
 
     // For presets without stored settings (made before they were stored, or saved from MTF's menu): reads them back
     // from tiers that form a ladder on one threshold condition. Colors come from the ends and middle of the range.
+    // Effects are read when every tier has the same ones in the same order; their ends are extended from the outer
+    // tiers, or taken from Default when it has them.
     std::optional<GradientSettings> InferGradient(const Catalogs& cat, const Preset& preset);
 }

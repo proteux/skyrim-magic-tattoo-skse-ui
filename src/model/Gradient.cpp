@@ -43,6 +43,12 @@ namespace mtfui::model {
             }
             return out;
         }
+
+        std::int64_t SnapSlider(const ParamSpec& p, double v) {
+            const double step = static_cast<double>(std::max<std::int64_t>(1, p.step));
+            const auto snapped = p.min + static_cast<std::int64_t>(std::llround((v - static_cast<double>(p.min)) / step)) * std::max<std::int64_t>(1, p.step);
+            return std::clamp(snapped, p.min, p.max);
+        }
     }
 
     GradientPlan PlanGradient(const GradientSpec& spec) {
@@ -96,6 +102,29 @@ namespace mtfui::model {
             return FromOklab({ ca.l + (cb.l - ca.l) * f, ca.a + (cb.a - ca.a) * f, ca.b + (cb.b - ca.b) * f });
         }
         return sorted.back().rgb & 0xFFFFFF;
+    }
+
+    Effect SampleEffect(const Catalogs& cat, const EffectRamp& ramp, double t) {
+        Effect fx;
+        fx.key = ramp.key;
+        fx.params = ramp.low;
+        const auto* entry = cat.FindEffect(ramp.key);
+        if (!entry) {
+            return fx;
+        }
+        for (int i = 0; i < 5; ++i) {
+            const auto& p = entry->params[i];
+            if (p.kind == ParamKind::None) {
+                fx.params[i] = std::int64_t{ 0 };
+            } else if (p.kind != ParamKind::Slider) {
+                fx.params[i] = p.Coerce(ramp.low[i]);
+            } else {
+                const auto lo = static_cast<double>(ParamInt(p.Coerce(ramp.low[i])));
+                const auto hi = static_cast<double>(ParamInt(p.Coerce(ramp.high[i])));
+                fx.params[i] = SnapSlider(p, lo + (hi - lo) * t);
+            }
+        }
+        return fx;
     }
 
     bool IsBelowCondition(const CatalogEntry& entry) {
@@ -166,11 +195,37 @@ namespace mtfui::model {
             }
             return out;
         };
+        auto effects = [&](double t) {
+            std::vector<Effect> out;
+            for (const auto& ramp : spec.effects) {
+                if (!ramp.key.empty()) {
+                    out.push_back(SampleEffect(cat, ramp, t));
+                }
+            }
+            return out;
+        };
 
         std::vector<Slot> slots;
         slots.push_back(base);
         slots[0].layers = look(plan.defaultT);
         slots[0].pulse = pulse(plan.defaultT);
+        if (spec.effectsOnDefault) {
+            auto& own = slots[0].effects;
+            std::vector<bool> replaced(own.size(), false);
+            for (auto& fx : effects(plan.defaultT)) {
+                std::size_t i = 0;
+                while (i < own.size() && (replaced[i] || !IEquals(own[i].key, fx.key))) {
+                    ++i;
+                }
+                if (i == own.size()) {
+                    own.push_back(std::move(fx));
+                    replaced.push_back(true);
+                } else {
+                    own[i] = std::move(fx);
+                    replaced[i] = true;
+                }
+            }
+        }
         for (const auto& tier : plan.tiers) {
             Slot s = DefaultSlot();
             ConditionItem item;
@@ -183,6 +238,7 @@ namespace mtfui::model {
             s.conditions.push_back(std::move(item));
             s.layers = look(tier.t);
             s.pulse = pulse(tier.t);
+            s.effects = effects(tier.t);
             slots.push_back(std::move(s));
         }
         while (static_cast<int>(slots.size()) < kSlotCount) {
@@ -258,6 +314,46 @@ namespace mtfui::model {
             }
             return true;
         }
+
+        Json EffectRampsToJson(const std::vector<EffectRamp>& ramps) {
+            Json out = Json::array();
+            for (const auto& r : ramps) {
+                Json low = Json::array(), high = Json::array();
+                for (int i = 0; i < 5; ++i) {
+                    low.push_back(ParamToJson(r.low[i]));
+                    high.push_back(ParamToJson(r.high[i]));
+                }
+                out.push_back(Json{ { "key", r.key }, { "low", low }, { "high", high } });
+            }
+            return out;
+        }
+
+        void EffectRampsFromJson(const Json& j, std::vector<EffectRamp>& ramps) {
+            if (!j.is_array()) {
+                return;
+            }
+            ramps.clear();
+            for (const auto& item : j) {
+                if (!item.is_object() || !item.contains("key") || !item["key"].is_string()) {
+                    continue;
+                }
+                EffectRamp r;
+                r.key = item["key"].get<std::string>();
+                auto values = [&](const char* name, std::array<ParamValue, 5>& out) {
+                    const auto it = item.find(name);
+                    if (it != item.end() && it->is_array()) {
+                        for (std::size_t i = 0; i < 5 && i < it->size(); ++i) {
+                            out[i] = ParamFromJson((*it)[i]);
+                        }
+                    }
+                };
+                values("low", r.low);
+                values("high", r.high);
+                if (ramps.size() < static_cast<std::size_t>(kEffectCap)) {
+                    ramps.push_back(std::move(r));
+                }
+            }
+        }
     }
 
     GradientSpec SpecFromSettings(const GradientSettings& s) {
@@ -292,6 +388,8 @@ namespace mtfui::model {
             spec.lowWaveform = s.lowWaveform;
             spec.lowWaveformUpTo = s.lowWaveUpTo / 100.0;
         }
+        spec.effects = s.effects;
+        spec.effectsOnDefault = s.effectsOnDefault;
         return spec;
     }
 
@@ -308,6 +406,13 @@ namespace mtfui::model {
                 text += std::format(";{:06X},{:06X},{:.4f},{}", l.tint, l.emissive, l.emissiveMult, l.alpha);
             }
             text += std::format(";{:.4f},{},{:.4f},{}", s.pulse.rate, s.pulse.depth, s.pulse.pause, s.pulse.waveform);
+            // Only tiers with effects add to the text, so fingerprints saved before effects were ramped still match.
+            for (const auto& fx : s.effects) {
+                text += ";" + fx.key;
+                for (const auto& v : fx.params) {
+                    text += "," + ParamToJson(v).dump();
+                }
+            }
         }
         return std::format("{:016x}", Fnv1a(text));
     }
@@ -341,6 +446,8 @@ namespace mtfui::model {
             { "lowwave", s.lowWave ? 1 : 0 },
             { "lowwaveform", s.lowWaveform },
             { "lowwaveupto", s.lowWaveUpTo },
+            { "effects", EffectRampsToJson(s.effects) },
+            { "effectsdefault", s.effectsOnDefault ? 1 : 0 },
             { "tiers", fingerprint },
         };
     }
@@ -377,6 +484,8 @@ namespace mtfui::model {
         Read(j, "lowwave", s.lowWave);
         Read(j, "lowwaveform", s.lowWaveform);
         Read(j, "lowwaveupto", s.lowWaveUpTo);
+        EffectRampsFromJson(j.value("effects", Json()), s.effects);
+        Read(j, "effectsdefault", s.effectsOnDefault);
         s.steps = std::max(1, s.steps);
         return s;
     }
@@ -511,6 +620,60 @@ namespace mtfui::model {
                 }
             }
             s.lowWaveUpTo = static_cast<int>(std::lround(upTo * 100.0));
+        }
+
+        const auto& tierFx = preset.slots[1].effects;
+        bool sameEffects = !tierFx.empty();
+        for (int k = 2; k <= n && sameEffects; ++k) {
+            const auto& fx = preset.slots[k].effects;
+            sameEffects = fx.size() == tierFx.size() &&
+                          std::equal(fx.begin(), fx.end(), tierFx.begin(), [](const Effect& a, const Effect& b) { return IEquals(a.key, b.key); });
+        }
+        if (sameEffects) {
+            // The outer tiers sit at tLo and tHi; the ramp's ends are at 0 and 1.
+            const int kLo = s.below ? 1 : n;
+            const int kHi = s.below ? n : 1;
+            const double tLo = s.below ? 0.0 : 1.0 / n;
+            const double tHi = s.below ? (n - 1.0) / n : 1.0;
+            const auto& own = preset.slots[0].effects;
+            std::vector<bool> taken(own.size(), false);
+            s.effectsOnDefault = true;
+            for (std::size_t i = 0; i < tierFx.size(); ++i) {
+                EffectRamp r;
+                r.key = tierFx[i].key;
+                r.low = preset.slots[kLo].effects[i].params;
+                r.high = r.low;
+                std::size_t d = 0;
+                while (d < own.size() && (taken[d] || !IEquals(own[d].key, r.key))) {
+                    ++d;
+                }
+                const Effect* atDefault = d < own.size() ? &own[d] : nullptr;
+                if (atDefault) {
+                    taken[d] = true;
+                } else {
+                    s.effectsOnDefault = false;
+                }
+                if (const auto* fxEntry = cat.FindEffect(r.key)) {
+                    for (int p = 0; p < 5; ++p) {
+                        const auto& spec = fxEntry->params[p];
+                        if (spec.kind != ParamKind::Slider) {
+                            continue;
+                        }
+                        const auto vLo = static_cast<double>(ParamInt(preset.slots[kLo].effects[i].params[p]));
+                        const auto vHi = static_cast<double>(ParamInt(preset.slots[kHi].effects[i].params[p]));
+                        const double slope = (vHi - vLo) / (tHi - tLo);
+                        r.low[p] = SnapSlider(spec, vLo - slope * tLo);
+                        r.high[p] = SnapSlider(spec, vLo + slope * (1.0 - tLo));
+                        if (atDefault) {
+                            (s.below ? r.high : r.low)[p] = spec.Coerce(atDefault->params[p]);
+                        }
+                    }
+                }
+                s.effects.push_back(std::move(r));
+            }
+            if (s.effects.size() > static_cast<std::size_t>(kEffectCap)) {
+                s.effects.resize(kEffectCap);
+            }
         }
         return s;
     }
