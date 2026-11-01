@@ -395,6 +395,75 @@ $MTFUI_Tiers_Base	Base
 $MTFUI_Tiers_BaseHelp	Default sets the base look. Tiers that leave their tattoo as "Same as Default" build on it, and it is shown whenever no tier matches.
 $MTFUI_Tiers_Header	Tiers (top wins)
 $MTFUI_Tiers_HeaderHelp	Drag tiers to change priority, or select one and press Alt+Up / Alt+Down. Right-click a tier to copy, paste or clear it. The first tier whose conditions are true is shown; Default applies when none are.
+$MTFUI_Tiers_Extra	Extra tiers (not in MTF's menu)
+$MTFUI_Tiers_ExtraHelp	MTF checks these like any other tier, but its own menu only shows the first {}, so edit them here. Saving from MTF's menu keeps them.
+$MTFUI_Tiers_Add	Add tier
+$MTFUI_Gradient_TierName	{} {}
+$MTFUI_Gradient_Open	Gradient tiers...
+$MTFUI_Gradient_OpenHelp	Builds a ladder of tiers from one value, such as health, so the tattoo's color follows it like a health bar.
+$MTFUI_Gradient_Title	Gradient tiers
+$MTFUI_Gradient_Intro	MTF can't map a value straight to a color, so this makes one tier per step of the value, each a shade along your colors. The preset's transition cross-fades between neighboring tiers.
+$MTFUI_Gradient_FromSaved	These are the settings that made this preset's tiers.
+$MTFUI_Gradient_FromSavedEdited	These are the settings that made this preset's tiers, but the tiers were changed since. Making tiers again replaces those changes.
+$MTFUI_Gradient_FromTiers	Settings read from this preset's tiers. Colors are taken from the ends and middle of the range, so check them before making tiers again.
+$MTFUI_Gradient_Condition	Value
+$MTFUI_Gradient_NoCondition	No installed condition has a threshold slider.
+$MTFUI_Gradient_Below	Below (tier 1 = lowest)
+$MTFUI_Gradient_Above	At or above (tier 1 = highest)
+$MTFUI_Gradient_DirectionHelp	Which way the condition compares. "Below Health %" is Below; "Above Health %" is At or above. Either one gives the same colors; this only has to match the condition.
+$MTFUI_Gradient_Range	Range
+$MTFUI_Gradient_From_Fmt	from %d
+$MTFUI_Gradient_To_Fmt	to %d
+$MTFUI_Gradient_Steps	Tiers
+$MTFUI_Gradient_StepsInfo	{} tiers plus Default, about {} each
+$MTFUI_Gradient_PastMenu	MTF's own menu only shows the first {} tiers. The rest work; edit them here.
+$MTFUI_Gradient_TintSection	Tint
+$MTFUI_Gradient_GlowSection	Glow
+$MTFUI_Gradient_ColorsHelp	From the low end of the range (top, left in the strip) to the high end. Two to four colors, evenly spaced. Turned off, the tiers keep Default's color.
+$MTFUI_Gradient_SameAsTint	Same as tint
+$MTFUI_Gradient_RemoveColor	Remove
+$MTFUI_Gradient_AddColor	Add color
+$MTFUI_Gradient_Reverse	Reverse
+$MTFUI_Gradient_Swap	Swap
+$MTFUI_Gradient_SwapTip	Swap the low-end and high-end values
+$MTFUI_Gradient_HealthBar	Health bar
+$MTFUI_Gradient_Tint	Change tint
+$MTFUI_Gradient_Emissive	Change glow color
+$MTFUI_Gradient_Glow	Glow strength ramp
+$MTFUI_Gradient_GlowHelp	Glow strength at each end of the range. A glow color only shows with some strength; the other layer settings come from Default.
+$MTFUI_Gradient_LowEnd_Fmt	low end %.1f
+$MTFUI_Gradient_HighEnd_Fmt	high end %.1f
+$MTFUI_Gradient_Opacity	Opacity ramp
+$MTFUI_Gradient_LowEndPct_Fmt	low end %d%%
+$MTFUI_Gradient_HighEndPct_Fmt	high end %d%%
+$MTFUI_Gradient_PulseSection	Pulse
+$MTFUI_Gradient_PulseHelp	Ramps the pulse along the range, like a heartbeat that speeds up as health drops. Off, the tiers keep Default's pulse. MTF may restart the pulse when the tier changes, so fewer, wider tiers can look smoother.
+$MTFUI_Gradient_PulseSpeed	Speed ramp
+$MTFUI_Gradient_PulseDepth	Depth ramp
+$MTFUI_Gradient_PulsePause	Pause ramp
+$MTFUI_Gradient_LowEndRate_Fmt	low end %.2f/s
+$MTFUI_Gradient_HighEndRate_Fmt	high end %.2f/s
+$MTFUI_Gradient_LowEndSec_Fmt	low end %.1f s
+$MTFUI_Gradient_HighEndSec_Fmt	high end %.1f s
+$MTFUI_Gradient_LowShape	Different shape at the low end
+$MTFUI_Gradient_LowShapeHelp	Tiers in the lowest part of the range use this pulse shape; the rest keep Default's.
+$MTFUI_Gradient_LowShapeUpTo_Fmt	lowest %d%%
+$MTFUI_Gradient_PulseNoGlow	The pulse only animates glow, and Default has no glow strength. Turn on the glow strength ramp or give Default some glow.
+$MTFUI_Gradient_EffectsSection	Effects
+$MTFUI_Gradient_EffectsHelp	Gives every tier these effects, with each slider set along the range, such as RaceMenu's Actor scale growing from 100% to 150% as health drops. Menus and other settings are the same on every tier. Each tier's effects run while it shows, so the value steps from tier to tier; effects with their own transition, like RaceMenu's, ease between the steps.
+$MTFUI_Gradient_AddEffect	Add effect
+$MTFUI_Gradient_LowEndParam	low end {}
+$MTFUI_Gradient_HighEndParam	high end {}
+$MTFUI_Gradient_EffectsOnDefault	Default gets them too
+$MTFUI_Gradient_EffectsOnDefaultHelp	Default shows outside the tiers, at its end of the range. On, it gets each effect at that end, replacing an effect of the same kind it already has. Off, Default's effects stay as they are, so the effects stop outside the tiers.
+$MTFUI_Gradient_TransitionHint	The transition is short, so the color jumps from tier to tier. A second or so makes it slide.
+$MTFUI_Gradient_SetTransition	Set transition to 1 s
+$MTFUI_Gradient_Replaces	Replaces all tiers. Default keeps its tattoo and effects. Undo brings them back.
+$MTFUI_Gradient_ReplacesWithDefaultEffects	Replaces all tiers. Default keeps its tattoo and other effects, and gets the effects above. Undo brings them back.
+$MTFUI_Gradient_Create	Make tiers
+$MTFUI_Toast_GradientMade	Made {} gradient tiers. Save to keep them.
+$MTFUI_Tiers_AddHelp	Adds a tier at the bottom. MTF's menu shows {} tiers; MTF itself checks up to {} (iMaxConditions in MagicTattoosFramework.ini).
+$MTFUI_Tiers_AddFull	MTF checks at most {} tiers. Raise iMaxConditions in Data/SKSE/Plugins/MagicTattoosFramework.ini and restart the game for more.
 $MTFUI_Header_Revert	Revert
 $MTFUI_Header_Undo	Undo
 $MTFUI_Header_Redo	Redo
@@ -442,6 +511,7 @@ $MTFUI_Lint_NotAnOption	{}: '{}' is not an option for {}
 $MTFUI_Lint_BadFileName	File name must be 1-32 characters of letters, digits, '_' or '-'
 $MTFUI_Lint_NoDisplayName	Display name is empty; MTF will show the file name
 $MTFUI_Lint_NoCondition	{} has a look or effects but no condition, so it never activates
+$MTFUI_Lint_PastLimit	{} is past the {} tiers MTF checks, so it never activates. Raise iMaxConditions in MagicTattoosFramework.ini.
 $MTFUI_Lint_Shadowed	{} can never activate: {} is higher in the list and always matches first. Move it up.
 $MTFUI_Lint_ConditionMissing	Condition '{}' is not installed; this tier will not activate
 $MTFUI_Lint_ConditionDisabled	{} is disabled in MTF; '{}' will never be true

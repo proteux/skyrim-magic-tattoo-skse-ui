@@ -117,7 +117,7 @@ namespace mtfui::model {
             out.push_back({ Severity::Info, -1, T("$MTFUI_Lint_NoDisplayName") });
         }
 
-        const int slotCount = std::min<int>(kSlotCount, static_cast<int>(preset.slots.size()));
+        const int slotCount = static_cast<int>(preset.slots.size());
         std::set<std::string> overflowReported;
         for (int i = 0; i < slotCount; ++i) {
             const Slot& s = preset.slots[i];
@@ -127,6 +127,10 @@ namespace mtfui::model {
                 if (HasContent(s)) {
                     out.push_back({ Severity::Warning, i, TF("$MTFUI_Lint_NoCondition", label), LintTab::Condition });
                 }
+                continue;
+            }
+            if (ctx.maxSlots > 0 && i >= ctx.maxSlots) {
+                out.push_back({ Severity::Warning, i, TF("$MTFUI_Lint_PastLimit", label, ctx.maxSlots - 1) });
                 continue;
             }
 

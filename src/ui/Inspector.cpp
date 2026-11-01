@@ -463,7 +463,7 @@ namespace mtfui::ui {
         TextUnformatted(slot == 0 ? T("$MTFUI_Tier_Default") : TF("$MTFUI_Inspector_TierTitle", slot, model::SlotLabel(p, slot)).c_str());
         if (slot > 0) {
             SameLine();
-            TextDisabled("%s", TF("$MTFUI_Inspector_Priority", slot, model::kSlotCount - 1).c_str());
+            TextDisabled("%s", TF("$MTFUI_Inspector_Priority", slot, static_cast<int>(p.slots.size()) - 1).c_str());
         }
         bool anyIssue = false;
         for (const auto severity : { model::Severity::Error, model::Severity::Warning }) {

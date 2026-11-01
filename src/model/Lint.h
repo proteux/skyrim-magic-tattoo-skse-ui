@@ -33,6 +33,7 @@ namespace mtfui::model {
         std::function<bool(const std::string&)> pluginEnabled;  // plugin id
         std::map<std::string, int> overlayStart;  // area -> MTF's first overlay slot
         std::map<std::string, int> overlayCapacity;  // area -> SKEE overlay count
+        int maxSlots = 0;  // Default + tiers MTF evaluates; 0 = unknown
     };
 
     std::vector<LintIssue> LintPreset(const Catalogs& cat, const Preset& preset, const LintContext& ctx);

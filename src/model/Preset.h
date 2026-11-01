@@ -14,12 +14,14 @@ namespace mtfui::model {
     using Json = nlohmann::json;
 
     inline constexpr int kSlotCount = 8;  // Default + the 7 tiers MTF's MCM shows
+    inline constexpr int kMaxSlotsFallback = 32;  // MTF's iMaxConditions default; Default counts as one
     inline constexpr int kLayerCount = 4;
     inline constexpr int kEffectCap = 8;
     inline constexpr int kConditionCap = 8;
     inline constexpr int kSchemaVersion = 9;
     inline constexpr const char* kNoTexture = "<none>";
     inline constexpr const char* kGroupKey = "mtfui_group";  // ours; MTF ignores it
+    inline constexpr const char* kGradientKey = "mtfui_gradient";  // ours too
 
     // A catalog parameter value: sliders and colors are ints, menus and text are string ids.
     using ParamValue = std::variant<std::int64_t, std::string>;
@@ -95,11 +97,13 @@ namespace mtfui::model {
         double transitionDuration = 1.0;
         FadeOnDeath fade;
         std::vector<Slot> slots;  // at least kSlotCount entries
+        // The Gradient tiers settings that made the tiers, null when they weren't. Saving from MTF's menu drops it.
+        Json gradient;
         Json raw = Json::object();
 
         bool operator==(const Preset& o) const {
             return name == o.name && displayName == o.displayName && group == o.group && hidden == o.hidden && transitionDuration == o.transitionDuration &&
-                   fade == o.fade && slots == o.slots;
+                   fade == o.fade && slots == o.slots && gradient == o.gradient;
         }
     };
 
@@ -116,6 +120,8 @@ namespace mtfui::model {
     Json PresetToJson(const Preset& preset);
 
     Slot DefaultSlot();
+    // Drops untouched tiers off the end, never going below kSlotCount slots.
+    void TrimTrailingEmptySlots(Preset& preset);
     Preset NewPreset(const std::string& name, const std::string& displayName);
 
     // Effective pack/entry after the Default slot's inheritance is applied.
@@ -136,6 +142,7 @@ namespace mtfui::model {
     void CopyLook(Preset& preset, int from, int to);
 
     // Replaces dst's tiers with src's (conditions, timing, looks, effects) and takes Default's effects too. Default's
-    // tattoo, layers and pulse stay dst's, so tiers that inherit the base tattoo show dst's.
+    // tattoo, layers and pulse stay dst's, so tiers that inherit the base tattoo show dst's. src's gradient settings
+    // come along with its tiers.
     void CopyTiers(Preset& dst, const Preset& src);
 }

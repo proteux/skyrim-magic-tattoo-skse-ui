@@ -43,6 +43,8 @@ Open the SKSE Menu Framework menu (F1 by default) and choose **Magic Tattoos**. 
 - **Groups.** Right-click a preset and choose **Move to group** to sort your library into folders, or **Duplicate...** to copy it under a new name. **Copy tiers from** gives a preset another preset's tiers but keeps its own Default tattoo.
 - **The whole preset on one screen.** Tiers are listed in priority order, top wins, with Default at the bottom. Each one has a sentence summary like "When the wearer is at least 50% aroused: Dragon Coil, pulsing at 1.2/s, 2 effects", plus a thumbnail of its tattoo.
 - **Drag tiers to reorder them**, or select one and press Alt+Up / Alt+Down. Right-click a tier to move it, clear it, copy another tier's look, or copy it and paste it into another tier or preset, whole or just its look, conditions, effects, or timing.
+- **Gradient tiers.** MTF can't map a value straight to a color, so **Gradient tiers...** builds the ladder for you. Pick a value (health, magicka, stamina, or any condition with a threshold slider), a range, how many tiers, and two to four colors each for the tint and the glow (either can be left alone). It writes one tier per step, each a shade along the colors, with optional glow and opacity ramps. Pulse speed, depth and pause can ramp too, and the lowest tiers can switch to another pulse shape, so the tattoo can beat faster as health drops. Effects can ramp as well: each tier gets the effects you add, with their sliders set along the range, so with the RaceMenu connector the actor can grow or bulk up as health drops. A red, yellow, green "health bar" is one click. Raise the preset's transition to a second or so and the color slides between tiers instead of jumping. The settings are saved in the preset, so reopening **Gradient tiers...** shows what made its tiers and says so if they were edited since. For a gradient preset without saved settings (made with an older version, or saved from MTF's menu), the window reads them back from the tiers.
+- **More than 7 tiers.** MTF's own menu shows 7 tiers, but MTF itself checks up to `iMaxConditions` in `Data/SKSE/Plugins/MagicTattoosFramework.ini` (32 by default, counting Default). **Add tier** goes past 7 here, and Gradient tiers can make more than 7. The extra tiers work in game; edit them here, since MTF's menu doesn't show them (saving from it keeps them).
 - **Copy and paste layers and pulses.** Right-click a layer header to copy, paste, or use its colors on every layer, and use **Copy pulse** / **Paste pulse** on the Pulse tab. Color pickers have a **Palette** button with MTF's named colors.
 - **An inspector for the selected tier** with Condition, Appearance, Pulse, Effects, and Timing tabs. Every condition and effect comes from the installed plugin catalogs, with its own sliders and menus, and is described in plain words as you edit it.
 - **Built-in checks.** The editor warns about mistakes MTF won't tell you about:
@@ -51,7 +53,8 @@ Open the SKSE Menu Framework menu (F1 by default) and choose **Magic Tattoos**. 
   - plugins that are missing or turned off;
   - tattoos or textures that aren't installed;
   - layers that overflow your RaceMenu overlay slots;
-  - a pulse that has nothing to animate.
+  - a pulse that has nothing to animate;
+  - tiers past the count MTF checks.
 
   Click a check's tier button to jump to the tab where it can be fixed. Some checks have a one-click fix: **Move it up** for a tier hidden by a higher one, and **Enable it** for a plugin that's turned off.
 - **Undo and redo** (Ctrl+Z, Ctrl+Y), **Save** (Ctrl+S), and **Revert**. Every save keeps a backup of the previous file.
@@ -100,7 +103,12 @@ The log is at `Documents/My Games/Skyrim Special Edition/SKSE/MagicTattoosUI.log
 
 ## Building from source
 
-Needs Visual Studio 2022 or later (or the standalone Build Tools with the C++ workload) and [vcpkg](https://github.com/microsoft/vcpkg). Set `VCPKG_ROOT` if vcpkg isn't at the default path in `build.sh`.
+Needs Visual Studio 2022 or later (or the standalone Build Tools with the C++ workload) and [vcpkg](https://github.com/microsoft/vcpkg). `build.sh` finds vcpkg through `VCPKG_ROOT` or your `PATH`. To set paths without touching the environment, create a `build.local.sh` next to `build.sh` (it's gitignored), for example:
+
+```
+VCPKG_ROOT="C:/vcpkg"
+SKYRIM_DIR="/d/SteamLibrary/steamapps/common/Skyrim Special Edition"
+```
 
 ```
 make            # same as make live

@@ -1,0 +1,30 @@
+{
+  "schemaversion": 2,
+  "pluginid": "test.ramp",
+  "pluginlabel": "Test ramp",
+  "conditions": [],
+  "effects": [
+    {
+      "id": "size",
+      "label": "Size",
+      "description": "{param1}% over {param2}.",
+      "param1": { "label": "Size", "min": 50, "max": 200, "step": 5, "default": 100, "format": "{0}%" },
+      "param2": { "label": "Transition", "min": 0, "max": 30, "default": 5, "format": "{0} s" }
+    },
+    {
+      "id": "shape",
+      "label": "Shape",
+      "description": "{param1} at {param2}% over {param3}.",
+      "param1": {
+        "label": "Shape",
+        "default": "a",
+        "menu": [
+          { "id": "a", "label": "A" },
+          { "id": "b", "label": "B" }
+        ]
+      },
+      "param2": { "label": "Strength", "min": 5, "max": 100, "step": 5, "default": 50, "format": "{0}%" },
+      "param3": { "label": "Transition", "min": 0, "max": 30, "default": 5, "format": "{0} s" }
+    }
+  ]
+}

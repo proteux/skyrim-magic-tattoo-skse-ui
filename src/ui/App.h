@@ -57,6 +57,7 @@ namespace mtfui::ui {
         Paths paths;
         model::Catalogs cat;
         io::UiSettings settings;
+        int maxSlots = model::kMaxSlotsFallback;  // Default + tiers MTF evaluates, from its iMaxConditions
         std::vector<model::PresetFileInfo> library;
         std::vector<model::PresetFileInfo> hiddenPresets;  // soft-deleted user presets
         model::UsageIndex usage;  // user presets only

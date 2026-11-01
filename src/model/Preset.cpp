@@ -342,6 +342,9 @@ namespace mtfui::model {
         p.raw = j.is_object() ? j : Json::object();
         p.displayName = GetStr(j, "displayname", name);
         p.group = GetStr(j, kGroupKey);
+        if (const Json& g = Child(j, kGradientKey); g.is_object()) {
+            p.gradient = g;
+        }
         p.hidden = static_cast<int>(GetInt(j, "hidden", 0));
         p.schemaVersion = static_cast<int>(GetInt(j, "schemaversion", 1));
         p.transitionDuration = GetFloat(Child(j, "transition"), "duration", 1.0);
@@ -392,6 +395,11 @@ namespace mtfui::model {
         } else {
             j[kGroupKey] = preset.group;
         }
+        if (preset.gradient.is_object()) {
+            j[kGradientKey] = preset.gradient;
+        } else {
+            j.erase(kGradientKey);
+        }
         j["schemaversion"] = kSchemaVersion;
         ObjectAt(j, "transition")["duration"] = PapyrusFloat(preset.transitionDuration);
         Json& fade = ObjectAt(j, "fadeondeath");
@@ -418,6 +426,13 @@ namespace mtfui::model {
     Slot DefaultSlot() {
         Slot s;
         return s;
+    }
+
+    void TrimTrailingEmptySlots(Preset& preset) {
+        const Slot empty = DefaultSlot();
+        while (static_cast<int>(preset.slots.size()) > kSlotCount && preset.slots.back() == empty) {
+            preset.slots.pop_back();
+        }
     }
 
     Preset NewPreset(const std::string& name, const std::string& displayName) {
@@ -495,5 +510,6 @@ namespace mtfui::model {
         base.effects = src.slots[0].effects;
         dst.slots = src.slots;
         dst.slots[0] = std::move(base);
+        dst.gradient = src.gradient;
     }
 }

@@ -6,6 +6,7 @@
 #include "io/UiSettings.h"
 #include "model/Catalogs.h"
 #include "model/Describe.h"
+#include "model/Gradient.h"
 #include "model/Lint.h"
 #include "model/Preset.h"
 #include "model/Slots.h"
@@ -157,6 +158,201 @@ namespace {
         Check(!usage.entries.empty(), "usage index finds tattoo entries");
         const auto* ostim = usage.Plugin("mtf.ostim");
         Check(ostim && !ostim->empty(), "usage index finds plugin users");
+    }
+
+    void Gradients(const fs::path& fixtures) {
+        model::Catalogs cat;
+        cat.Load(fixtures);
+        const auto* below = cat.FindCondition("mtf.attributes:health.below");
+        const auto* above = cat.FindCondition("mtf.attributes:health");
+        Check(below && model::IsBelowCondition(*below), "health.below reads as a below condition");
+        Check(above && !model::IsBelowCondition(*above), "health reads as an at-or-above condition");
+        const auto conditions = model::GradientConditions(cat);
+        Check(!conditions.empty() && model::IEquals(conditions.front().plugin->pluginId, "mtf.attributes"), "attribute conditions are listed first");
+
+        model::GradientSpec spec;
+        spec.conditionId = "mtf.attributes:health.below";
+        spec.steps = 4;
+        spec.tintStops = { { 0.0, 0xFF0000 }, { 1.0, 0x00FF00 } };
+        spec.emissiveStops = { { 0.0, 0x0000FF }, { 1.0, 0xFFFFFF } };
+        auto plan = model::PlanGradient(spec);
+        Check(plan.tiers.size() == 4, "4 steps make 4 tiers");
+        if (plan.tiers.size() == 4) {
+            Check(plan.tiers[0].threshold == 20 && plan.tiers[3].threshold == 80, "below: thresholds rise from tier 1");
+            Check(plan.tiers[0].t == 0.0 && plan.tiers[3].t == 0.75 && plan.defaultT == 1.0, "below: Default holds the top band");
+        }
+        spec.below = false;
+        plan = model::PlanGradient(spec);
+        if (plan.tiers.size() == 4) {
+            Check(plan.tiers[0].threshold == 80 && plan.tiers[3].threshold == 20, "above: thresholds fall from tier 1");
+            Check(plan.tiers[0].t == 1.0 && plan.tiers[3].t == 0.25 && plan.defaultT == 0.0, "above: Default holds the bottom band");
+        }
+        spec.steps = 500;
+        plan = model::PlanGradient(spec);
+        bool rising = true;
+        for (std::size_t i = 1; i < plan.tiers.size(); ++i) {
+            rising = rising && plan.tiers[i].threshold < plan.tiers[i - 1].threshold;
+        }
+        Check(plan.tiers.size() <= 100 && rising, "more steps than values merge equal thresholds");
+
+        Check(model::SampleGradient(spec.tintStops, 0.0) == 0xFF0000 && model::SampleGradient(spec.tintStops, 1.0) == 0x00FF00, "gradient ends are the stops");
+        const auto mid = model::SampleGradient(spec.tintStops, 0.5);
+        Check(((mid >> 16) & 0xFF) > 0x80 && ((mid >> 8) & 0xFF) > 0x80 && (mid & 0xFF) < 0x50, "red to green passes through yellow");
+
+        const auto dragon = model::PresetFromJson("B_H_-_DRAGON", *io::ReadJson(fixtures / "presets" / "B_H_-_DRAGON.json"));
+        auto p = dragon;
+        spec.below = true;
+        spec.steps = 20;
+        spec.emissiveMult = model::Ramp{ 0.5, 2.0 };
+        spec.pulseRate = model::Ramp{ 3.0, 0.5 };
+        spec.pulseDepth = model::Ramp{ 80.0, 20.0 };
+        spec.pulsePause = model::Ramp{ 0.0, 1.2 };
+        spec.lowWaveform = "heartbeat";
+        model::ApplyGradient(cat, p, spec, model::kMaxSlotsFallback);
+        Check(p.slots.size() == 21, "20 steps make Default plus 20 tiers");
+        Check(p.slots[0].packId == dragon.slots[0].packId && p.slots[0].effects == dragon.slots[0].effects, "Default keeps its tattoo and effects");
+        Check(p.slots[0].layers[0].tint == 0x00FF00 && p.slots[1].layers[0].tint == 0xFF0000, "Default and tier 1 take the end tints");
+        Check(p.slots[0].layers[0].emissive == 0xFFFFFF && p.slots[1].layers[0].emissive == 0x0000FF, "glow colors follow their own stops");
+
+        auto glowOnly = dragon;
+        auto glowSpec = spec;
+        glowSpec.tintStops.clear();
+        model::ApplyGradient(cat, glowOnly, glowSpec, model::kMaxSlotsFallback);
+        Check(glowOnly.slots[1].layers[0].tint == dragon.slots[0].layers[0].tint && glowOnly.slots[1].layers[0].emissive == 0x0000FF,
+            "without tint stops, tiers keep Default's tint");
+        Check(std::abs(p.slots[1].layers[0].emissiveMult - 0.5) < 1e-9 && std::abs(p.slots[0].layers[0].emissiveMult - 2.0) < 1e-9, "glow ramp");
+        Check(p.slots[1].pulse.rate == 3.0 && p.slots[1].pulse.depth == 80 && p.slots[1].pulse.pause == 0.0, "tier 1 takes the low-end pulse");
+        Check(p.slots[0].pulse.rate == 0.5 && p.slots[0].pulse.depth == 20 && p.slots[0].pulse.pause == static_cast<float>(1.2),
+            "Default takes the high-end pulse");
+        Check(p.slots[6].pulse.waveform == "heartbeat" && p.slots[7].pulse.waveform == dragon.slots[0].pulse.waveform,
+            "the low-end waveform stops at its cutoff");
+        bool inherit = true;
+        for (std::size_t i = 1; i < p.slots.size(); ++i) {
+            inherit = inherit && p.slots[i].packId.empty() && p.slots[i].effects.empty() && p.slots[i].Configured();
+        }
+        Check(inherit, "generated tiers inherit Default's tattoo");
+        for (const auto& issue : model::LintPreset(cat, p, {})) {
+            Check(issue.severity == model::Severity::Info, "no warnings on a generated gradient: " + issue.message);
+        }
+        Check(model::PresetFromJson(p.name, nlohmann::json::parse(io::WriteStyled(model::PresetToJson(p)))) == p, "20-tier preset round-trips");
+
+        auto capped = dragon;
+        model::ApplyGradient(cat, capped, spec, model::kSlotCount);
+        Check(capped.slots.size() == model::kSlotCount, "the tier cap limits the steps");
+
+        auto lint = p;
+        lint.slots.resize(12);
+        model::LintContext ctx;
+        ctx.maxSlots = 10;
+        bool past = false;
+        for (const auto& issue : model::LintPreset(cat, lint, ctx)) {
+            past = past || (issue.slot == 10 && issue.severity == model::Severity::Warning);
+        }
+        Check(past, "lint flags tiers past iMaxConditions");
+
+        model::GradientSettings settings;
+        settings.conditionId = "mtf.attributes:health.below";
+        settings.steps = 6;
+        settings.tintColors = { 0xFF0000, 0x00FF00 };
+        settings.pulseRate = true;
+        settings.lowWave = true;
+        auto made = dragon;
+        model::ApplyGradient(cat, made, model::SpecFromSettings(settings), model::kMaxSlotsFallback);
+        made.gradient = model::GradientSettingsToJson(settings, model::TiersFingerprint(made));
+        const auto reloaded = model::PresetFromJson(made.name, nlohmann::json::parse(io::WriteStyled(model::PresetToJson(made))));
+        Check(reloaded == made, "gradient settings survive a save");
+        const auto back = model::GradientSettingsFromJson(reloaded.gradient);
+        Check(back && *back == settings, "gradient settings read back unchanged");
+        Check(!model::GradientTiersEdited(reloaded), "a saved gradient's tiers match their fingerprint");
+        auto edited = reloaded;
+        edited.slots[2].layers[0].tint = 0x123456;
+        Check(model::GradientTiersEdited(edited), "editing a generated tier is noticed");
+        auto newBase = reloaded;
+        newBase.slots[0].packId = "mtf.lyru-1";
+        Check(!model::GradientTiersEdited(newBase), "changing Default's tattoo isn't an edit to the tiers");
+        Check(!model::PresetToJson(dragon).contains(model::kGradientKey), "presets without gradient settings write no key");
+
+        auto copied = dragon;
+        model::CopyTiers(copied, made);
+        Check(copied.gradient == made.gradient, "copied tiers bring their gradient settings");
+
+        const auto inferred = model::InferGradient(cat, made);
+        Check(inferred && inferred->below && inferred->steps == 6 && inferred->lo == 0 && inferred->hi == 100, "inference reads the condition and range");
+        Check(inferred && inferred->tint && inferred->tintColors == std::vector<std::uint32_t>{ 0xFF0000, 0x00FF00 }, "inference reads the end colors");
+        Check(inferred && inferred->pulseRate && inferred->rateLow == 3.0f && inferred->rateHigh == 0.5f, "inference reads the pulse ramp");
+        Check(inferred && inferred->lowWave && inferred->lowWaveform == "heartbeat", "inference reads the low-end pulse shape");
+        auto mixed = made;
+        mixed.slots[3].conditions.front().pluginId = "mtf.attributes:health";
+        Check(!model::InferGradient(cat, mixed), "tiers on mixed conditions aren't read as a gradient");
+
+        model::GradientSettings bodySettings;
+        bodySettings.conditionId = "mtf.attributes:health.below";
+        bodySettings.steps = 4;
+        model::EffectRamp scale;
+        scale.key = "test.ramp:size";
+        scale.low = { std::int64_t{ 150 }, std::int64_t{ 5 }, std::int64_t{ 0 }, std::int64_t{ 0 }, std::int64_t{ 0 } };
+        scale.high = { std::int64_t{ 100 }, std::int64_t{ 5 }, std::int64_t{ 0 }, std::int64_t{ 0 }, std::int64_t{ 0 } };
+        model::EffectRamp shape;
+        shape.key = "test.ramp:shape";
+        shape.low = { std::string("a"), std::int64_t{ 100 }, std::int64_t{ 5 }, std::int64_t{ 0 }, std::int64_t{ 0 } };
+        shape.high = { std::string("b"), std::int64_t{ 20 }, std::int64_t{ 5 }, std::int64_t{ 0 }, std::int64_t{ 0 } };
+        bodySettings.effects = { scale, shape };
+        auto body = dragon;
+        model::ApplyGradient(cat, body, model::SpecFromSettings(bodySettings), model::kMaxSlotsFallback);
+        auto fxParam = [&](int slot, std::size_t fx, int param) { return body.slots[slot].effects[fx].params[param]; };
+        const auto defaultFx = dragon.slots[0].effects.size();
+        const bool fourTiers = body.slots[4].Configured() && !body.slots[5].Configured();
+        Check(fourTiers && body.slots[1].effects.size() == 2 && body.slots[4].effects.size() == 2 && body.slots[5].effects.empty(),
+            "every tier gets the ramped effects");
+        if (fourTiers && body.slots[4].effects.size() == 2 && body.slots[0].effects.size() == defaultFx + 2) {
+            Check(model::ParamInt(fxParam(1, 0, 0)) == 150 && model::ParamInt(fxParam(4, 0, 0)) == 115, "effect sliders ramp and snap to their step");
+            Check(model::ParamInt(fxParam(2, 1, 1)) == 80 && model::ParamInt(fxParam(4, 1, 1)) == 40, "each slider ramps on its own");
+            Check(model::ParamStr(fxParam(4, 1, 0)) == "a", "menu parameters keep the low end's choice");
+            Check(model::ParamInt(fxParam(0, defaultFx, 0)) == 100 && model::ParamInt(fxParam(0, defaultFx + 1, 1)) == 20,
+                "Default gets the effects at its end of the range");
+            Check(std::equal(dragon.slots[0].effects.begin(), dragon.slots[0].effects.end(), body.slots[0].effects.begin()), "Default keeps its other effects");
+        } else {
+            Check(false, "Default gets the ramped effects added");
+        }
+        auto again = body;
+        model::ApplyGradient(cat, again, model::SpecFromSettings(bodySettings), model::kMaxSlotsFallback);
+        Check(again.slots[0].effects == body.slots[0].effects, "making the tiers again replaces Default's ramped effects");
+        for (const auto& issue : model::LintPreset(cat, body, {})) {
+            Check(issue.severity == model::Severity::Info, "no warnings on a gradient with effects: " + issue.message);
+        }
+
+        body.gradient = model::GradientSettingsToJson(bodySettings, model::TiersFingerprint(body));
+        const auto bodyReloaded = model::PresetFromJson(body.name, nlohmann::json::parse(io::WriteStyled(model::PresetToJson(body))));
+        const auto bodyBack = model::GradientSettingsFromJson(bodyReloaded.gradient);
+        Check(bodyBack && *bodyBack == bodySettings, "effect ramps survive a save");
+        Check(!model::GradientTiersEdited(bodyReloaded), "a gradient with effects matches its fingerprint");
+        auto bodyEdited = bodyReloaded;
+        bodyEdited.slots[2].effects[0].params[0] = std::int64_t{ 145 };
+        Check(model::GradientTiersEdited(bodyEdited), "editing a generated effect is noticed");
+
+        auto bodyBare = body;
+        bodyBare.gradient = nullptr;
+        const auto bodyInferred = model::InferGradient(cat, bodyBare);
+        Check(bodyInferred && bodyInferred->effects.size() == 2 && bodyInferred->effectsOnDefault, "inference reads the effects");
+        if (bodyInferred && bodyInferred->effects.size() == 2) {
+            const auto& s = bodyInferred->effects[0];
+            const auto& b = bodyInferred->effects[1];
+            Check(model::ParamInt(s.low[0]) == 150 && model::ParamInt(s.high[0]) == 100, "inference reads an effect ramp's ends");
+            Check(model::ParamStr(b.low[0]) == "a" && model::ParamInt(b.low[1]) == 100 && model::ParamInt(b.high[1]) == 20, "inference reads every parameter");
+        }
+        auto tiersOnly = dragon;
+        bodySettings.effectsOnDefault = false;
+        model::ApplyGradient(cat, tiersOnly, model::SpecFromSettings(bodySettings), model::kMaxSlotsFallback);
+        Check(tiersOnly.slots[0].effects == dragon.slots[0].effects, "Default can be left without the effects");
+        const auto tiersOnlyInferred = model::InferGradient(cat, tiersOnly);
+        Check(tiersOnlyInferred && !tiersOnlyInferred->effectsOnDefault && tiersOnlyInferred->effects.size() == 2 &&
+                  model::ParamInt(tiersOnlyInferred->effects[1].high[1]) == 20,
+            "without Default, inference extends the ramp from the outer tiers");
+
+        auto trimmed = dragon;
+        trimmed.slots.resize(11, model::DefaultSlot());
+        model::TrimTrailingEmptySlots(trimmed);
+        Check(trimmed.slots.size() == model::kSlotCount, "empty trailing tiers are trimmed down to the MCM's count");
     }
 
     void AtomicWrite() {
@@ -648,6 +844,7 @@ int main(int argc, char** argv) {
     RoundTripPresets(fixtures);
     Groups(fixtures);
     Catalogs(fixtures);
+    Gradients(fixtures);
     AtomicWrite();
     LintRules(fixtures);
     LookAndDescribe(fixtures);
