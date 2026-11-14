@@ -81,7 +81,11 @@ namespace mtfui::game {
 
     void LivePreview::RunSteps(std::shared_ptr<std::vector<Step>> steps, std::size_t i, int gen) {
         // Stopped or timed out: whoever bumped the generation has taken over the cleanup.
-        if (i >= steps->size() || gen != generation_) {
+        if (gen != generation_) {
+            Settled();
+            return;
+        }
+        if (i >= steps->size()) {
             return;
         }
         (*steps)[i]([this, steps, i, gen] { RunSteps(steps, i + 1, gen); });
@@ -97,7 +101,11 @@ namespace mtfui::game {
             ++generation_;
             status_ = T("$MTFUI_Preview_NoResponse");
         }
-        if (busy_ || !pending_ || now < pending_->due) {
+        if (settling_ && now - settleSince_ > kBusyTimeout) {
+            logger::warn("Stopped live preview did not settle within {}s; cleaning up anyway", kBusyTimeout.count());
+            FinishStop();
+        }
+        if (busy_ || settling_ || !pending_ || now < pending_->due) {
             return;
         }
         auto job = std::move(*pending_);
@@ -176,7 +184,9 @@ namespace mtfui::game {
                         // Stopped (or timed out) while this was in flight: undo it rather than leave an untracked preview.
                         if (rc == 1 || rc == 0) {
                             logger::info("Removing a preview that finished after it was stopped, on {:08X}", actor);
-                            MtfBridge::Get().Remove(actor, kPreviewPreset, {});
+                            MtfBridge::Get().Remove(actor, kPreviewPreset, [this] { Settled(); });
+                        } else {
+                            Settled();
                         }
                         return;
                     }
@@ -255,21 +265,52 @@ namespace mtfui::game {
         last_ = nlohmann::json();
         lastActor_ = 0;
         lastSuspend_.clear();
-        auto actors = touched_;
-        touched_.clear();
-        auto owed = std::move(suspended_);
-        suspended_.clear();
-        for (const auto& [id, names] : owed) {
-            if (std::find(actors.begin(), actors.end(), id) == actors.end()) {
-                actors.push_back(id);
+        for (const auto id : touched_) {
+            if (std::find(stopActors_.begin(), stopActors_.end(), id) == stopActors_.end()) {
+                stopActors_.push_back(id);
             }
         }
+        touched_.clear();
+        for (auto& [id, names] : suspended_) {
+            if (std::find(stopActors_.begin(), stopActors_.end(), id) == stopActors_.end()) {
+                stopActors_.push_back(id);
+            }
+            auto& into = stopOwed_[id];
+            for (auto& n : names) {
+                if (!Contains(into, n)) {
+                    into.push_back(std::move(n));
+                }
+            }
+        }
+        suspended_.clear();
         applied_ = 0;
         status_.clear();
         if (busy_) {
             ++generation_;
             busy_ = false;
+            if (!settling_) {
+                settling_ = true;
+                settleSince_ = std::chrono::steady_clock::now();
+                logger::info("Live preview stopped mid-update; putting things back once MTF answers");
+            }
         }
+        if (!settling_) {
+            FinishStop();
+        }
+    }
+
+    void LivePreview::Settled() {
+        if (settling_) {
+            FinishStop();
+        }
+    }
+
+    void LivePreview::FinishStop() {
+        settling_ = false;
+        auto actors = std::move(stopActors_);
+        auto owed = std::move(stopOwed_);
+        stopActors_.clear();
+        stopOwed_.clear();
         for (const auto id : actors) {
             const auto it = owed.find(id);
             if (it == owed.end() || it->second.empty()) {
@@ -306,6 +347,9 @@ namespace mtfui::game {
         lastActor_ = 0;
         lastSuspend_.clear();
         busy_ = false;
+        settling_ = false;
+        stopActors_.clear();
+        stopOwed_.clear();
         status_.clear();
     }
 

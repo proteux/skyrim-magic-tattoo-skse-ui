@@ -520,7 +520,9 @@ namespace mtfui::ui {
 
     void App::UpdatePreview() {
         auto& lp = game::LivePreview::Get();
-        if (!livePreview || !ed.preset || !game::MtfBridge::Get().Installed() || overlayMove_) {
+        // The menu section keeps committing frames after the split windows close, with no editor left on screen.
+        const bool editorShown = !window_ || window_->IsOpen || !settings.splitPanels;
+        if (!livePreview || !editorShown || !ed.preset || !game::MtfBridge::Get().Installed() || overlayMove_) {
             if (lp.Active()) {
                 lp.Stop();
             }

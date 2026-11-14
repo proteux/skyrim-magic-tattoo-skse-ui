@@ -2,8 +2,9 @@
 
 Versions follow `<major>.<feature>.<patch>`, as described in `AGENTS.md`.
 
-Version 1.6.7
+Version 1.6.8
 
+Fix: applied tattoos that were being previewed would get dropped when the menu closed
 New: gradient effects blend color settings from a low-end color to a high-end color, such as RaceMenu's hair color turning from brown to white as health drops.
 
 
