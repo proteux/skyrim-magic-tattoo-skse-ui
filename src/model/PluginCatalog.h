@@ -3,12 +3,27 @@
 #include "model/Preset.h"
 
 #include <filesystem>
+#include <functional>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace mtfui::model {
-    enum class ParamKind { None, Slider, Menu, Text, Color };
+    // Lookup: a string picked from a list the game supplies, such as "spell". Catalogs also mark it "text", so
+    // MTF's own menu shows a text box.
+    enum class ParamKind { None, Slider, Menu, Text, Color, Lookup };
+
+    // Unknown: the list isn't loaded, or can't tell. Missing: the list is loaded and lacks the value.
+    enum class LookupState { Unknown, Found, Missing };
+    struct LookupResult {
+        LookupState state = LookupState::Unknown;
+        std::string name;
+    };
+    using LookupResolver = std::function<LookupResult(std::string_view kind, std::string_view value)>;
+    // Set by the game side once its lists are loaded; offline, every lookup is Unknown.
+    void SetLookupResolver(LookupResolver resolver);
+    LookupResult ResolveLookup(std::string_view kind, std::string_view value);
 
     struct MenuOption {
         std::string id;
@@ -24,8 +39,9 @@ namespace mtfui::model {
         std::string format;  // "{0} m"
         ParamValue def = std::int64_t{ 0 };
         std::vector<MenuOption> menu;
+        std::string lookup;  // the list a Lookup picks from, "spell"
 
-        bool IsString() const { return kind == ParamKind::Menu || kind == ParamKind::Text; }
+        bool IsString() const { return kind == ParamKind::Menu || kind == ParamKind::Text || kind == ParamKind::Lookup; }
         std::string Display(const ParamValue& v) const;
         // Coerces a stored value to the type this spec writes.
         ParamValue Coerce(const ParamValue& v) const;

@@ -1,10 +1,125 @@
 #include "ui/Widgets.h"
 
+#include "game/SpellLookup.h"
 #include "io/UiSettings.h"
 #include "model/Catalogs.h"
 
+#include <cfloat>
+
 namespace mtfui::ui {
     using namespace ImGuiMCP;
+
+    namespace {
+        // Only one picker is open at a time, so they share this.
+        struct SpellPickerState {
+            std::string search;
+            int school = -1;  // -1: every school
+            bool knownOnly = false;
+            bool reading = false;
+            std::optional<std::unordered_set<RE::FormID>> known;
+        };
+
+        SpellPickerState& Picker() {
+            static SpellPickerState state;
+            return state;
+        }
+
+        const char* SchoolName(int school) {
+            static const char* keys[] = { "$MTFUI_Spells_Alteration", "$MTFUI_Spells_Conjuration", "$MTFUI_Spells_Destruction", "$MTFUI_Spells_Illusion",
+                "$MTFUI_Spells_Restoration" };
+            return school >= 0 && school < 5 ? T(keys[school]) : T("$MTFUI_Lookup_NoSchool");
+        }
+
+        void RequestKnown(SpellPickerState& st) {
+            st.reading = true;
+            game::SpellLookup::Get().ReadKnown([](std::unordered_set<RE::FormID> known) {
+                auto& s = Picker();
+                s.known = std::move(known);
+                s.reading = false;
+            });
+        }
+
+        bool SpellPicker(const char* label, model::ParamValue& value) {
+            const auto& lookup = game::SpellLookup::Get();
+            const auto current = model::ParamStr(value);
+            const auto* chosen = current.empty() ? nullptr : lookup.Find(current);
+            const std::string preview = current.empty() ? std::string(T("$MTFUI_Lookup_None")) : chosen ? chosen->name : TF("$MTFUI_Lookup_Missing", current);
+            SetNextWindowSizeConstraints(ImVec2{ 480, 0 }, ImVec2{ FLT_MAX, 520 });
+            if (!BeginCombo(label, preview.c_str(), 0)) {
+                return false;
+            }
+            auto& st = Picker();
+            if (IsWindowAppearing()) {
+                st.search.clear();
+                st.known.reset();
+                st.reading = false;
+                if (st.knownOnly) {
+                    RequestKnown(st);
+                }
+                SetKeyboardFocusHere();
+            }
+            SearchBox("##search", st.search, 200);
+            SameLine();
+            SetNextItemWidth(140);
+            if (BeginCombo("##school", st.school < 0 ? T("$MTFUI_Lookup_AllSchools") : SchoolName(st.school), 0)) {
+                if (Selectable(T("$MTFUI_Lookup_AllSchools"), st.school < 0)) {
+                    st.school = -1;
+                }
+                for (int s = 0; s < 5; ++s) {
+                    if (Selectable(SchoolName(s), st.school == s)) {
+                        st.school = s;
+                    }
+                }
+                EndCombo();
+            }
+            SameLine();
+            if (Checkbox(T("$MTFUI_Lookup_KnownOnly"), &st.knownOnly) && st.knownOnly && !st.known && !st.reading) {
+                RequestKnown(st);
+            }
+            if (BeginItemTooltip()) {
+                TextUnformatted(T("$MTFUI_Lookup_KnownOnlyTip"));
+                EndTooltip();
+            }
+
+            bool changed = false;
+            int shown = 0;
+            if (BeginChild("##spells", ImVec2{ 0, 360 })) {
+                if (st.knownOnly && st.reading) {
+                    TextDisabled("%s", T("$MTFUI_Lookup_Reading"));
+                } else {
+                    for (const auto& e : lookup.All()) {
+                        if (st.school >= 0 && e.school != st.school) {
+                            continue;
+                        }
+                        if (st.knownOnly && (!st.known || !st.known->contains(e.formId))) {
+                            continue;
+                        }
+                        const std::string row = TF("$MTFUI_Lookup_Row", e.name, SchoolName(e.school), e.plugin);
+                        if (!model::MatchesSearch(row, st.search)) {
+                            continue;
+                        }
+                        ++shown;
+                        const bool selected = chosen == &e;
+                        if (Selectable((row + "##" + e.value).c_str(), selected)) {
+                            value = e.value;
+                            changed = true;
+                            CloseCurrentPopup();
+                        }
+                        if (selected && IsWindowAppearing()) {
+                            SetScrollHereY();
+                        }
+                    }
+                    if (shown == 0) {
+                        TextDisabled("%s", T("$MTFUI_Lookup_NoMatch"));
+                    }
+                }
+            }
+            EndChild();
+            TextDisabled("%s", TF("$MTFUI_Lookup_Count", shown).c_str());
+            EndCombo();
+            return changed;
+        }
+    }
 
     bool InputString(const char* label, std::string& value, const char* hint, int flags, std::size_t capacity) {
         std::vector<char> buf(std::max(capacity, value.size() + 1), '\0');
@@ -116,6 +231,18 @@ namespace mtfui::ui {
                 if (InputString(label, s, T("$MTFUI_Param_TextHint"))) {
                     value = s;
                     changed = true;
+                }
+                break;
+            }
+            case model::ParamKind::Lookup: {
+                if (spec.lookup == "spell" && game::SpellLookup::Get().Ready()) {
+                    changed = SpellPicker(label, value);
+                } else {
+                    std::string s = model::ParamStr(value);
+                    if (InputString(label, s)) {
+                        value = s;
+                        changed = true;
+                    }
                 }
                 break;
             }

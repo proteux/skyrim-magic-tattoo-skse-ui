@@ -2,8 +2,13 @@
 
 Versions follow `<major>.<feature>.<patch>`, as described in `AGENTS.md`.
 
+Version 1.8.0
+
+New: a spell picker for plugin effects that take a spell, such as Cast a spell and Spell aura in MTF Plugin - Skyrim. It lists every spell in your load order with its school and plugin, with a search box, a school filter, and a "Known by player" filter. A spell whose plugin has been removed is flagged in the preset's checks.
+
 Version 1.7.1
 
+Change: the Spells tab is easier to read. Each spell gets its own box, and only the spells you've set up are listed; New spell adds the next one, with a count of how many of the 20 are in use. Remove clears a spell, and saving makes this character forget it.
 Change: the Spells tab's preset menu is grouped like the library, with a submenu per group, then ungrouped presets, then built-ins. A * marks the submenu holding the chosen preset.
 
 Version 1.7.0

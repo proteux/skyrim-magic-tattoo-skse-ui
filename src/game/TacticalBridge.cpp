@@ -185,8 +185,16 @@ namespace mtfui::game {
     void TacticalBridge::SyncKnown(const model::TacticalConfig& config) {
         const auto known = ReadKnownNow();
         for (int i = 0; i < kTacticalSpells; ++i) {
+            if (known[i] < 0) {
+                continue;
+            }
+            if (i != kTacticalDispel && config.slots[i].preset.empty()) {
+                logger::info("{}: spell {} has no preset now, forgetting it", kTacticalPlugin, i + 1);
+                SetKnown(i, -1);
+                continue;
+            }
             const int want = static_cast<int>(i == kTacticalDispel ? config.dispel.cast : config.slots[i].cast);
-            if (known[i] >= 0 && known[i] != want) {
+            if (known[i] != want) {
                 logger::info("{}: swapping the known version of spell {} to cast type {}", kTacticalPlugin, i + 1, want);
                 SetKnown(i, want);
             }

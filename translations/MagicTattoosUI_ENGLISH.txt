@@ -21,6 +21,16 @@ $MTFUI_Format_Seconds1_Fmt	%.1f s
 $MTFUI_Format_Milliseconds_Fmt	%d ms
 $MTFUI_Color_Palette	Palette
 $MTFUI_Param_TextHint	comma-separated, empty = any
+$MTFUI_Lookup_None	(none)
+$MTFUI_Lookup_Missing	(missing) {}
+$MTFUI_Lookup_AllSchools	All schools
+$MTFUI_Lookup_KnownOnly	Known by player
+$MTFUI_Lookup_KnownOnlyTip	Only spells the player knows. Needs a loaded game.
+$MTFUI_Lookup_Reading	Reading the player's spells...
+$MTFUI_Lookup_NoMatch	No spells match
+$MTFUI_Lookup_Count	{} spells
+$MTFUI_Lookup_Row	{}, {}, {}
+$MTFUI_Lookup_NoSchool	No school
 $MTFUI_Severity_Error	Error
 $MTFUI_Severity_Warning	Warning
 $MTFUI_Severity_Note	Note
@@ -519,6 +529,8 @@ $MTFUI_Lint_Shadowed	{} can never activate: {} is higher in the list and always 
 $MTFUI_Lint_ConditionMissing	Condition '{}' is not installed; this tier will not activate
 $MTFUI_Lint_ConditionDisabled	{} is disabled in MTF; '{}' will never be true
 $MTFUI_Lint_EmptyText	{}: text is empty, which usually matches anything
+$MTFUI_Lint_LookupEmpty	{}: no {} chosen, so it does nothing
+$MTFUI_Lint_LookupMissing	{}: '{}' isn't in this game. Its plugin may have been removed
 $MTFUI_Lint_PackMissing	Tattoo pack '{}' is not installed
 $MTFUI_Lint_NoEntry	A pack is chosen but no tattoo; nothing will show
 $MTFUI_Lint_EntryMissing	Tattoo '{}' is missing from {}
@@ -577,10 +589,19 @@ $MTFUI_Spells_Intro	Spells from Magic Tattoos Tactical. Each one puts a preset o
 $MTFUI_Spells_Save	Save spells
 $MTFUI_Spells_Revert	Revert
 $MTFUI_Spells_Unsaved	Unsaved changes
-$MTFUI_Spells_ColSpell	Spell
 $MTFUI_Spells_ColPreset	Preset
 $MTFUI_Spells_ColCasting	Casting and school
 $MTFUI_Spells_ColCost	Cost and duration
+$MTFUI_Spells_ColCostOnly	Cost
+$MTFUI_Spells_DispelSection	Dispel
+$MTFUI_Spells_DispelWhat	What it does
+$MTFUI_Spells_SpellsSection	Tattoo spells
+$MTFUI_Spells_Empty	No tattoo spells yet. Click New spell to set one up.
+$MTFUI_Spells_New	+ New spell
+$MTFUI_Spells_FullTip	All the spells are in use. Remove one to set up another.
+$MTFUI_Spells_Count	{} of {} spells
+$MTFUI_Spells_Remove	Remove
+$MTFUI_Spells_RemoveTip	Clears this spell. Once you save, this character forgets it if they know it.
 $MTFUI_Spells_DefaultName	Tattoo Spell {}
 $MTFUI_Spells_DispelDefaultName	Dispel Tattoos
 $MTFUI_Spells_DispelAbout	Removes every tattoo these spells put on the target, permanent ones included. Presets it wears from elsewhere stay on.

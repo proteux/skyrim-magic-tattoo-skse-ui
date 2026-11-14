@@ -20,6 +20,7 @@
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
+#include <fstream>
 #include <regex>
 #include <set>
 #include <string>
@@ -610,6 +611,29 @@ namespace {
         Check(!model::ParsePresetText("not json", &error) && !error.empty(), "clipboard import rejects non-JSON");
         Check(!model::ParsePresetText("{\"a\":1}", &error), "clipboard import rejects non-presets");
         Check(model::ParsePresetText("{\"slot\":[]}", &error).has_value(), "clipboard import accepts a preset");
+
+        const auto catalogFile = fs::temp_directory_path() / "mtfui_lookup_catalog.json";
+        std::ofstream(catalogFile) << R"({"pluginid":"t","effects":[{"id":"e","param1":{"label":"Spell","text":true,"lookup":"spell","default":"Skyrim.esm|0x012FCD"}}]})";
+        const auto catalog = model::LoadPluginCatalog(catalogFile);
+        fs::remove(catalogFile);
+        Check(catalog && catalog->effects.size() == 1, "a catalog with a lookup param loads");
+        if (!catalog || catalog->effects.empty()) {
+            return;
+        }
+        const auto& spell = catalog->effects[0].params[0];
+        Check(spell.kind == model::ParamKind::Lookup && spell.lookup == "spell", "lookup wins over text");
+        Check(spell.IsString() && model::ParamStr(spell.def) == "Skyrim.esm|0x012FCD", "a lookup stores its default as a string");
+        Check(spell.Display(spell.def) == "Skyrim.esm|0x012FCD", "without the game's list a lookup shows its raw value");
+        model::SetLookupResolver([](std::string_view kind, std::string_view value) {
+            if (kind == "spell" && value == "Skyrim.esm|0x012FCD") {
+                return model::LookupResult{ model::LookupState::Found, "Flames" };
+            }
+            return model::LookupResult{ model::LookupState::Missing, {} };
+        });
+        Check(spell.Display(spell.def) == "Flames", "a found lookup shows its name");
+        Check(spell.Display(model::ParamValue{ std::string("Gone.esp|0x800") }) == "Gone.esp|0x800", "a missing lookup shows its raw value");
+        Check(spell.Display(model::ParamValue{ std::string() }) == "(none)", "an empty lookup shows none");
+        model::SetLookupResolver(nullptr);
     }
 
     std::vector<std::uint8_t> DdsHeader(std::uint32_t w, std::uint32_t h, std::uint32_t mips, const char* fourcc, std::uint32_t dxgi = 0) {

@@ -14,6 +14,8 @@ namespace mtfui::ui {
 
         int g_lastFrame = -100;
         int g_readSession = -1;  // a read of the known spells is under way in this session
+        std::array<bool, model::kTacticalSlots> g_added{};  // empty spells opened with New, shown until removed or reverted
+        int g_scrollTo = -1;
 
         void ReadKnown(App& app) {
             if (!app.inGame || g_readSession == game::MtfBridge::Session()) {
@@ -152,17 +154,47 @@ namespace mtfui::ui {
             }
         }
 
-        void SlotRow(App& app, int i, model::TacticalSlot& s, const model::TacticalSlot& saved) {
-            PushID(i);
-            TableNextRow();
+        // A bordered box around one spell, as tall as its contents. Call EndChild whatever it returns.
+        bool BeginCard(const char* id) {
+            PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 12.0f, 10.0f });
+            const bool open = BeginChild(id, ImVec2{ 0, 0 }, ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_AlwaysUseWindowPadding);
+            PopStyleVar();
+            return open;
+        }
 
-            TableNextColumn();
-            SetNextItemWidth(-1.0f);
-            InputString("##name", s.name, TF("$MTFUI_Spells_DefaultName", i + 1).c_str(), 0, 64);
-            const bool ready = !saved.preset.empty() && s == saved;
-            KnownCell(app, i, ready, saved.preset.empty() ? T("$MTFUI_Spells_LearnNeedsPreset") : T("$MTFUI_Spells_LearnNeedsSave"));
+        bool BeginFields() {
+            PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2{ 10.0f, 3.0f });
+            const bool open = BeginTable("##fields", 3, ImGuiTableFlags_SizingStretchSame);
+            PopStyleVar();
+            return open;
+        }
 
+        void Caption(const char* key) {
+            TextDisabled("%s", T(key));
+        }
+
+        // The name, whether the character knows the spell, and optionally a Remove button at the right. Returns true when Remove is clicked.
+        bool CardHeader(App& app, int index, std::string& name, const char* hint, bool ready, const char* notReady, bool removable) {
+            const float right = GetCursorPosX() + GetContentRegionAvail().x;
+            SetNextItemWidth(std::min(280.0f, GetContentRegionAvail().x * 0.45f));
+            InputString("##name", name, hint, 0, 64);
+            SameLine(0.0f, 16.0f);
+            KnownCell(app, index, ready, notReady);
+            if (!removable) {
+                return false;
+            }
+            const char* label = T("$MTFUI_Spells_Remove");
+            SameLine(right - CalcTextSize(label).x - GetStyle()->FramePadding.x * 2.0f);
+            const bool clicked = SmallButton(label);
+            if (IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
+                SetTooltip("%s", T("$MTFUI_Spells_RemoveTip"));
+            }
+            return clicked;
+        }
+
+        void SlotFields(App& app, model::TacticalSlot& s) {
             TableNextColumn();
+            Caption("$MTFUI_Spells_ColPreset");
             SetNextItemWidth(-1.0f);
             PresetCombo(app, s.preset);
             int kind = s.hostile ? 0 : 1;
@@ -178,18 +210,21 @@ namespace mtfui::ui {
             s.hostile = kind == 0;
 
             TableNextColumn();
+            Caption("$MTFUI_Spells_ColCasting");
             SetNextItemWidth(-1.0f);
             KeyCombo("##cast", s.cast, kCastKeys);
             SetNextItemWidth(-1.0f);
             KeyCombo("##school", s.school, kSchoolKeys);
 
             TableNextColumn();
+            Caption("$MTFUI_Spells_ColCost");
             CostSlider(s.cost, s.cast);
             Checkbox(T("$MTFUI_Spells_Permanent"), &s.permanent);
             if (IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
                 SetTooltip("%s", T("$MTFUI_Spells_PermanentTip"));
             }
             if (!s.permanent) {
+                SameLine(0.0f, 12.0f);
                 SetNextItemWidth(-1.0f);
                 float decay = static_cast<float>(s.decay);
                 if (SliderFloat("##decay", &decay, static_cast<float>(model::kDecayMin), 3600.0f, T("$MTFUI_Spells_Decay_Fmt"), ImGuiSliderFlags_Logarithmic)) {
@@ -199,41 +234,56 @@ namespace mtfui::ui {
                     SetTooltip("%s", model::IsChanneled(s.cast) ? T("$MTFUI_Spells_DecayChannelTip") : T("$MTFUI_Spells_DecayTip"));
                 }
             }
-            PopID();
         }
 
-        void DispelRow(App& app, model::TacticalDispel& d, const model::TacticalDispel& saved) {
-            PushID("dispel");
-            TableNextRow();
-            TableNextColumn();
-            SetNextItemWidth(-1.0f);
-            InputString("##name", d.name, T("$MTFUI_Spells_DispelDefaultName"), 0, 64);
-            KnownCell(app, game::kTacticalDispel, d == saved, T("$MTFUI_Spells_LearnNeedsSave"));
-
-            TableNextColumn();
-            TextWrapped("%s", T("$MTFUI_Spells_DispelAbout"));
-
-            TableNextColumn();
-            SetNextItemWidth(-1.0f);
-            KeyCombo("##cast", d.cast, kCastKeys, static_cast<int>(model::CastType::SelfChannel));
-            SetNextItemWidth(-1.0f);
-            KeyCombo("##school", d.school, kSchoolKeys);
-
-            TableNextColumn();
-            CostSlider(d.cost, d.cast);
-            PopID();
-        }
-
-        bool BeginSpellTable(const char* id) {
-            if (!BeginTable(id, 4, ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_SizingStretchProp)) {
-                return false;
+        // Returns true when the spell is removed.
+        bool SlotCard(App& app, int i, model::TacticalSlot& s, const model::TacticalSlot& saved) {
+            PushID(i);
+            bool removed = false;
+            if (BeginCard("##card")) {
+                const bool ready = !saved.preset.empty() && s == saved;
+                removed = CardHeader(app, i, s.name, TF("$MTFUI_Spells_DefaultName", i + 1).c_str(), ready,
+                    saved.preset.empty() ? T("$MTFUI_Spells_LearnNeedsPreset") : T("$MTFUI_Spells_LearnNeedsSave"), true);
+                Spacing();
+                if (BeginFields()) {
+                    SlotFields(app, s);
+                    EndTable();
+                }
             }
-            TableSetupColumn(T("$MTFUI_Spells_ColSpell"), ImGuiTableColumnFlags_WidthStretch, 1.4f);
-            TableSetupColumn(T("$MTFUI_Spells_ColPreset"), ImGuiTableColumnFlags_WidthStretch, 1.6f);
-            TableSetupColumn(T("$MTFUI_Spells_ColCasting"), ImGuiTableColumnFlags_WidthStretch, 1.0f);
-            TableSetupColumn(T("$MTFUI_Spells_ColCost"), ImGuiTableColumnFlags_WidthStretch, 1.2f);
-            TableHeadersRow();
-            return true;
+            EndChild();
+            PopID();
+            return removed;
+        }
+
+        void DispelCard(App& app, model::TacticalDispel& d, const model::TacticalDispel& saved) {
+            PushID("dispel");
+            if (BeginCard("##card")) {
+                CardHeader(app, game::kTacticalDispel, d.name, T("$MTFUI_Spells_DispelDefaultName"), d == saved, T("$MTFUI_Spells_LearnNeedsSave"), false);
+                Spacing();
+                if (BeginFields()) {
+                    TableNextColumn();
+                    Caption("$MTFUI_Spells_DispelWhat");
+                    TextWrapped("%s", T("$MTFUI_Spells_DispelAbout"));
+
+                    TableNextColumn();
+                    Caption("$MTFUI_Spells_ColCasting");
+                    SetNextItemWidth(-1.0f);
+                    KeyCombo("##cast", d.cast, kCastKeys, static_cast<int>(model::CastType::SelfChannel));
+                    SetNextItemWidth(-1.0f);
+                    KeyCombo("##school", d.school, kSchoolKeys);
+
+                    TableNextColumn();
+                    Caption("$MTFUI_Spells_ColCostOnly");
+                    CostSlider(d.cost, d.cast);
+                    EndTable();
+                }
+            }
+            EndChild();
+            PopID();
+        }
+
+        void Gap() {
+            Dummy(ImVec2{ 0.0f, 6.0f });
         }
     }
 
@@ -267,24 +317,57 @@ namespace mtfui::ui {
         SameLine();
         if (Button(T("$MTFUI_Spells_Revert"))) {
             draft = saved;
+            g_added.fill(false);
         }
         EndDisabled();
         if (dirty) {
             SameLine();
             TextColored(kWarn, "%s", T("$MTFUI_Spells_Unsaved"));
         }
-        Spacing();
+        Gap();
 
-        if (BeginSpellTable("##dispel")) {
-            DispelRow(app, draft.dispel, saved.dispel);
-            EndTable();
-        }
-        Spacing();
-        if (BeginSpellTable("##spells")) {
-            for (int i = 0; i < model::kTacticalSlots; ++i) {
-                SlotRow(app, i, draft.slots[i], saved.slots[i]);
+        SeparatorText(T("$MTFUI_Spells_DispelSection"));
+        DispelCard(app, draft.dispel, saved.dispel);
+        Gap();
+
+        SeparatorText(T("$MTFUI_Spells_SpellsSection"));
+        int shown = 0;
+        for (int i = 0; i < model::kTacticalSlots; ++i) {
+            if (!g_added[i] && draft.slots[i] == model::TacticalSlot{}) {
+                continue;
             }
-            EndTable();
+            ++shown;
+            if (SlotCard(app, i, draft.slots[i], saved.slots[i])) {
+                draft.slots[i] = {};
+                g_added[i] = false;
+            }
+            if (i == g_scrollTo) {
+                SetScrollHereY(1.0f);
+                g_scrollTo = -1;
+            }
+            Gap();
         }
+        if (shown == 0) {
+            TextDisabled("%s", T("$MTFUI_Spells_Empty"));
+            Gap();
+        }
+
+        const bool full = shown >= model::kTacticalSlots;
+        BeginDisabled(full);
+        if (Button(T("$MTFUI_Spells_New"))) {
+            for (int i = 0; i < model::kTacticalSlots; ++i) {
+                if (!g_added[i] && draft.slots[i] == model::TacticalSlot{}) {
+                    g_added[i] = true;
+                    g_scrollTo = i;
+                    break;
+                }
+            }
+        }
+        EndDisabled();
+        if (full && IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
+            SetTooltip("%s", T("$MTFUI_Spells_FullTip"));
+        }
+        SameLine(0.0f, 12.0f);
+        TextDisabled("%s", TF("$MTFUI_Spells_Count", shown, model::kTacticalSlots).c_str());
     }
 }

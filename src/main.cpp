@@ -17,6 +17,7 @@
 #include "Version.h"
 #include "game/MtfBridge.h"
 #include "game/OverlayVisibility.h"
+#include "game/SpellLookup.h"
 #include "game/TacticalBridge.h"
 #include "io/UiSettings.h"
 #include "render/DdsCache.h"
@@ -99,6 +100,7 @@ namespace {
         case SKSE::MessagingInterface::kDataLoaded: {
             LogEnvironment();
             mtfui::game::MtfBridge::Get().OnDataLoaded();
+            mtfui::game::SpellLookup::Get().OnDataLoaded();
             auto* device = reinterpret_cast<ID3D11Device*>(RE::BSGraphics::Renderer::GetDevice());
             mtfui::render::DdsCache::Get().Init(device);
             try {
