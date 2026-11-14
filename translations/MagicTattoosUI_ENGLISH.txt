@@ -58,6 +58,7 @@ $MTFUI_Tab_Tattoos	Tattoos
 $MTFUI_Tab_TattoosChoosing	Tattoos (choosing)
 $MTFUI_Tab_General	General
 $MTFUI_Tab_Plugins	Plugins
+$MTFUI_Tab_Spells	Spells
 $MTFUI_Panels_PickHint	Choose the tattoo on the Tattoos tab of Magic Tattoos > Editor in the menu
 $MTFUI_Panels_Peek	Hold to peek
 $MTFUI_Panels_PeekTip	Hides the other panels while you hold the mouse button down. Drag panels by their title bar to move them; the layout is remembered.
@@ -572,3 +573,49 @@ $MTFUI_Tattoos_TextureFiles	Texture files
 $MTFUI_Tattoos_NewPresetTitle	New preset from tattoo
 $MTFUI_Tattoos_DefaultLook	Default look: {} ({})
 $MTFUI_Tattoos_UnsavedWarning	You'll be asked what to do with the unsaved changes to the open preset.
+$MTFUI_Spells_Intro	Spells from Magic Tattoos Tactical. Each one puts a preset on whoever it hits, as a hex or a blessing; what it does in play comes from the preset's tier effects. Save, then learn the spells you want this character to know.
+$MTFUI_Spells_Save	Save spells
+$MTFUI_Spells_Revert	Revert
+$MTFUI_Spells_Unsaved	Unsaved changes
+$MTFUI_Spells_ColSpell	Spell
+$MTFUI_Spells_ColPreset	Preset
+$MTFUI_Spells_ColCasting	Casting and school
+$MTFUI_Spells_ColCost	Cost and duration
+$MTFUI_Spells_DefaultName	Tattoo Spell {}
+$MTFUI_Spells_DispelDefaultName	Dispel Tattoos
+$MTFUI_Spells_DispelAbout	Removes every tattoo these spells put on the target, permanent ones included. Presets it wears from elsewhere stay on.
+$MTFUI_Spells_NoPreset	(no preset)
+$MTFUI_Spells_PresetMissing	This preset no longer exists
+$MTFUI_Spells_CastSelf	Self
+$MTFUI_Spells_CastSelfChannel	Self, channeled
+$MTFUI_Spells_CastTouch	Touch, channeled
+$MTFUI_Spells_CastRanged	Ranged
+$MTFUI_Spells_Alteration	Alteration
+$MTFUI_Spells_Conjuration	Conjuration
+$MTFUI_Spells_Destruction	Destruction
+$MTFUI_Spells_Illusion	Illusion
+$MTFUI_Spells_Restoration	Restoration
+$MTFUI_Spells_Hex	Hex
+$MTFUI_Spells_HexTip	Hostile: the target takes it as an attack, and casting it on someone who isn't an enemy can be a crime.
+$MTFUI_Spells_Blessing	Blessing
+$MTFUI_Spells_BlessingTip	Friendly: nobody minds being blessed.
+$MTFUI_Spells_Cost_Fmt	%d magicka
+$MTFUI_Spells_CostPerSecond_Fmt	%d magicka per second
+$MTFUI_Spells_CostTip	Before the school's cost perks. Ctrl+click to type a value.
+$MTFUI_Spells_Permanent	Permanent
+$MTFUI_Spells_PermanentTip	The tattoo stays until Dispel removes it.
+$MTFUI_Spells_Decay_Fmt	Lasts %.0f s
+$MTFUI_Spells_DecayTip	How long the tattoo stays after it lands. Casting it again restarts the time.
+$MTFUI_Spells_DecayChannelTip	How long the tattoo stays after the channel ends. It stays on for as long as you channel.
+$MTFUI_Spells_NoGame	Load a game to learn spells
+$MTFUI_Spells_Reading	Reading...
+$MTFUI_Spells_Known	Known
+$MTFUI_Spells_NotKnown	Not known
+$MTFUI_Spells_Learn	Learn
+$MTFUI_Spells_Forget	Forget
+$MTFUI_Spells_LearnNeedsPreset	Choose a preset and save first.
+$MTFUI_Spells_LearnNeedsSave	Save your changes first.
+$MTFUI_Toast_SpellsSaved	Saved the spells
+$MTFUI_Toast_SpellsSaveFailed	Couldn't save the spells: {}
+$MTFUI_Toast_SpellLearned	Learned {}. Equip it from the Magic menu.
+$MTFUI_Toast_SpellForgotten	Forgot {}

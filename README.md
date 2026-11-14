@@ -85,6 +85,10 @@ Open the SKSE Menu Framework menu (F1 by default) and choose **Magic Tattoos**. 
 - **Plugins:** turn each MTF plugin on or off, see what conditions and effects it provides, and which of your presets use it.
 - **Deleted presets and backups:** restore a deleted preset, or any of the last 10 backups of each preset, from the General tab. Restoring backs up the file it replaces first. **Copy as JSON** (under Preset options) and **Paste a preset from the clipboard** share presets as text.
 
+### Spells (with Magic Tattoos Tactical)
+
+When [Magic Tattoos Tactical](https://github.com/proteux/skyrim-magic-tattoo-tactical) is installed, a **Spells** tab sets up its 20 hex and blessing spells and its Dispel spell. Each spell gets a name, a preset, how it's cast (self, self channeled, touch channeled, or ranged), whether it's a hostile Hex or a friendly Blessing, its magicka cost and school, and how long the tattoo lasts, or Permanent. **Save spells**, then **Learn** the ones this character should know; **Forget** takes one back. Learned spells belong to the save, so each character knows their own. The setup is kept in `Data/SKSE/Plugins/StorageUtilData/MagicTattoosTactical/spells.json` and is shared by every save.
+
 ## Notes
 
 - Built-in presets that ship with MTF are read-only. Use **Duplicate** to make your own copy.

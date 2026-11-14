@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/MtfBridge.h"
+#include "game/TacticalBridge.h"
 #include "io/UiSettings.h"
 #include "model/Catalogs.h"
 #include "model/Lint.h"
@@ -27,7 +28,7 @@ namespace mtfui::ui {
         std::vector<model::Preset> redo;
     };
 
-    enum class Tab { Presets, Tattoos, General, Plugins };
+    enum class Tab { Presets, Tattoos, General, Plugins, Spells };
 
     // Copied parts of a tier, for pasting into another tier or preset.
     struct TierClipboard {
@@ -77,6 +78,10 @@ namespace mtfui::ui {
         TierClipboard clip;
         std::optional<model::LintTab> inspectorTab;  // tab the tier editor switches to next frame
         bool focusSearch = false;  // Ctrl+F: the preset list's search box takes focus next frame
+        // Spells tab (Magic Tattoos Tactical): the setup being edited, and what the player knows, once read this load.
+        std::optional<model::TacticalConfig> spellsDraft;
+        std::optional<game::KnownSpells> spellsKnown;
+        bool inGame = false;  // a save or new game has loaded this session
         void RequestTab(Tab tab) { requestedTab_ = tab; }
         void ResetPanelLayout() { resetLayout_ = true; }
 

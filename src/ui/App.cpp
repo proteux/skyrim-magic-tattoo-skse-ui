@@ -605,6 +605,9 @@ namespace mtfui::ui {
         game::MtfBridge::Get().Refresh();
         // Also corrects MTF's cached slot counts before anything is applied this session.
         ReadSlotUsage();
+        inGame = true;
+        spellsKnown.reset();
+        game::TacticalBridge::Get().OnGameLoaded();
     }
 
     void App::OnSaving() {

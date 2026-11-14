@@ -84,6 +84,7 @@ namespace mtfui::game {
         static void DrainUi();
         // After a save loads: callbacks from calls started earlier are dropped instead of run.
         static void NewSession();
+        static int Session();  // changes with every NewSession
 
     private:
         RE::TESQuest* quest_ = nullptr;

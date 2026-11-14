@@ -191,6 +191,9 @@ namespace mtfui::ui {
             tab(std::string(picking ? T("$MTFUI_Tab_TattoosChoosing") : T("$MTFUI_Tab_Tattoos")) + "###tattoos", Tab::Tattoos, DrawTattoosTab);
             tab(std::string(T("$MTFUI_Tab_General")) + "###general", Tab::General, DrawGeneralTab);
             tab(std::string(T("$MTFUI_Tab_Plugins")) + "###plugins", Tab::Plugins, DrawPluginsTab);
+            if (game::TacticalBridge::Get().Installed()) {
+                tab(std::string(T("$MTFUI_Tab_Spells")) + "###spells", Tab::Spells, DrawSpellsTab);
+            }
             EndTabBar();
         }
         // While the editor windows are up, the strip at the top shows the status.

@@ -2,6 +2,14 @@
 
 Versions follow `<major>.<feature>.<patch>`, as described in `AGENTS.md`.
 
+Version 1.7.1
+
+Change: the Spells tab's preset menu is grouped like the library, with a submenu per group, then ungrouped presets, then built-ins. A * marks the submenu holding the chosen preset.
+
+Version 1.7.0
+
+New: a Spells tab for Magic Tattoos Tactical, shown when its plugin is loaded. Set up to 20 hex and blessing spells that put a preset on whoever they hit (self, touch or ranged), with their name, magicka cost, school, and how long the tattoo lasts, plus a Dispel spell. Learn and forget each spell for the current character from the tab.
+
 Version 1.6.8
 
 Fix: applied tattoos that were being previewed would get dropped when the menu closed

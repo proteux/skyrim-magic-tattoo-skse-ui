@@ -10,6 +10,7 @@
 #include "model/Lint.h"
 #include "model/Preset.h"
 #include "model/Slots.h"
+#include "model/TacticalConfig.h"
 #include "model/Text.h"
 #include "model/Usage.h"
 
@@ -824,6 +825,50 @@ namespace {
         Check(std::string(T("$Z")) == "Plain" && tr.ActiveCodepoints().empty(), "dropping the translation leaves English");
     }
 
+    // Magic Tattoos Tactical's spells.json: the scripts read it with JsonUtil, so the layout and keys are fixed.
+    void Tactical() {
+        model::TacticalConfig c;
+        auto& s = c.slots[3];
+        s.name = "Mark of Ruin";
+        s.preset = "ruin_mark";
+        s.cast = model::CastType::Touch;
+        s.hostile = false;
+        s.cost = 12;
+        s.school = model::School::Restoration;
+        s.decay = 45.5;
+        s.permanent = true;
+        c.dispel = { "Cleanse", model::CastType::SelfInstant, 40, model::School::Conjuration };
+
+        const auto j = model::TacticalToJson(c);
+        Check(j["string"]["slot3.preset"] == "ruin_mark" && j["int"]["slot3.cast"] == 2 && j["int"]["slot3.permanent"] == 1 &&
+                  j["float"]["slot3.decay"] == 45.5 && j["string"]["dispel.name"] == "Cleanse",
+            "tactical config uses PapyrusUtil's typed sections and the keys the scripts read");
+        const auto text = io::WriteStyled(j);
+        Check(model::TacticalFromJson(nlohmann::json::parse(text)) == c, "tactical config survives a write and reload");
+        Check(io::WriteStyled(model::TacticalToJson(model::TacticalFromJson(nlohmann::json::parse(text)))) == text,
+            "tactical config rewrites byte for byte");
+
+        Check(model::TacticalFromJson(nlohmann::json::object()) == model::TacticalConfig{}, "a missing file gives the defaults");
+        auto bad = j;
+        bad["int"]["slot3.cast"] = 9;
+        bad["int"]["slot3.cost"] = 99999;
+        bad["float"]["slot3.decay"] = 0.0;
+        bad["int"]["dispel.cast"] = 1;
+        bad["string"]["slot3.preset"] = 5;
+        const auto clamped = model::TacticalFromJson(bad);
+        Check(clamped.slots[3].cast == model::CastType::Ranged, "an unknown cast type keeps the default");
+        Check(clamped.slots[3].cost == model::kTacticalCostMax, "cost is clamped");
+        Check(clamped.slots[3].decay == model::kDecayMin, "decay is clamped");
+        Check(clamped.slots[3].preset.empty(), "a preset of the wrong type is ignored");
+        Check(clamped.dispel.cast == model::CastType::SelfInstant, "a channeled Dispel becomes a self cast");
+        Check(model::DispelVersion(model::CastType::Touch) == 1 && model::DispelVersion(model::CastType::Ranged) == 2 &&
+                  model::DispelVersion(model::CastType::SelfInstant) == 0,
+            "Dispel versions follow the ESP's order");
+        Check(model::IsChanneled(model::CastType::Touch) && model::IsChanneled(model::CastType::SelfChannel) &&
+                  !model::IsChanneled(model::CastType::Ranged),
+            "touch and self channeled are the channeled cast types");
+    }
+
     // Every key the code uses has English text, and the files only hold keys the code uses.
     void TranslationFiles(const fs::path& root) {
         const auto english = io::ReadText(root / "translations" / "MagicTattoosUI_ENGLISH.txt");
@@ -886,6 +931,7 @@ int main(int argc, char** argv) {
     Settings();
     HiddenPresets(fixtures);
     OverlaySlots();
+    Tactical();
     if (g_failures == 0) {
         std::printf("All tests passed\n");
         return 0;
