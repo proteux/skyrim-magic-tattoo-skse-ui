@@ -2,6 +2,11 @@
 
 Versions follow `<major>.<feature>.<patch>`, as described in `AGENTS.md`.
 
+Version 1.6.7
+
+New: gradient effects blend color settings from a low-end color to a high-end color, such as RaceMenu's hair color turning from brown to white as health drops.
+
+
 Version 1.6.6
 
 New: Gradient tiers builds a ladder of tiers from health, magicka, stamina or any threshold condition, quickly building all of the tiers necessary.

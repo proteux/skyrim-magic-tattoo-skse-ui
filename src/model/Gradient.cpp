@@ -116,6 +116,10 @@ namespace mtfui::model {
             const auto& p = entry->params[i];
             if (p.kind == ParamKind::None) {
                 fx.params[i] = std::int64_t{ 0 };
+            } else if (p.kind == ParamKind::Color) {
+                const auto lo = static_cast<std::uint32_t>(ParamInt(p.Coerce(ramp.low[i])));
+                const auto hi = static_cast<std::uint32_t>(ParamInt(p.Coerce(ramp.high[i])));
+                fx.params[i] = std::int64_t{ SampleGradient({ { 0.0, lo }, { 1.0, hi } }, t) };
             } else if (p.kind != ParamKind::Slider) {
                 fx.params[i] = p.Coerce(ramp.low[i]);
             } else {
@@ -656,6 +660,15 @@ namespace mtfui::model {
                 if (const auto* fxEntry = cat.FindEffect(r.key)) {
                     for (int p = 0; p < 5; ++p) {
                         const auto& spec = fxEntry->params[p];
+                        if (spec.kind == ParamKind::Color) {
+                            // Blends in OKLab can't be extended past the outer tiers, so their colors are the ends.
+                            r.low[p] = spec.Coerce(preset.slots[kLo].effects[i].params[p]);
+                            r.high[p] = spec.Coerce(preset.slots[kHi].effects[i].params[p]);
+                            if (atDefault) {
+                                (s.below ? r.high : r.low)[p] = spec.Coerce(atDefault->params[p]);
+                            }
+                            continue;
+                        }
                         if (spec.kind != ParamKind::Slider) {
                             continue;
                         }

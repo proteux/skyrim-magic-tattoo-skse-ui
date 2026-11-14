@@ -566,7 +566,8 @@ namespace mtfui::ui {
             PopID();
         }
 
-        // Each effect's sliders get a low-end and high-end value; its other parameters are the same on every tier.
+        // Each effect's sliders and colors get a low-end and high-end value; its other parameters are the same on every
+        // tier.
         template <class RampPair>
         void DrawEffectRamps(App& app, float width, RampPair& rampPair) {
             const char* removeLabel = T("$MTFUI_Gradient_RemoveColor");
@@ -628,6 +629,22 @@ namespace mtfui::ui {
                             };
                             r.low[k] = snap(lo);
                             r.high[k] = snap(hi);
+                        } else if (spec.kind == model::ParamKind::Color) {
+                            PushID(id.c_str());
+                            TextDisabled("%s", spec.label.c_str());
+                            auto lo = static_cast<std::uint32_t>(model::ParamInt(spec.Coerce(r.low[k])));
+                            auto hi = static_cast<std::uint32_t>(model::ParamInt(spec.Coerce(r.high[k])));
+                            SetNextItemWidth(width * 0.6f);
+                            ColorEditRgb(T("$MTFUI_Gradient_LowEndColor"), lo);
+                            SetNextItemWidth(width * 0.6f);
+                            ColorEditRgb(T("$MTFUI_Gradient_HighEndColor"), hi);
+                            if (SmallButton(T("$MTFUI_Gradient_Reverse"))) {
+                                std::swap(lo, hi);
+                            }
+                            r.low[k] = std::int64_t{ lo };
+                            r.high[k] = std::int64_t{ hi };
+                            DrawGradientStrip(model::SpecFromSettings(grad), { { 0.0, lo }, { 1.0, hi } }, width);
+                            PopID();
                         } else if (spec.kind != model::ParamKind::None) {
                             auto v = spec.Coerce(r.low[k]);
                             if (ParamEditor(id.c_str(), spec, v, width * 0.6f)) {

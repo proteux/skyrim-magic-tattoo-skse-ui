@@ -22,8 +22,8 @@ namespace mtfui::model {
         double At(double t) const { return low + (high - low) * t; }
     };
 
-    // An effect every tier gets. Slider parameters go from low at the low end of the range to high at the high end;
-    // the others take low's value.
+    // An effect every tier gets. Slider and color parameters go from low at the low end of the range to high at the
+    // high end (colors blend in OKLab); the others take low's value.
     struct EffectRamp {
         std::string key;  // "<plugin>:<effect>"
         std::array<ParamValue, 5> low{ std::int64_t{ 0 }, std::int64_t{ 0 }, std::int64_t{ 0 }, std::int64_t{ 0 }, std::int64_t{ 0 } };
