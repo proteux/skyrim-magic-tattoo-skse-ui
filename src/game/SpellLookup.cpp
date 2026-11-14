@@ -1,6 +1,7 @@
 #include "game/SpellLookup.h"
 
 #include "game/MtfBridge.h"
+#include "game/TacticalForms.h"
 #include "io/UiSettings.h"
 #include "model/PluginCatalog.h"
 
@@ -95,7 +96,8 @@ namespace mtfui::game {
             }
             const char* name = spell->GetFullName();
             auto* file = spell->GetFile(0);
-            if (!name || !*name || !file) {
+            // Tactical's spells put presets on, so a tier casting one could keep putting its own preset back on.
+            if (!name || !*name || !file || _stricmp(std::string(file->GetFilename()).c_str(), kTacticalPlugin) == 0) {
                 continue;
             }
             SpellEntry e;
