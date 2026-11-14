@@ -3,9 +3,26 @@
 #include <unordered_set>
 
 namespace mtfui::game {
+    // Why a spell suits being applied straight to actors poorly, whatever the tattoo effect.
+    enum class SpellCaveat { None, Cloak, Summon, Corpse, CasterOnly, Ward };
+
+    struct SpellEffectInfo {
+        std::string name;
+        float magnitude = 0.0f;  // 0 when the effect has none
+        std::uint32_t area = 0;  // feet
+        std::uint32_t duration = 0;  // seconds
+    };
+
     struct SpellEntry {
         std::string name;
         int school = -1;  // model::School, or -1 for none
+        int level = -1;  // 0 Novice to 4 Master, or -1 for none
+        bool concentration = false;
+        int delivery = 0;  // RE::MagicSystem::Delivery
+        int cost = 0;  // base magicka, per second for concentration spells
+        bool harmful = false;  // the costliest effect is hostile
+        SpellCaveat caveat = SpellCaveat::None;
+        std::vector<SpellEffectInfo> effects;
         std::string plugin;
         std::string value;  // "Skyrim.esm|0x012FCD", as catalogs with "lookup": "spell" store it
         RE::FormID formId = 0;

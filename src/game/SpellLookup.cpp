@@ -17,6 +17,30 @@ namespace mtfui::game {
             }
         }
 
+        int LevelOf(std::int32_t minimumSkill) {
+            return minimumSkill < 25 ? 0 : minimumSkill < 50 ? 1 : minimumSkill < 75 ? 2 : minimumSkill < 100 ? 3 : 4;
+        }
+
+        SpellCaveat CaveatOf(const RE::EffectSetting& effect) {
+            using A = RE::EffectSetting::Archetype;
+            if (effect.data.primaryAV == RE::ActorValue::kWardPower) {
+                return SpellCaveat::Ward;
+            }
+            switch (effect.GetArchetype()) {
+                case A::kCloak: return SpellCaveat::Cloak;
+                case A::kSummonCreature:
+                case A::kBoundWeapon:
+                case A::kCommandSummoned: return SpellCaveat::Summon;
+                case A::kReanimate: return SpellCaveat::Corpse;
+                case A::kTelekinesis:
+                case A::kLight:
+                case A::kGuide:
+                case A::kOpen:
+                case A::kSpawnHazard: return SpellCaveat::CasterOnly;
+                default: return SpellCaveat::None;
+            }
+        }
+
         // "skyrim.esm|4045" for "Skyrim.esm|0x012FCD", so case and leading zeros don't matter. Empty when the value
         // isn't a plugin and a hex FormID.
         std::string Normalize(std::string_view value) {
@@ -80,8 +104,34 @@ namespace mtfui::game {
             e.formId = spell->GetFormID();
             const auto local = file->IsLight() ? e.formId & 0xFFF : e.formId & 0xFFFFFF;
             e.value = std::format("{}|0x{:06X}", e.plugin, local);
+            e.concentration = spell->GetCastingType() == RE::MagicSystem::CastingType::kConcentration;
+            e.delivery = static_cast<int>(spell->GetDelivery());
+            e.cost = static_cast<int>(std::lround(spell->CalculateMagickaCost(nullptr)));
             if (auto* costliest = spell->GetCostliestEffectItem(); costliest && costliest->baseEffect) {
-                e.school = SchoolOf(costliest->baseEffect->data.associatedSkill);
+                const auto& base = *costliest->baseEffect;
+                e.school = SchoolOf(base.data.associatedSkill);
+                e.level = e.school < 0 ? -1 : LevelOf(base.GetMinimumSkillLevel());
+                e.harmful = base.IsHostile();
+            }
+            for (auto* effect : spell->effects) {
+                if (!effect || !effect->baseEffect) {
+                    continue;
+                }
+                const auto& base = *effect->baseEffect;
+                if (e.caveat == SpellCaveat::None) {
+                    e.caveat = CaveatOf(base);
+                }
+                const char* effectName = base.GetFullName();
+                if (!effectName || !*effectName) {
+                    continue;
+                }
+                using F = RE::EffectSetting::EffectSettingData::Flag;
+                SpellEffectInfo info;
+                info.name = effectName;
+                info.magnitude = base.data.flags.any(F::kNoMagnitude) ? 0.0f : effect->effectItem.magnitude;
+                info.area = base.data.flags.any(F::kNoArea) ? 0 : effect->effectItem.area;
+                info.duration = base.data.flags.any(F::kNoDuration) ? 0 : effect->effectItem.duration;
+                e.effects.push_back(std::move(info));
             }
             spells_.push_back(std::move(e));
         }

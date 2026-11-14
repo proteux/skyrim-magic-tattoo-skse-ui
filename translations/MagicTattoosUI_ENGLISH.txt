@@ -29,8 +29,44 @@ $MTFUI_Lookup_KnownOnlyTip	Only spells the player knows. Needs a loaded game.
 $MTFUI_Lookup_Reading	Reading the player's spells...
 $MTFUI_Lookup_NoMatch	No spells match
 $MTFUI_Lookup_Count	{} spells
-$MTFUI_Lookup_Row	{}, {}, {}
 $MTFUI_Lookup_NoSchool	No school
+$MTFUI_Lookup_SearchTip	Matches the name, school, level, type, Harmful or Helpful, and the plugin.
+$MTFUI_Lookup_ColSpell	Spell
+$MTFUI_Lookup_ColSchool	School
+$MTFUI_Lookup_ColLevel	Level
+$MTFUI_Lookup_ColType	Type
+$MTFUI_Lookup_ColCost	Cost
+$MTFUI_Lookup_ColTargets	Targets
+$MTFUI_Lookup_Novice	Novice
+$MTFUI_Lookup_Apprentice	Apprentice
+$MTFUI_Lookup_Adept	Adept
+$MTFUI_Lookup_Expert	Expert
+$MTFUI_Lookup_Master	Master
+$MTFUI_Lookup_Concentration	Concentration
+$MTFUI_Lookup_FireAndForget	Fire and forget
+$MTFUI_Lookup_Self	self
+$MTFUI_Lookup_Touch	touch
+$MTFUI_Lookup_Aimed	aimed
+$MTFUI_Lookup_TargetActor	target actor
+$MTFUI_Lookup_TargetLocation	target location
+$MTFUI_Lookup_Type	{}, {}
+$MTFUI_Lookup_CostPerSecond	{}/s
+$MTFUI_Lookup_Harmful	Harmful
+$MTFUI_Lookup_Helpful	Helpful
+$MTFUI_Lookup_TipSummary	{}, {}, cost {}
+$MTFUI_Lookup_LevelSchool	{} {}
+$MTFUI_Lookup_EffectArea	{} ft area
+$MTFUI_Lookup_EffectDuration	for {} s
+$MTFUI_Lookup_TipConcentration	Concentration: each time it lands is one second of the spell. Weak in Cast a spell, about right in a Spell aura.
+$MTFUI_Lookup_TipFireAndForget	Fire and forget: each time it lands is the whole spell. Right for Cast a spell; a Spell aura lands it every second, which makes attacks far stronger than casting them.
+$MTFUI_Lookup_TipHarmful	Harmful: a Spell aura hits actors hostile to whoever applied the tattoo, never the wearer.
+$MTFUI_Lookup_TipHelpful	Helpful: lands on the wearer, and a Spell aura also reaches actors who aren't hostile to whoever applied the tattoo.
+$MTFUI_Lookup_CaveatCloak	A cloak counts as helpful, so it goes on the wearer and friendly actors nearby, not on enemies.
+$MTFUI_Lookup_CaveatSummon	Summons and bound weapons are made to come from their caster, and do little when applied to an actor.
+$MTFUI_Lookup_CaveatCorpse	Made for corpses, and tattoo effects only reach living actors.
+$MTFUI_Lookup_CaveatCasterOnly	Works through its caster's hands or surroundings, and does nothing when applied to an actor.
+$MTFUI_Lookup_CaveatWard	A ward only holds while it's being cast, so it flickers.
+$MTFUI_Lookup_TipSource	From {}
 $MTFUI_Severity_Error	Error
 $MTFUI_Severity_Warning	Warning
 $MTFUI_Severity_Note	Note

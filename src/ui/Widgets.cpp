@@ -10,6 +10,8 @@ namespace mtfui::ui {
     using namespace ImGuiMCP;
 
     namespace {
+        enum SpellColumn { kColName, kColSchool, kColLevel, kColType, kColCost, kColTargets, kColCount };
+
         // Only one picker is open at a time, so they share this.
         struct SpellPickerState {
             std::string search;
@@ -17,6 +19,7 @@ namespace mtfui::ui {
             bool knownOnly = false;
             bool reading = false;
             std::optional<std::unordered_set<RE::FormID>> known;
+            std::vector<std::size_t> order;  // indices into SpellLookup::All(), in the table's sort order
         };
 
         SpellPickerState& Picker() {
@@ -30,6 +33,98 @@ namespace mtfui::ui {
             return school >= 0 && school < 5 ? T(keys[school]) : T("$MTFUI_Lookup_NoSchool");
         }
 
+        const char* LevelName(int level) {
+            static const char* keys[] = { "$MTFUI_Lookup_Novice", "$MTFUI_Lookup_Apprentice", "$MTFUI_Lookup_Adept", "$MTFUI_Lookup_Expert",
+                "$MTFUI_Lookup_Master" };
+            return level >= 0 && level < 5 ? T(keys[level]) : "";
+        }
+
+        const char* DeliveryName(int delivery) {
+            static const char* keys[] = { "$MTFUI_Lookup_Self", "$MTFUI_Lookup_Touch", "$MTFUI_Lookup_Aimed", "$MTFUI_Lookup_TargetActor",
+                "$MTFUI_Lookup_TargetLocation" };
+            return delivery >= 0 && delivery < 5 ? T(keys[delivery]) : "";
+        }
+
+        std::string TypeText(const game::SpellEntry& e) {
+            return TF("$MTFUI_Lookup_Type", T(e.concentration ? "$MTFUI_Lookup_Concentration" : "$MTFUI_Lookup_FireAndForget"), DeliveryName(e.delivery));
+        }
+
+        std::string CostText(const game::SpellEntry& e) {
+            return e.concentration ? TF("$MTFUI_Lookup_CostPerSecond", e.cost) : std::to_string(e.cost);
+        }
+
+        const char* TargetsText(const game::SpellEntry& e) {
+            return T(e.harmful ? "$MTFUI_Lookup_Harmful" : "$MTFUI_Lookup_Helpful");
+        }
+
+        const char* CaveatText(game::SpellCaveat caveat) {
+            switch (caveat) {
+                case game::SpellCaveat::Cloak: return T("$MTFUI_Lookup_CaveatCloak");
+                case game::SpellCaveat::Summon: return T("$MTFUI_Lookup_CaveatSummon");
+                case game::SpellCaveat::Corpse: return T("$MTFUI_Lookup_CaveatCorpse");
+                case game::SpellCaveat::CasterOnly: return T("$MTFUI_Lookup_CaveatCasterOnly");
+                case game::SpellCaveat::Ward: return T("$MTFUI_Lookup_CaveatWard");
+                default: return nullptr;
+            }
+        }
+
+        void SpellTooltip(const game::SpellEntry& e) {
+            PushTextWrapPos(GetFontSize() * 28.0f);
+            TextUnformatted(e.name.c_str());
+            const std::string school = e.level < 0 ? std::string(SchoolName(e.school)) : TF("$MTFUI_Lookup_LevelSchool", LevelName(e.level), SchoolName(e.school));
+            TextDisabled("%s", TF("$MTFUI_Lookup_TipSummary", school, TypeText(e), CostText(e)).c_str());
+            Separator();
+            for (const auto& fx : e.effects) {
+                std::string line = fx.name;
+                if (fx.magnitude > 0.0f) {
+                    line += std::format(" {:g}", fx.magnitude);
+                }
+                if (fx.area > 0) {
+                    line += ", " + TF("$MTFUI_Lookup_EffectArea", fx.area);
+                }
+                if (fx.duration > 0) {
+                    line += ", " + TF("$MTFUI_Lookup_EffectDuration", fx.duration);
+                }
+                BulletText("%s", line.c_str());
+            }
+            Separator();
+            TextWrapped("%s", T(e.concentration ? "$MTFUI_Lookup_TipConcentration" : "$MTFUI_Lookup_TipFireAndForget"));
+            TextWrapped("%s", T(e.harmful ? "$MTFUI_Lookup_TipHarmful" : "$MTFUI_Lookup_TipHelpful"));
+            if (const char* caveat = CaveatText(e.caveat)) {
+                PushStyleColor(ImGuiCol_Text, kWarn);
+                TextWrapped("%s", caveat);
+                PopStyleColor();
+            }
+            TextDisabled("%s", TF("$MTFUI_Lookup_TipSource", e.value).c_str());
+            PopTextWrapPos();
+        }
+
+        void SortSpells(std::vector<std::size_t>& order, const std::vector<game::SpellEntry>& all, int column, bool descending) {
+            order.resize(all.size());
+            for (std::size_t i = 0; i < order.size(); ++i) {
+                order[i] = i;
+            }
+            auto key = [column](const game::SpellEntry& e) -> int {
+                switch (column) {
+                    case kColSchool: return e.school;
+                    case kColLevel: return e.level;
+                    case kColType: return (e.concentration ? 10 : 0) + e.delivery;
+                    case kColCost: return e.cost;
+                    case kColTargets: return e.harmful ? 1 : 0;
+                    default: return 0;
+                }
+            };
+            // All() is sorted by name, so a stable sort keeps equal keys in name order.
+            std::ranges::stable_sort(order, [&](std::size_t a, std::size_t b) {
+                if (column == kColName) {
+                    return descending ? b < a : a < b;
+                }
+                const int ka = key(all[a]);
+                const int kb = key(all[b]);
+                return descending ? kb < ka : ka < kb;
+            });
+        }
+
         void RequestKnown(SpellPickerState& st) {
             st.reading = true;
             game::SpellLookup::Get().ReadKnown([](std::unordered_set<RE::FormID> known) {
@@ -39,13 +134,48 @@ namespace mtfui::ui {
             });
         }
 
+        bool SpellRow(const game::SpellEntry& e, bool selected) {
+            TableNextRow();
+            TableNextColumn();
+            const bool warn = e.caveat != game::SpellCaveat::None;
+            if (warn) {
+                PushStyleColor(ImGuiCol_Text, kWarn);
+            }
+            const bool clicked = Selectable((e.name + "##" + e.value).c_str(), selected, ImGuiSelectableFlags_SpanAllColumns);
+            if (warn) {
+                PopStyleColor();
+            }
+            if (BeginItemTooltip()) {
+                SpellTooltip(e);
+                EndTooltip();
+            }
+            if (selected && IsWindowAppearing()) {
+                SetScrollHereY();
+            }
+            TableNextColumn();
+            TextUnformatted(e.school < 0 ? "" : SchoolName(e.school));
+            TableNextColumn();
+            TextUnformatted(LevelName(e.level));
+            TableNextColumn();
+            TextUnformatted(TypeText(e).c_str());
+            TableNextColumn();
+            TextUnformatted(CostText(e).c_str());
+            TableNextColumn();
+            TextColored(e.harmful ? kError : kGood, "%s", TargetsText(e));
+            return clicked;
+        }
+
         bool SpellPicker(const char* label, model::ParamValue& value) {
             const auto& lookup = game::SpellLookup::Get();
             const auto current = model::ParamStr(value);
             const auto* chosen = current.empty() ? nullptr : lookup.Find(current);
             const std::string preview = current.empty() ? std::string(T("$MTFUI_Lookup_None")) : chosen ? chosen->name : TF("$MTFUI_Lookup_Missing", current);
-            SetNextWindowSizeConstraints(ImVec2{ 480, 0 }, ImVec2{ FLT_MAX, 520 });
+            SetNextWindowSizeConstraints(ImVec2{ 760, 0 }, ImVec2{ FLT_MAX, 560 });
             if (!BeginCombo(label, preview.c_str(), 0)) {
+                if (chosen && BeginItemTooltip()) {
+                    SpellTooltip(*chosen);
+                    EndTooltip();
+                }
                 return false;
             }
             auto& st = Picker();
@@ -59,6 +189,10 @@ namespace mtfui::ui {
                 SetKeyboardFocusHere();
             }
             SearchBox("##search", st.search, 200);
+            if (BeginItemTooltip()) {
+                TextUnformatted(T("$MTFUI_Lookup_SearchTip"));
+                EndTooltip();
+            }
             SameLine();
             SetNextItemWidth(140);
             if (BeginCombo("##school", st.school < 0 ? T("$MTFUI_Lookup_AllSchools") : SchoolName(st.school), 0)) {
@@ -83,38 +217,50 @@ namespace mtfui::ui {
 
             bool changed = false;
             int shown = 0;
-            if (BeginChild("##spells", ImVec2{ 0, 360 })) {
-                if (st.knownOnly && st.reading) {
-                    TextDisabled("%s", T("$MTFUI_Lookup_Reading"));
-                } else {
-                    for (const auto& e : lookup.All()) {
-                        if (st.school >= 0 && e.school != st.school) {
+            const auto& all = lookup.All();
+            constexpr int flags = ImGuiTableFlags_Sortable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit;
+            if (st.knownOnly && st.reading) {
+                TextDisabled("%s", T("$MTFUI_Lookup_Reading"));
+            } else if (BeginTable("##spells", kColCount, flags, ImVec2{ 0, 400 })) {
+                TableSetupScrollFreeze(0, 1);
+                TableSetupColumn(T("$MTFUI_Lookup_ColSpell"), ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_DefaultSort);
+                TableSetupColumn(T("$MTFUI_Lookup_ColSchool"), ImGuiTableColumnFlags_WidthFixed, 95.0f);
+                TableSetupColumn(T("$MTFUI_Lookup_ColLevel"), ImGuiTableColumnFlags_WidthFixed, 85.0f);
+                TableSetupColumn(T("$MTFUI_Lookup_ColType"), ImGuiTableColumnFlags_WidthFixed, 175.0f);
+                TableSetupColumn(T("$MTFUI_Lookup_ColCost"), ImGuiTableColumnFlags_WidthFixed, 55.0f);
+                TableSetupColumn(T("$MTFUI_Lookup_ColTargets"), ImGuiTableColumnFlags_WidthFixed, 70.0f);
+                TableHeadersRow();
+                if (auto* specs = TableGetSortSpecs(); specs && (specs->SpecsDirty || st.order.size() != all.size())) {
+                    const bool any = specs->SpecsCount > 0;
+                    SortSpells(st.order, all, any ? specs->Specs[0].ColumnIndex : kColName, any && specs->Specs[0].SortDirection == ImGuiSortDirection_Descending);
+                    specs->SpecsDirty = false;
+                }
+                for (const std::size_t i : st.order) {
+                    const auto& e = all[i];
+                    if (st.school >= 0 && e.school != st.school) {
+                        continue;
+                    }
+                    if (st.knownOnly && (!st.known || !st.known->contains(e.formId))) {
+                        continue;
+                    }
+                    if (!st.search.empty()) {
+                        const auto haystack = std::format("{} {} {} {} {} {}", e.name, SchoolName(e.school), LevelName(e.level), TypeText(e), TargetsText(e), e.plugin);
+                        if (!model::MatchesSearch(haystack, st.search)) {
                             continue;
-                        }
-                        if (st.knownOnly && (!st.known || !st.known->contains(e.formId))) {
-                            continue;
-                        }
-                        const std::string row = TF("$MTFUI_Lookup_Row", e.name, SchoolName(e.school), e.plugin);
-                        if (!model::MatchesSearch(row, st.search)) {
-                            continue;
-                        }
-                        ++shown;
-                        const bool selected = chosen == &e;
-                        if (Selectable((row + "##" + e.value).c_str(), selected)) {
-                            value = e.value;
-                            changed = true;
-                            CloseCurrentPopup();
-                        }
-                        if (selected && IsWindowAppearing()) {
-                            SetScrollHereY();
                         }
                     }
-                    if (shown == 0) {
-                        TextDisabled("%s", T("$MTFUI_Lookup_NoMatch"));
+                    ++shown;
+                    if (SpellRow(e, chosen == &e)) {
+                        value = e.value;
+                        changed = true;
+                        CloseCurrentPopup();
                     }
                 }
+                EndTable();
+                if (shown == 0) {
+                    TextDisabled("%s", T("$MTFUI_Lookup_NoMatch"));
+                }
             }
-            EndChild();
             TextDisabled("%s", TF("$MTFUI_Lookup_Count", shown).c_str());
             EndCombo();
             return changed;

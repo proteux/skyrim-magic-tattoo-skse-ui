@@ -2,6 +2,10 @@
 
 Versions follow `<major>.<feature>.<patch>`, as described in `AGENTS.md`.
 
+Version 1.8.1
+
+Change: the spell picker is a table with each spell's school, level (Novice to Master), type (concentration or fire and forget, and how it's delivered), base magicka cost, and whether it's harmful or helpful. Click a column to sort by it. The search also matches those details, so "adept concentration" or "helpful" narrows the list. Hovering a spell, or the chosen one, shows its effects with magnitude, area, and duration, how it behaves in Cast a spell and Spell aura, and the plugin it comes from. Cloaks, summons, bound weapons, wards, spells for corpses, and spells that only work through their caster, such as Telekinesis and Candlelight, are marked in orange with the reason they work poorly from a tattoo. The plugin name no longer fills each row.
+
 Version 1.8.0
 
 New: a spell picker for plugin effects that take a spell, such as Cast a spell and Spell aura in MTF Plugin - Skyrim. It lists every spell in your load order with its school and plugin, with a search box, a school filter, and a "Known by player" filter. A spell whose plugin has been removed is flagged in the preset's checks.
