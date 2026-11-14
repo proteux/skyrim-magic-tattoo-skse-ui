@@ -29,7 +29,7 @@ namespace mtfui::game {
         // mid-preview had suspended.
         void Cleanup();
 
-        bool Active() const { return applied_ != 0 || pending_.has_value() || busy_ || !suspended_.empty(); }
+        bool Active() const { return applied_ != 0 || pending_.has_value() || busy_ || settling_ || !suspended_.empty(); }
         RE::FormID Actor() const { return applied_; }
         const std::string& Status() const { return status_; }
 
@@ -49,6 +49,10 @@ namespace mtfui::game {
 
         void Remember(RE::FormID actor);
         void RunSteps(std::shared_ptr<std::vector<Step>> steps, std::size_t i, int gen);
+        // Takes the preview off what Stop collected and puts back what it hid.
+        void FinishStop();
+        // A stale step chain has no more calls in flight.
+        void Settled();
         // Re-applies names on actor. rewriteRecord: the saved list is then set to whatever failed to go back.
         void Restore(RE::FormID actor, std::vector<std::string> names, bool rewriteRecord, std::function<void()> done = {});
 
@@ -68,6 +72,12 @@ namespace mtfui::game {
         std::vector<RE::FormID> touched_;  // this session, removed on Stop
         std::vector<RE::FormID> known_;
         std::map<RE::FormID, std::vector<std::string>> suspended_;  // taken off in game, owed back
+        // Stopped while a step chain was in flight: putting presets back before its removals land would let them
+        // take the restored presets off again, so the cleanup waits for the chain to settle.
+        bool settling_ = false;
+        std::chrono::steady_clock::time_point settleSince_;
+        std::vector<RE::FormID> stopActors_;
+        std::map<RE::FormID, std::vector<std::string>> stopOwed_;
     };
 
     model::Preset MakePreviewPreset(const model::Preset& source, int slot, bool includeEffects);

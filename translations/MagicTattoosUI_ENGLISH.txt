@@ -450,10 +450,12 @@ $MTFUI_Gradient_LowShapeHelp	Tiers in the lowest part of the range use this puls
 $MTFUI_Gradient_LowShapeUpTo_Fmt	lowest %d%%
 $MTFUI_Gradient_PulseNoGlow	The pulse only animates glow, and Default has no glow strength. Turn on the glow strength ramp or give Default some glow.
 $MTFUI_Gradient_EffectsSection	Effects
-$MTFUI_Gradient_EffectsHelp	Gives every tier these effects, with each slider set along the range, such as RaceMenu's Actor scale growing from 100% to 150% as health drops. Menus and other settings are the same on every tier. Each tier's effects run while it shows, so the value steps from tier to tier; effects with their own transition, like RaceMenu's, ease between the steps.
+$MTFUI_Gradient_EffectsHelp	Gives every tier these effects, with each slider and color set along the range, such as RaceMenu's Actor scale growing from 100% to 150% as health drops, or its Hair color turning from brown to white. Colors blend from the low-end color to the high-end color. Menus and other settings are the same on every tier. Each tier's effects run while it shows, so the value steps from tier to tier; effects with their own transition, like RaceMenu's, ease between the steps.
 $MTFUI_Gradient_AddEffect	Add effect
 $MTFUI_Gradient_LowEndParam	low end {}
 $MTFUI_Gradient_HighEndParam	high end {}
+$MTFUI_Gradient_LowEndColor	Low end
+$MTFUI_Gradient_HighEndColor	High end
 $MTFUI_Gradient_EffectsOnDefault	Default gets them too
 $MTFUI_Gradient_EffectsOnDefaultHelp	Default shows outside the tiers, at its end of the range. On, it gets each effect at that end, replacing an effect of the same kind it already has. Off, Default's effects stay as they are, so the effects stop outside the tiers.
 $MTFUI_Gradient_TransitionHint	The transition is short, so the color jumps from tier to tier. A second or so makes it slide.

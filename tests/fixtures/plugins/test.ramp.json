@@ -25,6 +25,13 @@
       },
       "param2": { "label": "Strength", "min": 5, "max": 100, "step": 5, "default": 50, "format": "{0}%" },
       "param3": { "label": "Transition", "min": 0, "max": 30, "default": 5, "format": "{0} s" }
+    },
+    {
+      "id": "hair",
+      "label": "Hair color",
+      "description": "{param1} hair over {param2}.",
+      "param1": { "label": "Color", "color": 1, "default": 12597547 },
+      "param2": { "label": "Transition", "min": 0, "max": 30, "default": 5, "format": "{0} s" }
     }
   ]
 }

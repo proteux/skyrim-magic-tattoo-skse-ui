@@ -349,6 +349,38 @@ namespace {
                   model::ParamInt(tiersOnlyInferred->effects[1].high[1]) == 20,
             "without Default, inference extends the ramp from the outer tiers");
 
+        model::GradientSettings hairSettings;
+        hairSettings.conditionId = "mtf.attributes:health.below";
+        hairSettings.steps = 4;
+        model::EffectRamp hairRamp;
+        hairRamp.key = "test.ramp:hair";
+        hairRamp.low = { std::int64_t{ 0xFF0000 }, std::int64_t{ 0 }, std::int64_t{ 0 }, std::int64_t{ 0 }, std::int64_t{ 0 } };
+        hairRamp.high = { std::int64_t{ 0x0000FF }, std::int64_t{ 20 }, std::int64_t{ 0 }, std::int64_t{ 0 }, std::int64_t{ 0 } };
+        hairSettings.effects = { hairRamp };
+        auto hair = dragon;
+        model::ApplyGradient(cat, hair, model::SpecFromSettings(hairSettings), model::kMaxSlotsFallback);
+        const bool hairTiers = hair.slots[4].Configured() && hair.slots[3].effects.size() == 1 && hair.slots[0].effects.size() == defaultFx + 1;
+        Check(hairTiers, "every tier gets the color effect");
+        if (hairTiers) {
+            auto hairParam = [&](int slot, std::size_t fx, int param) { return model::ParamInt(hair.slots[slot].effects[fx].params[param]); };
+            Check(hairParam(1, 0, 0) == 0xFF0000 && hairParam(0, defaultFx, 0) == 0x0000FF, "effect colors run from the low-end color to the high-end color");
+            Check(hairParam(3, 0, 0) == static_cast<std::int64_t>(model::SampleGradient({ { 0.0, 0xFF0000 }, { 1.0, 0x0000FF } }, 0.5)) &&
+                      hairParam(3, 0, 0) != 0xFF0000 && hairParam(3, 0, 0) != 0x0000FF,
+                "effect colors blend between the ends");
+            Check(hairParam(3, 0, 1) == 10, "a slider beside a color still ramps");
+        }
+        hair.gradient = model::GradientSettingsToJson(hairSettings, model::TiersFingerprint(hair));
+        const auto hairReloaded = model::PresetFromJson(hair.name, nlohmann::json::parse(io::WriteStyled(model::PresetToJson(hair))));
+        const auto hairBack = model::GradientSettingsFromJson(hairReloaded.gradient);
+        Check(hairBack && *hairBack == hairSettings, "color ramps survive a save");
+        Check(!model::GradientTiersEdited(hairReloaded), "a gradient with a color effect matches its fingerprint");
+        auto hairBare = hair;
+        hairBare.gradient = nullptr;
+        const auto hairInferred = model::InferGradient(cat, hairBare);
+        Check(hairInferred && hairInferred->effects.size() == 1 && model::ParamInt(hairInferred->effects[0].low[0]) == 0xFF0000 &&
+                  model::ParamInt(hairInferred->effects[0].high[0]) == 0x0000FF,
+            "inference reads a color ramp's ends");
+
         auto trimmed = dragon;
         trimmed.slots.resize(11, model::DefaultSlot());
         model::TrimTrailingEmptySlots(trimmed);
