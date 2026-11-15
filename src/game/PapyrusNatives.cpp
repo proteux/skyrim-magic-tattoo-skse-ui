@@ -39,10 +39,10 @@ namespace mtfui::game {
         }
 
         // Lands each effect on the target in place: no projectile from the caster. Magnitude follows the caster's
-        // Fortify (School) power and Mod Spell Magnitude perks (Augmented Flames, and so on). The caster is blamed
-        // for anger, kill credit and crime.
-        void CastAs(RE::StaticFunctionTag*, RE::Actor* caster, RE::SpellItem* spell, RE::TESObjectREFR* target) {
-            if (!caster || !spell || !target) {
+        // Fortify (School) power and Mod Spell Magnitude perks (Augmented Flames, and so on), then afScale. The
+        // caster is blamed for anger, kill credit and crime.
+        void CastAsScaled(RE::StaticFunctionTag*, RE::Actor* caster, RE::SpellItem* spell, RE::TESObjectREFR* target, float scale) {
+            if (!caster || !spell || !target || scale <= 0.0f) {
                 return;
             }
             auto* magicTarget = target->GetMagicTarget();
@@ -63,6 +63,7 @@ namespace mtfui::game {
                     RE::BGSEntryPoint::HandleEntryPoint(RE::BGSEntryPoint::ENTRY_POINT::kModSpellMagnitude, caster, static_cast<RE::MagicItem*>(spell),
                         effect->baseEffect, std::addressof(magnitude));
                 }
+                magnitude *= scale;
 
                 RE::MagicTarget::AddTargetData data{};
                 data.caster = caster;
@@ -81,8 +82,13 @@ namespace mtfui::game {
             }
         }
 
+        void CastAs(RE::StaticFunctionTag* tag, RE::Actor* caster, RE::SpellItem* spell, RE::TESObjectREFR* target) {
+            CastAsScaled(tag, caster, spell, target, 1.0f);
+        }
+
         bool Register(RE::BSScript::IVirtualMachine* vm) {
             vm->RegisterFunction("CastAs", kScript, CastAs);
+            vm->RegisterFunction("CastAsScaled", kScript, CastAsScaled);
             logger::info("Registered Papyrus natives on {}", kScript);
             return true;
         }

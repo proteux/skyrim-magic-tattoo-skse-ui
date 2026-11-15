@@ -17,6 +17,7 @@ namespace mtfui::ui {
             std::string search;
             int school = -1;  // -1: every school
             bool knownOnly = false;
+            bool showAwkward = false;  // cloaks, wards, summons, caster-only, corpse
             bool reading = false;
             std::optional<std::unordered_set<RE::FormID>> known;
             std::vector<std::size_t> order;  // indices into SpellLookup::All(), in the table's sort order
@@ -214,6 +215,12 @@ namespace mtfui::ui {
                 TextUnformatted(T("$MTFUI_Lookup_KnownOnlyTip"));
                 EndTooltip();
             }
+            SameLine();
+            Checkbox(T("$MTFUI_Lookup_ShowAwkward"), &st.showAwkward);
+            if (BeginItemTooltip()) {
+                TextUnformatted(T("$MTFUI_Lookup_ShowAwkwardTip"));
+                EndTooltip();
+            }
 
             bool changed = false;
             int shown = 0;
@@ -241,6 +248,10 @@ namespace mtfui::ui {
                         continue;
                     }
                     if (st.knownOnly && (!st.known || !st.known->contains(e.formId))) {
+                        continue;
+                    }
+                    // Keep a stored caveat spell visible as the selection even when the filter hides the rest.
+                    if (!st.showAwkward && e.caveat != game::SpellCaveat::None && chosen != &e) {
                         continue;
                     }
                     if (!st.search.empty()) {

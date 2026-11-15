@@ -2,6 +2,10 @@
 
 Versions follow `<major>.<feature>.<patch>`, as described in `AGENTS.md`.
 
+Version 1.8.6
+
+New: `MagicTattoosUI.CastAsScaled`, which lands a spell like `CastAs` then multiplies magnitude (used by MTF Plugin - Skyrim Spell aura for half-strength fire-and-forget hits). The spell picker hides awkward spells (cloaks, wards, summons, caster-only, corpse) by default, with a "Show awkward spells" toggle to bring them back.
+
 Version 1.8.5
 
 Fix: `CastAs` no longer crashes when reading Fortify (School) power on AE 1.6.1170 (ActorValueOwner must be reached through `AsActorValueOwner`).

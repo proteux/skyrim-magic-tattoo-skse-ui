@@ -26,6 +26,8 @@ $MTFUI_Lookup_Missing	(missing) {}
 $MTFUI_Lookup_AllSchools	All schools
 $MTFUI_Lookup_KnownOnly	Known by player
 $MTFUI_Lookup_KnownOnlyTip	Only spells the player knows. Needs a loaded game.
+$MTFUI_Lookup_ShowAwkward	Show awkward spells
+$MTFUI_Lookup_ShowAwkwardTip	Cloaks, wards, summons, bound weapons, caster-only spells (Telekinesis, Candlelight), and corpse spells. Hidden by default because they do little or the wrong thing from a tattoo.
 $MTFUI_Lookup_Reading	Reading the player's spells...
 $MTFUI_Lookup_NoMatch	No spells match
 $MTFUI_Lookup_Count	{} spells
@@ -57,8 +59,8 @@ $MTFUI_Lookup_TipSummary	{}, {}, cost {}
 $MTFUI_Lookup_LevelSchool	{} {}
 $MTFUI_Lookup_EffectArea	{} ft area
 $MTFUI_Lookup_EffectDuration	for {} s
-$MTFUI_Lookup_TipConcentration	Concentration: each time it lands is one second of the spell. Weak in Cast a spell, about right in a Spell aura.
-$MTFUI_Lookup_TipFireAndForget	Fire and forget: each time it lands is the whole spell. Right for Cast a spell; a Spell aura lands it every second, which makes attacks far stronger than casting them.
+$MTFUI_Lookup_TipConcentration	Concentration: each time it lands is one second of the spell. Cast a spell repeats that every second while shown; a Spell aura does the same on nearby actors.
+$MTFUI_Lookup_TipFireAndForget	Fire and forget: each landing is the whole spell. Cast a spell repeats it on the wearer at the spell's cast time; a Spell aura hits nearby actors every second at half strength.
 $MTFUI_Lookup_TipHarmful	Harmful: a Spell aura hits actors hostile to whoever applied the tattoo, never the wearer.
 $MTFUI_Lookup_TipHelpful	Helpful: lands on the wearer, and a Spell aura also reaches actors who aren't hostile to whoever applied the tattoo.
 $MTFUI_Lookup_CaveatCloak	A cloak counts as helpful, so it goes on the wearer and friendly actors nearby, not on enemies.
