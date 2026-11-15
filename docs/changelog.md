@@ -2,6 +2,10 @@
 
 Versions follow `<major>.<feature>.<patch>`, as described in `AGENTS.md`.
 
+Version 1.8.9
+
+Change: the spell picker's concentration tip matches MTF Plugin - Skyrim 0.3.5: each pulse is about ten seconds of the spell, the wearer always pays magicka each second, and empty magicka pauses the channel until it recovers.
+
 Version 1.8.8
 
 Change: Magic Tattoos Tactical spells take their hand glow, light, projectile and hit FX from a vanilla spell that matches the school and whether they're a Hex or a Blessing, so a Restoration blessing no longer looks like an Illusion hex in your hands.

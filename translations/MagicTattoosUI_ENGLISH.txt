@@ -59,7 +59,7 @@ $MTFUI_Lookup_TipSummary	{}, {}, cost {}
 $MTFUI_Lookup_LevelSchool	{} {}
 $MTFUI_Lookup_EffectArea	{} ft area
 $MTFUI_Lookup_EffectDuration	for {} s
-$MTFUI_Lookup_TipConcentration	Concentration: each time it lands is one second of the spell. Cast a spell repeats that every second while shown; a Spell aura does the same on nearby actors.
+$MTFUI_Lookup_TipConcentration	Concentration: each time it lands is about ten seconds of the spell. Cast a spell and Spell aura pulse that every second while shown; the wearer always pays one second of magicka per pulse (one payment for a whole aura ring). When they can't afford it, pulses pause until magicka recovers.
 $MTFUI_Lookup_TipFireAndForget	Fire and forget: each landing is the whole spell. Cast a spell repeats it on the wearer at the spell's cast time; a Spell aura hits nearby actors every second at half strength.
 $MTFUI_Lookup_TipHarmful	Harmful: a Spell aura hits actors hostile to whoever applied the tattoo, never the wearer.
 $MTFUI_Lookup_TipHelpful	Helpful: lands on the wearer, and a Spell aura also reaches actors who aren't hostile to whoever applied the tattoo.
