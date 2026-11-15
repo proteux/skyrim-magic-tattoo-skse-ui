@@ -303,8 +303,16 @@ namespace mtfui::ui {
             ReadKnown(app);
         }
 
-        TextWrapped("%s", T("$MTFUI_Spells_Intro"));
+        int shown = 0;
+        for (int i = 0; i < model::kTacticalSlots; ++i) {
+            if (g_added[i] || draft.slots[i] != model::TacticalSlot{}) {
+                ++shown;
+            }
+        }
+        const bool full = shown >= model::kTacticalSlots;
         const bool dirty = draft != saved;
+
+        // Save / Revert on the left, New on the right; the list scrolls under this row.
         BeginDisabled(!dirty);
         if (Button(T("$MTFUI_Spells_Save"))) {
             std::string error;
@@ -324,37 +332,18 @@ namespace mtfui::ui {
             SameLine();
             TextColored(kWarn, "%s", T("$MTFUI_Spells_Unsaved"));
         }
-        Gap();
 
-        SeparatorText(T("$MTFUI_Spells_DispelSection"));
-        DispelCard(app, draft.dispel, saved.dispel);
-        Gap();
-
-        SeparatorText(T("$MTFUI_Spells_SpellsSection"));
-        int shown = 0;
-        for (int i = 0; i < model::kTacticalSlots; ++i) {
-            if (!g_added[i] && draft.slots[i] == model::TacticalSlot{}) {
-                continue;
-            }
-            ++shown;
-            if (SlotCard(app, i, draft.slots[i], saved.slots[i])) {
-                draft.slots[i] = {};
-                g_added[i] = false;
-            }
-            if (i == g_scrollTo) {
-                SetScrollHereY(1.0f);
-                g_scrollTo = -1;
-            }
-            Gap();
-        }
-        if (shown == 0) {
-            TextDisabled("%s", T("$MTFUI_Spells_Empty"));
-            Gap();
-        }
-
-        const bool full = shown >= model::kTacticalSlots;
+        const char* newLabel = T("$MTFUI_Spells_New");
+        const std::string count = TF("$MTFUI_Spells_Count", shown, model::kTacticalSlots);
+        const float newW = CalcTextSize(newLabel).x + GetStyle()->FramePadding.x * 2.0f;
+        const float countW = CalcTextSize(count.c_str()).x;
+        const float right = GetWindowContentRegionMax().x - newW - 12.0f - countW;
+        SameLine();
+        SetCursorPosX(std::max(GetCursorPosX(), right));
+        TextDisabled("%s", count.c_str());
+        SameLine(0.0f, 12.0f);
         BeginDisabled(full);
-        if (Button(T("$MTFUI_Spells_New"))) {
+        if (Button(newLabel)) {
             for (int i = 0; i < model::kTacticalSlots; ++i) {
                 if (!g_added[i] && draft.slots[i] == model::TacticalSlot{}) {
                     g_added[i] = true;
@@ -367,7 +356,36 @@ namespace mtfui::ui {
         if (full && IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
             SetTooltip("%s", T("$MTFUI_Spells_FullTip"));
         }
-        SameLine(0.0f, 12.0f);
-        TextDisabled("%s", TF("$MTFUI_Spells_Count", shown, model::kTacticalSlots).c_str());
+
+        if (!BeginChild("##spells_list", ImVec2{ 0, 0 })) {
+            EndChild();
+            return;
+        }
+        TextWrapped("%s", T("$MTFUI_Spells_Intro"));
+        Gap();
+
+        SeparatorText(T("$MTFUI_Spells_DispelSection"));
+        DispelCard(app, draft.dispel, saved.dispel);
+        Gap();
+
+        SeparatorText(T("$MTFUI_Spells_SpellsSection"));
+        if (shown == 0) {
+            TextDisabled("%s", T("$MTFUI_Spells_Empty"));
+        }
+        for (int i = 0; i < model::kTacticalSlots; ++i) {
+            if (!g_added[i] && draft.slots[i] == model::TacticalSlot{}) {
+                continue;
+            }
+            if (SlotCard(app, i, draft.slots[i], saved.slots[i])) {
+                draft.slots[i] = {};
+                g_added[i] = false;
+            }
+            if (i == g_scrollTo) {
+                SetScrollHereY(1.0f);
+                g_scrollTo = -1;
+            }
+            Gap();
+        }
+        EndChild();
     }
 }
