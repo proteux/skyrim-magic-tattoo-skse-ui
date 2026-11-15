@@ -2,6 +2,10 @@
 
 Versions follow `<major>.<feature>.<patch>`, as described in `AGENTS.md`.
 
+Version 1.8.3
+
+New: a Papyrus function, `MagicTattoosUI.CastAs`, that lands a spell on a target as if an actor cast it, counting that actor's perks and Fortify (School) potions. MTF Plugin - Skyrim 0.3.1 uses it, so a Cast a spell or Spell aura on a Magic Tattoos Tactical hex hits as hard as the caster's own spell. The package now has `Scripts/MagicTattoosUI.pex`.
+
 Version 1.8.2
 
 Change: the spell picker leaves out Magic Tattoos Tactical's own spells. A tier that cast one would put a tattoo on again and again.

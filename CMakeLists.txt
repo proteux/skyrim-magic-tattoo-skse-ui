@@ -54,6 +54,7 @@ add_commonlibsse_plugin(${PROJECT_NAME}
     SOURCES
         src/main.cpp
         src/game/Papyrus.cpp
+        src/game/PapyrusNatives.cpp
         src/game/MtfBridge.cpp
         src/game/TacticalBridge.cpp
         src/game/SpellLookup.cpp

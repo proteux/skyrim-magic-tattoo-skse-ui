@@ -17,6 +17,7 @@
 #include "Version.h"
 #include "game/MtfBridge.h"
 #include "game/OverlayVisibility.h"
+#include "game/PapyrusNatives.h"
 #include "game/SpellLookup.h"
 #include "game/TacticalBridge.h"
 #include "io/UiSettings.h"
@@ -144,5 +145,6 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse) {
         logger::error("Could not register for SKSE messages");
         return false;
     }
+    mtfui::game::RegisterPapyrusNatives();
     return true;
 }

@@ -107,7 +107,7 @@ The log is at `Documents/My Games/Skyrim Special Edition/SKSE/MagicTattoosUI.log
 
 ## Building from source
 
-Needs Visual Studio 2022 or later (or the standalone Build Tools with the C++ workload) and [vcpkg](https://github.com/microsoft/vcpkg). `build.sh` finds vcpkg through `VCPKG_ROOT` or your `PATH`. To set paths without touching the environment, create a `build.local.sh` next to `build.sh` (it's gitignored), for example:
+Needs Visual Studio 2022 or later (or the standalone Build Tools with the C++ workload), [vcpkg](https://github.com/microsoft/vcpkg), and a Papyrus compiler for `scripts/Source/MagicTattoosUI.psc`: by default the one Nemesis installs under `Data/Nemesis_Engine`, or set `PAPYRUS_COMPILER`, along with the Creation Kit's `TESV_Papyrus_Flags.flg` in `Data/Source/Scripts` or `Data/Scripts/Source`. `build.sh` finds vcpkg through `VCPKG_ROOT` or your `PATH`. To set paths without touching the environment, create a `build.local.sh` next to `build.sh` (it's gitignored), for example:
 
 ```
 VCPKG_ROOT="C:/vcpkg"

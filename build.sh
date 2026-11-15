@@ -20,7 +20,8 @@ export VCPKG_ROOT="${VCPKG_ROOT:-}"
 
 case "$TARGET" in
   uninstall-live)
-    rm -f "$DATA/SKSE/Plugins/MagicTattoosUI.dll" "$DATA/SKSE/Plugins/MagicTattoosUI.pdb" "$DATA/Interface/Translations/MagicTattoosUI_"*.txt
+    rm -f "$DATA/SKSE/Plugins/MagicTattoosUI.dll" "$DATA/SKSE/Plugins/MagicTattoosUI.pdb" "$DATA/Interface/Translations/MagicTattoosUI_"*.txt \
+      "$DATA/Scripts/MagicTattoosUI.pex" "$DATA/Scripts/Source/MagicTattoosUI.psc"
     echo "Removed Magic Tattoos UI from $DATA"
     echo "Your settings, favorites and preset backups in $DATA/SKSE/Plugins/MagicTattoosUI were kept."
     exit 0
@@ -89,6 +90,33 @@ mkdir -p "$DIST/SKSE/Plugins"
 cp -f "$BUILD/MagicTattoosUI.dll" "$DIST/SKSE/Plugins/"
 cp -f "$BUILD/MagicTattoosUI.pdb" "$DIST/SKSE/Plugins/"
 
+# The Papyrus script other mods call the DLL's native functions through. Stubs only, never the game's sources.
+COMPILER="$(cygpath -w "${PAPYRUS_COMPILER:-$DATA/Nemesis_Engine/Papyrus Compiler/PapyrusCompiler.exe}")"
+FLAGS=""
+for flg in "$DATA/Source/Scripts/TESV_Papyrus_Flags.flg" "$DATA/Scripts/Source/TESV_Papyrus_Flags.flg"; do
+  if [[ -f "$flg" ]]; then
+    FLAGS="$(cygpath -w "$flg")"
+    break
+  fi
+done
+if [[ -z "$FLAGS" ]]; then
+  echo "TESV_Papyrus_Flags.flg not found in $DATA/Source/Scripts or $DATA/Scripts/Source" >&2
+  exit 1
+fi
+mkdir -p "$DIST/Scripts/Source"
+(
+  cd "$ROOT/scripts/Source"
+  export MSYS_NO_PATHCONV=1
+  "$COMPILER" MagicTattoosUI.psc -f="$FLAGS" -i="$(cygpath -w "$ROOT/scripts/Source");$(cygpath -w "$ROOT/scripts/stubs")" \
+    -o="$(cygpath -w "$DIST/Scripts")" -op
+)
+if [[ ! -f "$DIST/Scripts/MagicTattoosUI.pex" ]]; then
+  echo "Compile produced no MagicTattoosUI.pex" >&2
+  exit 1
+fi
+find "$DIST/Scripts" -maxdepth 1 -name '*.pex' ! -name 'MagicTattoosUI.pex' -delete
+cp -f "$ROOT/scripts/Source/MagicTattoosUI.psc" "$DIST/Scripts/Source/"
+
 # Skyrim's translation files are UTF-16 LE with a BOM and CRLF line ends. The repo keeps UTF-8 so diffs stay readable.
 mkdir -p "$DIST/Interface/Translations"
 for src in "$ROOT"/translations/MagicTattoosUI_*.txt; do
@@ -105,6 +133,7 @@ while IFS= read -r -d '' file; do
   rel="${file#"$DIST"/}"
   case "$rel" in
     SKSE/Plugins/MagicTattoosUI.dll|SKSE/Plugins/MagicTattoosUI.pdb|SKSE/Plugins/MagicTattoosUI/*|Interface/Translations/MagicTattoosUI_*.txt) ;;
+    Scripts/MagicTattoosUI.pex|Scripts/Source/MagicTattoosUI.psc) ;;
     *)
       echo "Unexpected file $rel in dist. Only Magic Tattoos UI files may ship." >&2
       exit 1
@@ -118,6 +147,7 @@ case "$TARGET" in
     cp -f "$DIST/SKSE/Plugins/MagicTattoosUI.dll" "$DIST/SKSE/Plugins/MagicTattoosUI.pdb" "$STAGING/SKSE/Plugins/"
     mkdir -p "$STAGING/Interface/Translations"
     cp -f "$DIST/Interface/Translations/"*.txt "$STAGING/Interface/Translations/"
+    cp -rf "$DIST/Scripts" "$STAGING/"
     ;;
   live)
     mkdir -p "$DATA/SKSE/Plugins"
@@ -127,6 +157,7 @@ case "$TARGET" in
     fi
     mkdir -p "$DATA/Interface/Translations"
     cp -f "$DIST/Interface/Translations/"*.txt "$DATA/Interface/Translations/"
+    cp -rf "$DIST/Scripts" "$DATA/"
     ;;
   package)
     PACKAGE="$DIST/package"
@@ -134,12 +165,12 @@ case "$TARGET" in
     rm -rf "$PACKAGE" "$ZIP"
     mkdir -p "$PACKAGE/SKSE/Plugins"
     cp -f "$DIST/SKSE/Plugins/MagicTattoosUI.dll" "$PACKAGE/SKSE/Plugins/"
-    cp -rf "$DIST/Interface" "$PACKAGE/"
+    cp -rf "$DIST/Interface" "$DIST/Scripts" "$PACKAGE/"
     mkdir -p "$PACKAGE/SKSE/Plugins/MagicTattoosUI"
     cp -f "$ROOT/LICENSE" "$PACKAGE/SKSE/Plugins/MagicTattoosUI/LICENSE.txt"
     cp -f "$ROOT/release/README.txt" "$PACKAGE/SKSE/Plugins/MagicTattoosUI/README.txt"
     # Windows bsdtar, not Git Bash's GNU tar, which cannot write zips. Compress-Archive in Windows PowerShell writes backslash paths.
-    "$(cygpath -u "$SYSTEMROOT")/System32/tar.exe" -a -cf "$(cygpath -w "$ZIP")" -C "$(cygpath -w "$PACKAGE")" SKSE Interface
+    "$(cygpath -u "$SYSTEMROOT")/System32/tar.exe" -a -cf "$(cygpath -w "$ZIP")" -C "$(cygpath -w "$PACKAGE")" SKSE Interface Scripts
     ;;
 esac
 
