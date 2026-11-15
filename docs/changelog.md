@@ -2,6 +2,14 @@
 
 Versions follow `<major>.<feature>.<patch>`, as described in `AGENTS.md`.
 
+Version 1.8.5
+
+Fix: `CastAs` no longer crashes when reading Fortify (School) power on AE 1.6.1170 (ActorValueOwner must be reached through `AsActorValueOwner`).
+
+Version 1.8.4
+
+Change: `MagicTattoosUI.CastAs` puts the spell's effects on the target in place. Aimed spells such as Firebolt no longer fly from the caster; a hex detonates on the victim, still counting the caster's Fortify (School) potions and Mod Spell Magnitude perks, with kill credit and aggro going to the caster.
+
 Version 1.8.3
 
 New: a Papyrus function, `MagicTattoosUI.CastAs`, that lands a spell on a target as if an actor cast it, counting that actor's perks and Fortify (School) potions. MTF Plugin - Skyrim 0.3.1 uses it, so a Cast a spell or Spell aura on a Magic Tattoos Tactical hex hits as hard as the caster's own spell. The package now has `Scripts/MagicTattoosUI.pex`.
