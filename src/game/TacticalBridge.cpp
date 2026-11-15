@@ -53,6 +53,42 @@ namespace mtfui::game {
                 effect->data.associatedSkill = SkillOf(school);
             }
         }
+
+        // Hand glow, light, projectile, hit FX and cast sounds from a vanilla effect. Leaves cast type, delivery,
+        // archetype and hostility alone.
+        void CopyVisuals(RE::EffectSetting* dst, const RE::EffectSetting* src) {
+            if (!dst || !src) {
+                return;
+            }
+            dst->data.light = src->data.light;
+            dst->data.effectShader = src->data.effectShader;
+            dst->data.enchantShader = src->data.enchantShader;
+            dst->data.projectileBase = src->data.projectileBase;
+            dst->data.explosion = src->data.explosion;
+            dst->data.castingArt = src->data.castingArt;
+            dst->data.hitEffectArt = src->data.hitEffectArt;
+            dst->data.impactDataSet = src->data.impactDataSet;
+            dst->data.enchantEffectArt = src->data.enchantEffectArt;
+            dst->data.hitVisuals = src->data.hitVisuals;
+            dst->data.enchantVisuals = src->data.enchantVisuals;
+            dst->data.imageSpaceMod = src->data.imageSpaceMod;
+            dst->data.castingSoundLevel = src->data.castingSoundLevel;
+            dst->effectSounds = src->effectSounds;
+        }
+
+        void SetVisuals(RE::SpellItem* spell, model::School school, bool hostile, int cast) {
+            auto* effect = EffectOf(spell);
+            if (!effect || cast < 0 || cast >= model::kCastTypeCount) {
+                return;
+            }
+            const int s = std::clamp(static_cast<int>(school), 0, model::kSchoolCount - 1);
+            const auto id = kTacticalVisuals[s][hostile ? 1 : 0][cast];
+            if (auto* src = RE::TESForm::LookupByID<RE::EffectSetting>(id)) {
+                CopyVisuals(effect, src);
+            } else {
+                logger::warn("{}: visual template {:06X} is missing", kTacticalPlugin, id);
+            }
+        }
     }
 
     TacticalBridge& TacticalBridge::Get() {
@@ -124,9 +160,11 @@ namespace mtfui::game {
         for (int i = 0; i < model::kTacticalSlots; ++i) {
             const auto& slot = config.slots[i];
             const auto name = SpellName(config, i);
-            for (auto* spell : cast_[i]) {
+            for (int v = 0; v < model::kCastTypeCount; ++v) {
+                auto* spell = cast_[i][v];
                 Name(spell, name);
                 SetCasting(spell, slot.cost, slot.school);
+                SetVisuals(spell, slot.school, slot.hostile, v);
                 if (auto* effect = EffectOf(spell)) {
                     if (slot.hostile) {
                         effect->data.flags.set(RE::EffectSetting::EffectSettingData::Flag::kHostile, RE::EffectSetting::EffectSettingData::Flag::kDetrimental);
@@ -140,10 +178,14 @@ namespace mtfui::game {
                 decay_[i]->effects[0]->effectItem.duration = static_cast<std::uint32_t>(std::lround(slot.decay));
             }
         }
+        // Dispel versions are self, touch, ranged (no self-channeled).
+        static constexpr int kDispelCast[] = {static_cast<int>(model::CastType::SelfInstant), static_cast<int>(model::CastType::Touch),
+            static_cast<int>(model::CastType::Ranged)};
         const auto dispelName = SpellName(config, kTacticalDispel);
-        for (auto* spell : dispel_) {
-            Name(spell, dispelName);
-            SetCasting(spell, config.dispel.cost, config.dispel.school);
+        for (int d = 0; d < kDispelVersions; ++d) {
+            Name(dispel_[d], dispelName);
+            SetCasting(dispel_[d], config.dispel.cost, config.dispel.school);
+            SetVisuals(dispel_[d], config.dispel.school, false, kDispelCast[d]);
         }
     }
 

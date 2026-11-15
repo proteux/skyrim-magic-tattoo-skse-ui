@@ -87,7 +87,7 @@ Open the SKSE Menu Framework menu (F1 by default) and choose **Magic Tattoos**. 
 
 ### Spells (with Magic Tattoos Tactical)
 
-When [Magic Tattoos Tactical](https://github.com/proteux/skyrim-magic-tattoo-tactical) is installed, a **Spells** tab sets up its hex and blessing spells and its Dispel spell. **New spell** adds one, up to 20, and **Remove** clears one. Each spell gets a name, a preset, how it's cast (self, self channeled, touch channeled, or ranged), whether it's a hostile Hex or a friendly Blessing, its magicka cost and school, and how long the tattoo lasts, or Permanent. **Save spells**, then **Learn** the ones this character should know; **Forget** takes one back. Learned spells belong to the save, so each character knows their own. The setup is kept in `Data/SKSE/Plugins/StorageUtilData/MagicTattoosTactical/spells.json` and is shared by every save.
+When [Magic Tattoos Tactical](https://github.com/proteux/skyrim-magic-tattoo-tactical) is installed, a **Spells** tab sets up its hex and blessing spells and its Dispel spell. **New spell** adds one, up to 20, and **Remove** clears one. Each spell gets a name, a preset, how it's cast (self, self channeled, touch channeled, or ranged), whether it's a hostile Hex or a friendly Blessing, its magicka cost and school, and how long the tattoo lasts, or Permanent. The hand glow and projectile follow the school and Hex or Blessing, using vanilla casting art. **Save spells**, then **Learn** the ones this character should know; **Forget** takes one back. Learned spells belong to the save, so each character knows their own. The setup is kept in `Data/SKSE/Plugins/StorageUtilData/MagicTattoosTactical/spells.json` and is shared by every save.
 
 ## Notes
 

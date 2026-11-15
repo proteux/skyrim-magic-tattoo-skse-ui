@@ -2,6 +2,10 @@
 
 Versions follow `<major>.<feature>.<patch>`, as described in `AGENTS.md`.
 
+Version 1.8.8
+
+Change: Magic Tattoos Tactical spells take their hand glow, light, projectile and hit FX from a vanilla spell that matches the school and whether they're a Hex or a Blessing, so a Restoration blessing no longer looks like an Illusion hex in your hands.
+
 Version 1.8.6
 
 New: `MagicTattoosUI.CastAsScaled`, which lands a spell like `CastAs` then multiplies magnitude (used by MTF Plugin - Skyrim Spell aura for half-strength fire-and-forget hits). The spell picker hides awkward spells (cloaks, wards, summons, caster-only, corpse) by default, with a "Show awkward spells" toggle to bring them back.

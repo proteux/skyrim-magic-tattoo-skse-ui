@@ -12,9 +12,9 @@ namespace mtfui::game {
     using KnownSpells = std::array<int, kTacticalSpells>;
 
     // Magic Tattoos Tactical, when its ESP is loaded. Its spells are set up here: the UI writes spells.json, and the
-    // names, costs, schools, hostility and decay times go onto the ESP's records while the game runs. Those changes
-    // aren't saved, so they go on again at every load. Which spells the player knows is the player's spell list,
-    // which the save keeps.
+    // names, costs, schools, hostility, casting visuals and decay times go onto the ESP's records while the game
+    // runs. Those changes aren't saved, so they go on again at every load. Which spells the player knows is the
+    // player's spell list, which the save keeps.
     class TacticalBridge {
     public:
         static TacticalBridge& Get();
