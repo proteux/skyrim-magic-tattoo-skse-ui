@@ -154,50 +154,37 @@ namespace mtfui::ui {
             }
         }
 
-        // A bordered box around one spell, as tall as its contents. Call EndChild whatever it returns.
+        // A bordered box around one spell, as tall as its contents. Pair with EndCard.
         bool BeginCard(const char* id) {
-            PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 12.0f, 10.0f });
+            PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 6.0f, 4.0f });
+            PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 8.0f, 6.0f });
             const bool open = BeginChild(id, ImVec2{ 0, 0 }, ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_AlwaysUseWindowPadding);
-            PopStyleVar();
+            PopStyleVar();  // WindowPadding is applied at BeginChild; keep ItemSpacing for the body
             return open;
         }
 
-        bool BeginFields() {
-            PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2{ 10.0f, 3.0f });
-            const bool open = BeginTable("##fields", 3, ImGuiTableFlags_SizingStretchSame);
-            PopStyleVar();
-            return open;
+        void EndCard() {
+            EndChild();
+            PopStyleVar();  // ItemSpacing from BeginCard
         }
 
         void Caption(const char* key) {
             TextDisabled("%s", T(key));
         }
 
-        // The name, whether the character knows the spell, and optionally a Remove button at the right. Returns true when Remove is clicked.
-        bool CardHeader(App& app, int index, std::string& name, const char* hint, bool ready, const char* notReady, bool removable) {
-            const float right = GetCursorPosX() + GetContentRegionAvail().x;
-            SetNextItemWidth(std::min(280.0f, GetContentRegionAvail().x * 0.45f));
-            InputString("##name", name, hint, 0, 64);
-            SameLine(0.0f, 16.0f);
-            KnownCell(app, index, ready, notReady);
-            if (!removable) {
-                return false;
-            }
-            const char* label = T("$MTFUI_Spells_Remove");
-            SameLine(right - CalcTextSize(label).x - GetStyle()->FramePadding.x * 2.0f);
-            const bool clicked = SmallButton(label);
-            if (IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
-                SetTooltip("%s", T("$MTFUI_Spells_RemoveTip"));
-            }
-            return clicked;
+        // Cast and school side by side so a narrow card still fits both.
+        void CastAndSchool(model::CastType& cast, model::School& school, int skipCast = -1) {
+            const float gap = GetStyle()->ItemSpacing.x;
+            const float half = std::max(60.0f, (GetContentRegionAvail().x - gap) * 0.5f);
+            SetNextItemWidth(half);
+            KeyCombo("##cast", cast, kCastKeys, skipCast);
+            SameLine(0.0f, gap);
+            SetNextItemWidth(-1.0f);
+            KeyCombo("##school", school, kSchoolKeys);
         }
 
-        void SlotFields(App& app, model::TacticalSlot& s) {
-            TableNextColumn();
-            Caption("$MTFUI_Spells_ColPreset");
-            SetNextItemWidth(-1.0f);
-            PresetCombo(app, s.preset);
-            int kind = s.hostile ? 0 : 1;
+        void KindRadios(bool& hostile) {
+            int kind = hostile ? 0 : 1;
             RadioButton(T("$MTFUI_Spells_Hex"), &kind, 0);
             if (IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
                 SetTooltip("%s", T("$MTFUI_Spells_HexTip"));
@@ -207,33 +194,57 @@ namespace mtfui::ui {
             if (IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
                 SetTooltip("%s", T("$MTFUI_Spells_BlessingTip"));
             }
-            s.hostile = kind == 0;
+            hostile = kind == 0;
+        }
 
-            TableNextColumn();
-            Caption("$MTFUI_Spells_ColCasting");
-            SetNextItemWidth(-1.0f);
-            KeyCombo("##cast", s.cast, kCastKeys);
-            SetNextItemWidth(-1.0f);
-            KeyCombo("##school", s.school, kSchoolKeys);
-
-            TableNextColumn();
-            Caption("$MTFUI_Spells_ColCost");
-            CostSlider(s.cost, s.cast);
-            Checkbox(T("$MTFUI_Spells_Permanent"), &s.permanent);
+        void DecayRow(bool& permanent, double& decay, model::CastType cast) {
+            Checkbox(T("$MTFUI_Spells_Permanent"), &permanent);
             if (IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
                 SetTooltip("%s", T("$MTFUI_Spells_PermanentTip"));
             }
-            if (!s.permanent) {
-                SameLine(0.0f, 12.0f);
-                SetNextItemWidth(-1.0f);
-                float decay = static_cast<float>(s.decay);
-                if (SliderFloat("##decay", &decay, static_cast<float>(model::kDecayMin), 3600.0f, T("$MTFUI_Spells_Decay_Fmt"), ImGuiSliderFlags_Logarithmic)) {
-                    s.decay = std::clamp(static_cast<double>(std::round(decay)), model::kDecayMin, model::kDecayMax);
-                }
-                if (IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
-                    SetTooltip("%s", model::IsChanneled(s.cast) ? T("$MTFUI_Spells_DecayChannelTip") : T("$MTFUI_Spells_DecayTip"));
-                }
+            if (permanent) {
+                return;
             }
+            SameLine(0.0f, 8.0f);
+            SetNextItemWidth(-1.0f);
+            float value = static_cast<float>(decay);
+            if (SliderFloat("##decay", &value, static_cast<float>(model::kDecayMin), 3600.0f, T("$MTFUI_Spells_Decay_Fmt"), ImGuiSliderFlags_Logarithmic)) {
+                decay = std::clamp(static_cast<double>(std::round(value)), model::kDecayMin, model::kDecayMax);
+            }
+            if (IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
+                SetTooltip("%s", model::IsChanneled(cast) ? T("$MTFUI_Spells_DecayChannelTip") : T("$MTFUI_Spells_DecayTip"));
+            }
+        }
+
+        // Name on the first row (with Remove when the spell can go), known/learn on the next.
+        bool CardHeader(App& app, int index, std::string& name, const char* hint, bool ready, const char* notReady, bool removable) {
+            bool clicked = false;
+            if (removable) {
+                const char* label = T("$MTFUI_Spells_Remove");
+                const float removeW = CalcTextSize(label).x + GetStyle()->FramePadding.x * 2.0f;
+                SetNextItemWidth(-(removeW + GetStyle()->ItemSpacing.x));
+                InputString("##name", name, hint, 0, 64);
+                SameLine();
+                clicked = SmallButton(label);
+                if (IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
+                    SetTooltip("%s", T("$MTFUI_Spells_RemoveTip"));
+                }
+            } else {
+                SetNextItemWidth(-1.0f);
+                InputString("##name", name, hint, 0, 64);
+            }
+            KnownCell(app, index, ready, notReady);
+            return clicked;
+        }
+
+        void SlotFields(App& app, model::TacticalSlot& s) {
+            Caption("$MTFUI_Spells_ColPreset");
+            SetNextItemWidth(-1.0f);
+            PresetCombo(app, s.preset);
+            KindRadios(s.hostile);
+            CastAndSchool(s.cast, s.school);
+            CostSlider(s.cost, s.cast);
+            DecayRow(s.permanent, s.decay, s.cast);
         }
 
         // Returns true when the spell is removed.
@@ -244,11 +255,7 @@ namespace mtfui::ui {
                 const bool ready = !saved.preset.empty() && s == saved;
                 removed = CardHeader(app, i, s.name, TF("$MTFUI_Spells_DefaultName", i + 1).c_str(), ready,
                     saved.preset.empty() ? T("$MTFUI_Spells_LearnNeedsPreset") : T("$MTFUI_Spells_LearnNeedsSave"), true);
-                Spacing();
-                if (BeginFields()) {
-                    SlotFields(app, s);
-                    EndTable();
-                }
+                SlotFields(app, s);
                 if (const int other = model::DuplicatePresetSlot(draft, i); other >= 0) {
                     TextColored(kWarn, "%s", TF("$MTFUI_Spells_DuplicatePreset", other + 1).c_str());
                     if (IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
@@ -256,7 +263,7 @@ namespace mtfui::ui {
                     }
                 }
             }
-            EndChild();
+            EndCard();
             PopID();
             return removed;
         }
@@ -265,31 +272,25 @@ namespace mtfui::ui {
             PushID("dispel");
             if (BeginCard("##card")) {
                 CardHeader(app, game::kTacticalDispel, d.name, T("$MTFUI_Spells_DispelDefaultName"), d == saved, T("$MTFUI_Spells_LearnNeedsSave"), false);
-                Spacing();
-                if (BeginFields()) {
-                    TableNextColumn();
-                    Caption("$MTFUI_Spells_DispelWhat");
-                    TextWrapped("%s", T("$MTFUI_Spells_DispelAbout"));
-
+                TextWrapped("%s", T("$MTFUI_Spells_DispelAbout"));
+                PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2{ 8.0f, 2.0f });
+                if (BeginTable("##dispel_fields", 2, ImGuiTableFlags_SizingStretchSame)) {
                     TableNextColumn();
                     Caption("$MTFUI_Spells_ColCasting");
-                    SetNextItemWidth(-1.0f);
-                    KeyCombo("##cast", d.cast, kCastKeys, static_cast<int>(model::CastType::SelfChannel));
-                    SetNextItemWidth(-1.0f);
-                    KeyCombo("##school", d.school, kSchoolKeys);
-
+                    CastAndSchool(d.cast, d.school, static_cast<int>(model::CastType::SelfChannel));
                     TableNextColumn();
                     Caption("$MTFUI_Spells_ColCostOnly");
                     CostSlider(d.cost, d.cast);
                     EndTable();
                 }
+                PopStyleVar();
             }
-            EndChild();
+            EndCard();
             PopID();
         }
 
         void Gap() {
-            Dummy(ImVec2{ 0.0f, 6.0f });
+            Dummy(ImVec2{ 0.0f, 4.0f });
         }
     }
 
@@ -388,20 +389,26 @@ namespace mtfui::ui {
         SeparatorText(T("$MTFUI_Spells_SpellsSection"));
         if (shown == 0) {
             TextDisabled("%s", T("$MTFUI_Spells_Empty"));
-        }
-        for (int i = 0; i < model::kTacticalSlots; ++i) {
-            if (!g_added[i] && draft.slots[i] == model::TacticalSlot{}) {
-                continue;
+        } else {
+            PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2{ 6.0f, 6.0f });
+            if (BeginTable("##spell_grid", 3, ImGuiTableFlags_SizingStretchSame)) {
+                for (int i = 0; i < model::kTacticalSlots; ++i) {
+                    if (!g_added[i] && draft.slots[i] == model::TacticalSlot{}) {
+                        continue;
+                    }
+                    TableNextColumn();
+                    if (SlotCard(app, i, draft.slots[i], saved.slots[i], draft)) {
+                        draft.slots[i] = {};
+                        g_added[i] = false;
+                    }
+                    if (i == g_scrollTo) {
+                        SetScrollHereY(1.0f);
+                        g_scrollTo = -1;
+                    }
+                }
+                EndTable();
             }
-            if (SlotCard(app, i, draft.slots[i], saved.slots[i], draft)) {
-                draft.slots[i] = {};
-                g_added[i] = false;
-            }
-            if (i == g_scrollTo) {
-                SetScrollHereY(1.0f);
-                g_scrollTo = -1;
-            }
-            Gap();
+            PopStyleVar();
         }
         EndChild();
     }

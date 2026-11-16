@@ -59,10 +59,10 @@ $MTFUI_Lookup_TipSummary	{}, {}, cost {}
 $MTFUI_Lookup_LevelSchool	{} {}
 $MTFUI_Lookup_EffectArea	{} ft area
 $MTFUI_Lookup_EffectDuration	for {} s
-$MTFUI_Lookup_TipConcentration	Concentration: each time it lands is about ten seconds of the spell. Cast a spell and Spell aura pulse that every second while shown; the wearer always pays one second of magicka per pulse (one payment for a whole aura ring). When they can't afford it, pulses pause until magicka recovers.
-$MTFUI_Lookup_TipFireAndForget	Fire and forget: each landing is the whole spell. Cast a spell repeats it on the wearer at the spell's cast time; a Spell aura hits nearby actors every second at half strength.
-$MTFUI_Lookup_TipHarmful	Harmful: a Spell aura hits actors hostile to whoever applied the tattoo, never the wearer.
-$MTFUI_Lookup_TipHelpful	Helpful: lands on the wearer, and a Spell aura also reaches actors who aren't hostile to whoever applied the tattoo.
+$MTFUI_Lookup_TipConcentration	Concentration: every trigger will channel for 10 seconds. Magicka is drained from the caster per pulse. When they can't afford it, pulses pause until magicka recovers.
+$MTFUI_Lookup_TipFireAndForget	Fire and forget: each trigger applies the whole spell. Repeats based on the spell's duration or cast time for the lifetime of the tattoo.
+$MTFUI_Lookup_TipHarmful	Harmful: Cast an Aura hits actors allied with the wearer, but not the wearer themselves.
+$MTFUI_Lookup_TipHelpful	Helpful: Beneficial spell that targets either the wearer or those allied with the wearer.
 $MTFUI_Lookup_CaveatCloak	A cloak counts as helpful, so it goes on the wearer and friendly actors nearby, not on enemies.
 $MTFUI_Lookup_CaveatSummon	Summons and bound weapons are made to come from their caster, and do little when applied to an actor.
 $MTFUI_Lookup_CaveatCorpse	Made for corpses, and tattoo effects only reach living actors.
@@ -629,10 +629,8 @@ $MTFUI_Spells_Revert	Revert
 $MTFUI_Spells_Unsaved	Unsaved changes
 $MTFUI_Spells_ColPreset	Preset
 $MTFUI_Spells_ColCasting	Casting and school
-$MTFUI_Spells_ColCost	Cost and duration
 $MTFUI_Spells_ColCostOnly	Cost
 $MTFUI_Spells_DispelSection	Dispel
-$MTFUI_Spells_DispelWhat	What it does
 $MTFUI_Spells_SpellsSection	Tattoo spells
 $MTFUI_Spells_Empty	No tattoo spells yet. Click New spell to set one up.
 $MTFUI_Spells_New	+ New spell
@@ -655,7 +653,7 @@ $MTFUI_Spells_Destruction	Destruction
 $MTFUI_Spells_Illusion	Illusion
 $MTFUI_Spells_Restoration	Restoration
 $MTFUI_Spells_Hex	Hex
-$MTFUI_Spells_HexTip	When the target can see you, a Hex counts as an attack — they turn hostile, and casting it on a non-enemy can be a crime. While you are sneaking and undetected, the mark lands quietly and they do not know who did it. Harmful tattoo effects such as Cast a spell or Spell aura still credit you when they hit.
+$MTFUI_Spells_HexTip	When the target can see you, a Hex counts as an attack — they turn hostile, and casting it on a non-enemy can be a crime. While you are sneaking and undetected, the mark lands quietly and they do not know who did it. Harmful tattoo effects such as Cast a spell or Cast an aura still credit you when they hit.
 $MTFUI_Spells_Blessing	Blessing
 $MTFUI_Spells_BlessingTip	Friendly: the target does not treat it as an attack, and it is never a crime. Use Blessings on yourself and allies.
 

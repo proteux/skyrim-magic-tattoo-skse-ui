@@ -2,6 +2,22 @@
 
 Versions follow `<major>.<feature>.<patch>`, as described in `AGENTS.md`.
 
+Version 1.8.18
+
+Change: the fire-and-forget tip covers Cast an aura's pulse spacing too (effect duration or cast time), matching Skyrim connector 0.3.9.
+
+Version 1.8.17
+
+Change: spell-picker tips and docs say Cast an aura (was Spell aura), matching MTF Plugin - Skyrim 0.3.8.
+
+Version 1.8.16
+
+Change: the fire-and-forget spell tip matches the Skyrim connector 0.3.7 Cast a spell interval (effect duration when the spell lasts, otherwise cast time). Dropped two unused Spells-tab translation keys left from the 1.8.15 layout.
+
+Version 1.8.15
+
+Change: the Spells tab lays tattoo spells out in a three-column grid with tighter cards (stacked fields, cast and school on one row) so more spells fit on screen.
+
 Version 1.8.14
 
 New: `MagicTattoosUI.GetSlotPreset` and `IsSlotPermanent` for Magic Tattoos Tactical cast scripts. The Spells tab also checks `MTFT_LayoutVersion` from the ESP against the UI's layout fixture, and hides itself if they disagree.
@@ -32,7 +48,7 @@ Change: Magic Tattoos Tactical spells take their hand glow, light, projectile an
 
 Version 1.8.6
 
-New: `MagicTattoosUI.CastAsScaled`, which lands a spell like `CastAs` then multiplies magnitude (used by MTF Plugin - Skyrim Spell aura for half-strength fire-and-forget hits). The spell picker hides awkward spells (cloaks, wards, summons, caster-only, corpse) by default, with a "Show awkward spells" toggle to bring them back.
+New: `MagicTattoosUI.CastAsScaled`, which lands a spell like `CastAs` then multiplies magnitude (used by MTF Plugin - Skyrim Cast an aura for half-strength fire-and-forget hits). The spell picker hides awkward spells (cloaks, wards, summons, caster-only, corpse) by default, with a "Show awkward spells" toggle to bring them back.
 
 Version 1.8.5
 
@@ -44,7 +60,7 @@ Change: `MagicTattoosUI.CastAs` puts the spell's effects on the target in place.
 
 Version 1.8.3
 
-New: a Papyrus function, `MagicTattoosUI.CastAs`, that lands a spell on a target as if an actor cast it, counting that actor's perks and Fortify (School) potions. MTF Plugin - Skyrim 0.3.1 uses it, so a Cast a spell or Spell aura on a Magic Tattoos Tactical hex hits as hard as the caster's own spell. The package now has `Scripts/MagicTattoosUI.pex`.
+New: a Papyrus function, `MagicTattoosUI.CastAs`, that lands a spell on a target as if an actor cast it, counting that actor's perks and Fortify (School) potions. MTF Plugin - Skyrim 0.3.1 uses it, so a Cast a spell or Cast an aura on a Magic Tattoos Tactical hex hits as hard as the caster's own spell. The package now has `Scripts/MagicTattoosUI.pex`.
 
 Version 1.8.2
 
@@ -52,11 +68,11 @@ Change: the spell picker leaves out Magic Tattoos Tactical's own spells. A tier 
 
 Version 1.8.1
 
-Change: the spell picker is a table with each spell's school, level (Novice to Master), type (concentration or fire and forget, and how it's delivered), base magicka cost, and whether it's harmful or helpful. Click a column to sort by it. The search also matches those details, so "adept concentration" or "helpful" narrows the list. Hovering a spell, or the chosen one, shows its effects with magnitude, area, and duration, how it behaves in Cast a spell and Spell aura, and the plugin it comes from. Cloaks, summons, bound weapons, wards, spells for corpses, and spells that only work through their caster, such as Telekinesis and Candlelight, are marked in orange with the reason they work poorly from a tattoo. The plugin name no longer fills each row.
+Change: the spell picker is a table with each spell's school, level (Novice to Master), type (concentration or fire and forget, and how it's delivered), base magicka cost, and whether it's harmful or helpful. Click a column to sort by it. The search also matches those details, so "adept concentration" or "helpful" narrows the list. Hovering a spell, or the chosen one, shows its effects with magnitude, area, and duration, how it behaves in Cast a spell and Cast an aura, and the plugin it comes from. Cloaks, summons, bound weapons, wards, spells for corpses, and spells that only work through their caster, such as Telekinesis and Candlelight, are marked in orange with the reason they work poorly from a tattoo. The plugin name no longer fills each row.
 
 Version 1.8.0
 
-New: a spell picker for plugin effects that take a spell, such as Cast a spell and Spell aura in MTF Plugin - Skyrim. It lists every spell in your load order with its school and plugin, with a search box, a school filter, and a "Known by player" filter. A spell whose plugin has been removed is flagged in the preset's checks.
+New: a spell picker for plugin effects that take a spell, such as Cast a spell and Cast an aura in MTF Plugin - Skyrim. It lists every spell in your load order with its school and plugin, with a search box, a school filter, and a "Known by player" filter. A spell whose plugin has been removed is flagged in the preset's checks.
 
 Version 1.7.1
 
