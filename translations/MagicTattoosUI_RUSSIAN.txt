@@ -21,6 +21,54 @@ $MTFUI_Format_Seconds1_Fmt	%.1f с
 $MTFUI_Format_Milliseconds_Fmt	%d мс
 $MTFUI_Color_Palette	Палитра
 $MTFUI_Param_TextHint	через запятую, пусто = любое
+$MTFUI_Lookup_None	(нет)
+$MTFUI_Lookup_Missing	(отсутствует) {}
+$MTFUI_Lookup_AllSchools	Все школы
+$MTFUI_Lookup_KnownOnly	Известные игроку
+$MTFUI_Lookup_KnownOnlyTip	Только заклинания, которые знает игрок. Нужна загруженная игра.
+$MTFUI_Lookup_ShowAwkward	Показать неудобные заклинания
+$MTFUI_Lookup_ShowAwkwardTip	Обереги, призывы, призванное оружие, заклинания только для заклинателя (Телекинез, Свет свечи) и заклинания для трупов. По умолчанию скрыты: от татуировки они почти ничего не дают или делают не то.
+$MTFUI_Lookup_Reading	Чтение заклинаний игрока...
+$MTFUI_Lookup_NoMatch	Подходящих заклинаний нет
+$MTFUI_Lookup_Count	Заклинаний: {}
+$MTFUI_Lookup_NoSchool	Без школы
+$MTFUI_Lookup_SearchTip	Ищет по названию, школе, уровню, типу, длительности, «Вредное» или «Полезное» и по плагину.
+$MTFUI_Lookup_ColSpell	Заклинание
+$MTFUI_Lookup_ColSchool	Школа
+$MTFUI_Lookup_ColType	Тип
+$MTFUI_Lookup_ColCost	Цена
+$MTFUI_Lookup_ColDuration	Длительность
+$MTFUI_Lookup_ColTargets	Цели
+$MTFUI_Lookup_Novice	Новичок
+$MTFUI_Lookup_Apprentice	Ученик
+$MTFUI_Lookup_Adept	Адепт
+$MTFUI_Lookup_Expert	Эксперт
+$MTFUI_Lookup_Master	Мастер
+$MTFUI_Lookup_Concentration	Концентрация
+$MTFUI_Lookup_FireAndForget	Выстрелил и забыл
+$MTFUI_Lookup_Self	на себя
+$MTFUI_Lookup_Touch	касание
+$MTFUI_Lookup_Aimed	прицельно
+$MTFUI_Lookup_TargetActor	цель — персонаж
+$MTFUI_Lookup_TargetLocation	цель — место
+$MTFUI_Lookup_Type	{}, {}
+$MTFUI_Lookup_CostPerSecond	{}/с
+$MTFUI_Lookup_Harmful	Вредное
+$MTFUI_Lookup_Helpful	Полезное
+$MTFUI_Lookup_TipSummary	{}, {}, цена {}
+$MTFUI_Lookup_LevelSchool	{} {}
+$MTFUI_Lookup_EffectArea	область {} фт
+$MTFUI_Lookup_Duration	{} с
+$MTFUI_Lookup_EffectDuration	на {} с
+$MTFUI_Lookup_TipConcentration	Концентрация: каждое срабатывание направляет заклинание 10 секунд. С заклинателя на каждый импульс списывается Magicka. Когда её не хватает, импульсы приостанавливаются, пока Magicka не восстановится.
+$MTFUI_Lookup_TipFireAndForget	Выстрелил и забыл: каждое срабатывание применяет заклинание целиком. Повторяется в зависимости от длительности или времени сотворения заклинания, пока существует татуировка.
+$MTFUI_Lookup_TipHarmful	Вредное: Cast an aura действует на персонажей на стороне владельца (не на его врагов) и никогда на самого владельца.
+$MTFUI_Lookup_TipHelpful	Полезное: Cast an aura действует на персонажей на стороне владельца (не на его врагов) и никогда на самого владельца.
+$MTFUI_Lookup_CaveatSummon	Призывы и призванное оружие рассчитаны на то, что исходят от заклинателя, и почти ничего не дают при применении к персонажу.
+$MTFUI_Lookup_CaveatCorpse	Сделано для трупов, а эффекты татуировок действуют только на живых персонажей.
+$MTFUI_Lookup_CaveatCasterOnly	Действует через руки или окружение заклинателя и ничего не делает при применении к персонажу.
+$MTFUI_Lookup_CaveatWard	Оберег держится, только пока его творят, поэтому мерцает.
+$MTFUI_Lookup_TipSource	Из {}
 $MTFUI_Severity_Error	Ошибка
 $MTFUI_Severity_Warning	Предупреждение
 $MTFUI_Severity_Note	Заметка
@@ -49,12 +97,16 @@ $MTFUI_Status_MtfDisabled	MTF отключён в своих настройка�
 $MTFUI_Status_PreviewOn	{}: {}
 $MTFUI_Status_LoadingTextures	Загрузка текстур: {}...
 $MTFUI_Status_Shortcuts	Горячие клавиши\nCtrl+S  сохранить\nCtrl+Z / Ctrl+Y  отменить / повторить\nCtrl+N  новый пресет\nCtrl+D  дублировать\nCtrl+F  поиск пресетов\nF5  применить к цели\nAlt+Up / Alt+Down  переместить выбранный уровень
+$MTFUI_Font_Missing	Шрифт меню не умеет рисовать буквы ({}), поэтому это меню на английском. Наведите курсор, чтобы увидеть решение.
+$MTFUI_Font_FixSwitch	В Data/SKSE/Plugins/SKSEMenuFramework.ini задайте {} = true в разделе [Fonts], затем перезапустите игру.
+$MTFUI_Font_FixFont	В Data/SKSE/Plugins/SKSEMenuFramework.ini выберите в разделе [Fonts] PrimaryFont, в котором есть эти буквы, затем перезапустите игру.
 $MTFUI_Status_ShortcutHint	|  Ctrl+S сохранить, Ctrl+Z отменить, F5 применить (наведите, чтобы увидеть все)
 $MTFUI_Tab_Presets	Пресеты
 $MTFUI_Tab_Tattoos	Татуировки
 $MTFUI_Tab_TattoosChoosing	Татуировки (выбор)
 $MTFUI_Tab_General	Общее
 $MTFUI_Tab_Plugins	Плагины
+$MTFUI_Tab_Spells	Заклинания
 $MTFUI_Panels_PickHint	Выберите татуировку на вкладке «Татуировки» в Magic Tattoos > Editor в меню
 $MTFUI_Panels_Peek	Удерживать для просмотра
 $MTFUI_Panels_PeekTip	Скрывает остальные панели, пока вы держите кнопку мыши. Панели перетаскиваются за заголовок; расположение запоминается.
@@ -392,6 +444,77 @@ $MTFUI_Tiers_Base	Основа
 $MTFUI_Tiers_BaseHelp	«По умолчанию» задаёт базовый вид. Уровни, у которых татуировка оставлена «Как в „По умолчанию“», строятся на нём, и он показывается, когда ни один уровень не подходит.
 $MTFUI_Tiers_Header	Уровни (верхний побеждает)
 $MTFUI_Tiers_HeaderHelp	Перетаскивайте уровни, чтобы менять приоритет, или выберите уровень и нажмите Alt+Up / Alt+Down. Правый клик по уровню — копировать, вставить или очистить. Показывается первый уровень с выполненными условиями; если таких нет, действует «По умолчанию».
+$MTFUI_Tiers_Extra	Дополнительные уровни (нет в меню MTF)
+$MTFUI_Tiers_ExtraHelp	MTF проверяет их как любые другие уровни, но в его меню показаны только первые {}, поэтому правьте их здесь. При сохранении из меню MTF они остаются.
+$MTFUI_Tiers_Add	Добавить уровень
+$MTFUI_Gradient_TierName	{} {}
+$MTFUI_Gradient_Open	Градиентные уровни...
+$MTFUI_Gradient_OpenHelp	Строит лесенку уровней из одного значения, например здоровья, чтобы цвет татуировки следовал за ним, как полоска здоровья.
+$MTFUI_Gradient_Title	Градиентные уровни
+$MTFUI_Gradient_Intro	MTF не умеет напрямую сопоставлять значение с цветом, поэтому здесь создаётся по уровню на каждый шаг значения, каждый — оттенок вдоль ваших цветов. Переход пресета плавно смешивает соседние уровни.
+$MTFUI_Gradient_FromSaved	Это настройки, по которым созданы уровни этого пресета.
+$MTFUI_Gradient_FromSavedEdited	Это настройки, по которым созданы уровни этого пресета, но с тех пор уровни изменили. Повторное создание заменит эти изменения.
+$MTFUI_Gradient_FromTiers	Настройки считаны из уровней этого пресета. Цвета берутся с концов и из середины диапазона, поэтому проверьте их перед повторным созданием уровней.
+$MTFUI_Gradient_Condition	Значение
+$MTFUI_Gradient_NoCondition	Ни у одного установленного условия нет ползунка порога.
+$MTFUI_Gradient_Below	Ниже (уровень 1 = самый низкий)
+$MTFUI_Gradient_Above	Не ниже (уровень 1 = самый высокий)
+$MTFUI_Gradient_DirectionHelp	В какую сторону условие сравнивает. «Ниже % здоровья» — это Ниже; «Выше % здоровья» — это Не ниже. Цвета получаются одинаковые; нужно лишь, чтобы это совпадало с условием.
+$MTFUI_Gradient_Range	Диапазон
+$MTFUI_Gradient_From_Fmt	от %d
+$MTFUI_Gradient_To_Fmt	до %d
+$MTFUI_Gradient_Steps	Уровни
+$MTFUI_Gradient_StepsInfo	Уровней: {} плюс «По умолчанию», примерно {} каждый
+$MTFUI_Gradient_PastMenu	В меню MTF показаны только первые {} уровней. Остальные работают; правьте их здесь.
+$MTFUI_Gradient_TintSection	Оттенок
+$MTFUI_Gradient_GlowSection	Свечение
+$MTFUI_Gradient_ColorsHelp	От нижнего края диапазона (сверху, слева на полоске) к верхнему. От двух до четырёх цветов, равномерно. Если выключено, уровни сохраняют цвет «По умолчанию».
+$MTFUI_Gradient_SameAsTint	Как оттенок
+$MTFUI_Gradient_RemoveColor	Убрать
+$MTFUI_Gradient_AddColor	Добавить цвет
+$MTFUI_Gradient_Reverse	Развернуть
+$MTFUI_Gradient_Swap	Поменять
+$MTFUI_Gradient_SwapTip	Поменять местами значения нижнего и верхнего краёв
+$MTFUI_Gradient_HealthBar	Полоска здоровья
+$MTFUI_Gradient_Tint	Менять оттенок
+$MTFUI_Gradient_Emissive	Менять цвет свечения
+$MTFUI_Gradient_Glow	Нарастание силы свечения
+$MTFUI_Gradient_GlowHelp	Сила свечения на каждом краю диапазона. Цвет свечения виден только при ненулевой силе; остальные настройки слоя берутся из «По умолчанию».
+$MTFUI_Gradient_LowEnd_Fmt	нижний край %.1f
+$MTFUI_Gradient_HighEnd_Fmt	верхний край %.1f
+$MTFUI_Gradient_Opacity	Нарастание непрозрачности
+$MTFUI_Gradient_LowEndPct_Fmt	нижний край %d%%
+$MTFUI_Gradient_HighEndPct_Fmt	верхний край %d%%
+$MTFUI_Gradient_PulseSection	Пульсация
+$MTFUI_Gradient_PulseHelp	Меняет пульсацию вдоль диапазона, как сердцебиение, которое учащается по мере падения здоровья. Если выключено, уровни сохраняют пульсацию «По умолчанию». MTF может перезапускать пульсацию при смене уровня, поэтому меньше более широких уровней могут выглядеть плавнее.
+$MTFUI_Gradient_PulseSpeed	Нарастание скорости
+$MTFUI_Gradient_PulseDepth	Нарастание глубины
+$MTFUI_Gradient_PulsePause	Нарастание паузы
+$MTFUI_Gradient_LowEndRate_Fmt	нижний край %.2f/с
+$MTFUI_Gradient_HighEndRate_Fmt	верхний край %.2f/с
+$MTFUI_Gradient_LowEndSec_Fmt	нижний край %.1f с
+$MTFUI_Gradient_HighEndSec_Fmt	верхний край %.1f с
+$MTFUI_Gradient_LowShape	Другая форма на нижнем краю
+$MTFUI_Gradient_LowShapeHelp	Уровни в самой нижней части диапазона используют эту форму пульсации; остальные сохраняют форму «По умолчанию».
+$MTFUI_Gradient_LowShapeUpTo_Fmt	нижние %d%%
+$MTFUI_Gradient_PulseNoGlow	Пульсация анимирует только свечение, а у «По умолчанию» нет силы свечения. Включите нарастание силы свечения или задайте «По умолчанию» немного свечения.
+$MTFUI_Gradient_EffectsSection	Эффекты
+$MTFUI_Gradient_EffectsHelp	Даёт каждому уровню эти эффекты, причём каждый ползунок и цвет задаётся вдоль диапазона: например, масштаб персонажа в RaceMenu растёт со 100% до 150% по мере падения здоровья, а цвет волос меняется с каштанового на белый. Цвета плавно переходят от цвета нижнего края к цвету верхнего. Меню и прочие настройки одинаковы на каждом уровне. Эффекты каждого уровня работают, пока он показан, поэтому значение меняется скачками от уровня к уровню; эффекты со своим переходом, как у RaceMenu, плавно сглаживают шаги.
+$MTFUI_Gradient_AddEffect	Добавить эффект
+$MTFUI_Gradient_LowEndParam	нижний край: {}
+$MTFUI_Gradient_HighEndParam	верхний край: {}
+$MTFUI_Gradient_LowEndColor	Нижний край
+$MTFUI_Gradient_HighEndColor	Верхний край
+$MTFUI_Gradient_EffectsOnDefault	«По умолчанию» тоже получает их
+$MTFUI_Gradient_EffectsOnDefaultHelp	«По умолчанию» показывается за пределами уровней, на своём краю диапазона. Если включено, он получает каждый эффект на этом краю, заменяя уже имеющийся эффект того же вида. Если выключено, эффекты «По умолчанию» остаются как есть, поэтому за пределами уровней эффекты прекращаются.
+$MTFUI_Gradient_TransitionHint	Переход короткий, поэтому цвет прыгает от уровня к уровню. Секунда-две сделают его плавным.
+$MTFUI_Gradient_SetTransition	Задать переход 1 с
+$MTFUI_Gradient_Replaces	Заменяет все уровни. «По умолчанию» сохраняет свою татуировку и эффекты. Отмена вернёт их.
+$MTFUI_Gradient_ReplacesWithDefaultEffects	Заменяет все уровни. «По умолчанию» сохраняет свою татуировку и прочие эффекты и получает эффекты выше. Отмена вернёт их.
+$MTFUI_Gradient_Create	Создать уровни
+$MTFUI_Toast_GradientMade	Создано градиентных уровней: {}. Сохраните, чтобы оставить их.
+$MTFUI_Tiers_AddHelp	Добавляет уровень внизу. В меню MTF показано уровней: {}; сам MTF проверяет до {} (iMaxConditions в MagicTattoosFramework.ini).
+$MTFUI_Tiers_AddFull	MTF проверяет не более {} уровней. Увеличьте iMaxConditions в Data/SKSE/Plugins/MagicTattoosFramework.ini и перезапустите игру, чтобы получить больше.
 $MTFUI_Header_Revert	Вернуть
 $MTFUI_Header_Undo	Отменить
 $MTFUI_Header_Redo	Повторить
@@ -439,10 +562,13 @@ $MTFUI_Lint_NotAnOption	{}: «{}» — недопустимый вариант �
 $MTFUI_Lint_BadFileName	Имя файла должно состоять из 1–32 латинских букв, цифр, «_» или «-»
 $MTFUI_Lint_NoDisplayName	Отображаемое имя пустое; MTF покажет имя файла
 $MTFUI_Lint_NoCondition	У «{}» есть внешний вид или эффекты, но нет условия, поэтому он никогда не включится
+$MTFUI_Lint_PastLimit	{} находится за пределом {} уровней, которые проверяет MTF, поэтому никогда не сработает. Увеличьте iMaxConditions в MagicTattoosFramework.ini.
 $MTFUI_Lint_Shadowed	«{}» никогда не включится: «{}» стоит выше в списке и всегда срабатывает первым. Поднимите его.
 $MTFUI_Lint_ConditionMissing	Условие «{}» не установлено; этот уровень не включится
 $MTFUI_Lint_ConditionDisabled	{} выключен в MTF; «{}» никогда не будет истинным
 $MTFUI_Lint_EmptyText	{}: текст пустой, обычно это совпадает с чем угодно
+$MTFUI_Lint_LookupEmpty	{}: не выбрано ({}), поэтому ничего не делает
+$MTFUI_Lint_LookupMissing	{}: «{}» нет в этой игре. Возможно, его плагин удалили
 $MTFUI_Lint_PackMissing	Пак татуировок «{}» не установлен
 $MTFUI_Lint_NoEntry	Пак выбран, а татуировка нет; ничего не будет показано
 $MTFUI_Lint_EntryMissing	Татуировки «{}» нет в паке {}
@@ -497,3 +623,62 @@ $MTFUI_Tattoos_TextureFiles	Файлы текстур
 $MTFUI_Tattoos_NewPresetTitle	Новый пресет из татуировки
 $MTFUI_Tattoos_DefaultLook	Вид «По умолчанию»: {} ({})
 $MTFUI_Tattoos_UnsavedWarning	Вас спросят, что делать с несохранёнными изменениями открытого пресета.
+$MTFUI_Spells_Intro	Заклинания из Magic Tattoos Tactical. Каждое накладывает пресет на того, в кого попадает, как проклятие или благословение; что он делает в игре, определяют эффекты уровней пресета. Сохраните, затем выучите заклинания, которые должен знать этот персонаж.
+$MTFUI_Spells_Save	Сохранить заклинания
+$MTFUI_Spells_Revert	Откатить
+$MTFUI_Spells_Unsaved	Несохранённые изменения
+$MTFUI_Spells_ColPreset	Пресет
+$MTFUI_Spells_ColCasting	Сотворение и школа
+$MTFUI_Spells_ColCostOnly	Цена
+$MTFUI_Spells_DispelSection	Рассеивание
+$MTFUI_Spells_SpellsSection	Заклинания-татуировки
+$MTFUI_Spells_Empty	Заклинаний-татуировок пока нет. Нажмите «Новое заклинание», чтобы создать.
+$MTFUI_Spells_New	+ Новое заклинание
+$MTFUI_Spells_FullTip	Все заклинания заняты. Уберите одно, чтобы создать другое.
+$MTFUI_Spells_Count	{} из {} заклинаний
+$MTFUI_Spells_Remove	Убрать
+$MTFUI_Spells_RemoveTip	Очищает это заклинание. После сохранения этот персонаж забудет его, если знает.
+$MTFUI_Spells_DefaultName	Заклинание-татуировка {}
+$MTFUI_Spells_DispelDefaultName	Снять татуировки
+$MTFUI_Spells_DispelAbout	Убирает все татуировки, которые эти заклинания наложили на цель, в том числе постоянные. Пресеты, которые на ней из других источников, остаются.
+$MTFUI_Spells_NoPreset	(нет пресета)
+$MTFUI_Spells_PresetMissing	Этого пресета больше нет
+$MTFUI_Spells_CastSelf	На себя
+$MTFUI_Spells_CastSelfChannel	На себя, с удержанием
+$MTFUI_Spells_CastTouch	Касание, с удержанием
+$MTFUI_Spells_CastRanged	На расстоянии
+$MTFUI_Spells_Alteration	Изменение
+$MTFUI_Spells_Conjuration	Колдовство
+$MTFUI_Spells_Destruction	Разрушение
+$MTFUI_Spells_Illusion	Иллюзия
+$MTFUI_Spells_Restoration	Восстановление
+$MTFUI_Spells_Hex	Проклятие
+$MTFUI_Spells_HexTip	Считается атакой. Пока вы крадётесь и вас не заметили, метка ложится тихо, и цель не знает, кто это сделал.
+$MTFUI_Spells_Blessing	Благословение
+$MTFUI_Spells_BlessingTip	Никогда не считается атакой и никогда не является преступлением.
+$MTFUI_Spells_Cost_Fmt	%d Magicka
+$MTFUI_Spells_CostPerSecond_Fmt	%d Magicka в секунду
+$MTFUI_Spells_CostTip	До перков школы, снижающих цену. Ctrl+щелчок, чтобы ввести значение.
+$MTFUI_Spells_Permanent	Постоянно
+$MTFUI_Spells_PermanentTip	Татуировка остаётся, пока её не снимет «Снять татуировки» или носитель не умрёт.
+$MTFUI_Spells_Decay_Fmt	Длится %.0f с
+$MTFUI_Spells_DecayTip	Сколько татуировка держится после попадания. Повторное сотворение сбрасывает время.
+$MTFUI_Spells_DecayChannelTip	Сколько татуировка держится после окончания удержания. Пока вы удерживаете, она остаётся.
+$MTFUI_Spells_NoGame	Загрузите игру, чтобы учить заклинания
+$MTFUI_Spells_Reading	Чтение...
+$MTFUI_Spells_Known	Известно
+$MTFUI_Spells_NotKnown	Неизвестно
+$MTFUI_Spells_Learn	Выучить
+$MTFUI_Spells_Forget	Забыть
+$MTFUI_Spells_LearnNeedsPreset	Сначала выберите пресет и сохраните.
+$MTFUI_Spells_LearnNeedsSave	Сначала сохраните изменения.
+$MTFUI_Spells_DuplicatePreset	Тот же пресет, что у заклинания {}
+$MTFUI_Spells_DuplicatePresetTip	Два заклинания могут делить один пресет, но татуировкой владеет то, что сотворено последним. Снимает её его таймер или рассеивание.
+$MTFUI_Toast_SpellsSaved	Заклинания сохранены
+$MTFUI_Toast_SpellsSaveFailed	Не удалось сохранить заклинания: {}
+$MTFUI_Toast_SpellLearned	Выучено: {}. Экипируйте из меню магии.
+$MTFUI_Toast_SpellForgotten	Забыто: {}
+$MTFUI_Toast_SpellForgottenOne	Забыто заклинание, пресет которого очищен. Экипируйте из меню магии, если выучите его снова.
+$MTFUI_Toast_SpellForgottenN	Забыто заклинаний с очищенными пресетами: {}.
+$MTFUI_Toast_SpellSwappedOne	Тип сотворения изменён: экипируйте заклинание из меню магии снова (избранное и горячие клавиши сброшены).
+$MTFUI_Toast_SpellSwappedN	Тип сотворения изменён у заклинаний: {}. Экипируйте их из меню магии снова (избранное и горячие клавиши сброшены).

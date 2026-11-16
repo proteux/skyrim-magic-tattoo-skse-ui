@@ -2,6 +2,10 @@
 
 Versions follow `<major>.<feature>.<patch>`, as described in `AGENTS.md`.
 
+Version 1.8.25
+
+Change: French, German, Italian, Spanish, and Russian translations catch up with English (spell lookup, Spells tab, gradient tiers, and related tips).
+
 Version 1.8.24
 
 Change: the Spells tab Save / Revert / New bar sits under the list with a top border and padding.

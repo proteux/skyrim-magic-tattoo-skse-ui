@@ -21,6 +21,54 @@ $MTFUI_Format_Seconds1_Fmt	%.1f s
 $MTFUI_Format_Milliseconds_Fmt	%d ms
 $MTFUI_Color_Palette	Palette
 $MTFUI_Param_TextHint	kommagetrennt, leer = alles
+$MTFUI_Lookup_None	(keine)
+$MTFUI_Lookup_Missing	(fehlt) {}
+$MTFUI_Lookup_AllSchools	Alle Schulen
+$MTFUI_Lookup_KnownOnly	Dem Spieler bekannt
+$MTFUI_Lookup_KnownOnlyTip	Nur Zauber, die der Spieler kennt. Benötigt ein geladenes Spiel.
+$MTFUI_Lookup_ShowAwkward	Unpraktische Zauber anzeigen
+$MTFUI_Lookup_ShowAwkwardTip	Schutzzauber, Beschwörungen, gebundene Waffen, Zauber nur für den Zaubernden (Telekinese, Kerzenlicht) und Leichenzauber. Standardmäßig ausgeblendet, weil sie als Tattoo wenig oder das Falsche bewirken.
+$MTFUI_Lookup_Reading	Zauber des Spielers werden gelesen...
+$MTFUI_Lookup_NoMatch	Keine passenden Zauber
+$MTFUI_Lookup_Count	{} Zauber
+$MTFUI_Lookup_NoSchool	Keine Schule
+$MTFUI_Lookup_SearchTip	Sucht in Name, Schule, Stufe, Typ, Dauer, Schädlich oder Nützlich und im Plugin.
+$MTFUI_Lookup_ColSpell	Zauber
+$MTFUI_Lookup_ColSchool	Schule
+$MTFUI_Lookup_ColType	Typ
+$MTFUI_Lookup_ColCost	Kosten
+$MTFUI_Lookup_ColDuration	Dauer
+$MTFUI_Lookup_ColTargets	Ziele
+$MTFUI_Lookup_Novice	Neuling
+$MTFUI_Lookup_Apprentice	Lehrling
+$MTFUI_Lookup_Adept	Adept
+$MTFUI_Lookup_Expert	Experte
+$MTFUI_Lookup_Master	Meister
+$MTFUI_Lookup_Concentration	Konzentration
+$MTFUI_Lookup_FireAndForget	Einmalwurf
+$MTFUI_Lookup_Self	selbst
+$MTFUI_Lookup_Touch	Berührung
+$MTFUI_Lookup_Aimed	gezielt
+$MTFUI_Lookup_TargetActor	Zielperson
+$MTFUI_Lookup_TargetLocation	Zielort
+$MTFUI_Lookup_Type	{}, {}
+$MTFUI_Lookup_CostPerSecond	{}/s
+$MTFUI_Lookup_Harmful	Schädlich
+$MTFUI_Lookup_Helpful	Nützlich
+$MTFUI_Lookup_TipSummary	{}, {}, Kosten {}
+$MTFUI_Lookup_LevelSchool	{} {}
+$MTFUI_Lookup_EffectArea	Bereich {} ft
+$MTFUI_Lookup_Duration	{} s
+$MTFUI_Lookup_EffectDuration	für {} s
+$MTFUI_Lookup_TipConcentration	Konzentration: Jeder Auslöser kanalisiert 10 Sekunden lang. Pro Impuls wird dem Zaubernden Magicka entzogen. Reicht sie nicht, pausieren die Impulse, bis sich die Magicka erholt.
+$MTFUI_Lookup_TipFireAndForget	Einmalwurf: Jeder Auslöser wendet den ganzen Zauber an. Wiederholt sich je nach Dauer oder Zauberzeit des Zaubers, solange das Tattoo besteht.
+$MTFUI_Lookup_TipHarmful	Schädlich: Cast an aura trifft Akteure auf der Seite des Trägers (nicht dessen Feinde), nie den Träger selbst.
+$MTFUI_Lookup_TipHelpful	Nützlich: Cast an aura trifft Akteure auf der Seite des Trägers (nicht dessen Feinde), nie den Träger selbst.
+$MTFUI_Lookup_CaveatSummon	Beschwörungen und gebundene Waffen sind dafür gemacht, vom Zaubernden auszugehen, und bewirken auf einem Akteur kaum etwas.
+$MTFUI_Lookup_CaveatCorpse	Für Leichen gemacht, und Tattoo-Effekte erreichen nur lebende Akteure.
+$MTFUI_Lookup_CaveatCasterOnly	Wirkt über die Hände oder die Umgebung des Zaubernden und tut nichts, wenn er auf einen Akteur angewendet wird.
+$MTFUI_Lookup_CaveatWard	Ein Schutzzauber hält nur, solange er gewirkt wird, und flackert daher.
+$MTFUI_Lookup_TipSource	Von {}
 $MTFUI_Severity_Error	Fehler
 $MTFUI_Severity_Warning	Warnung
 $MTFUI_Severity_Note	Hinweis
@@ -49,12 +97,16 @@ $MTFUI_Status_MtfDisabled	MTF ist in seinen Einstellungen deaktiviert. Tattoos w
 $MTFUI_Status_PreviewOn	{} auf {}
 $MTFUI_Status_LoadingTextures	Lade {} Textur(en)...
 $MTFUI_Status_Shortcuts	Tastenkürzel\nStrg+S  speichern\nStrg+Z / Strg+Y  rückgängig / wiederholen\nStrg+N  neues Preset\nStrg+D  duplizieren\nStrg+F  Presets suchen\nF5  auf Ziel anwenden\nAlt+Hoch / Alt+Runter  gewählte Stufe verschieben
+$MTFUI_Font_Missing	Die Menüschrift kann {}-Buchstaben nicht darstellen, daher ist dieses Menü auf Englisch. Für die Lösung mit der Maus darüberfahren.
+$MTFUI_Font_FixSwitch	Setze in Data/SKSE/Plugins/SKSEMenuFramework.ini unter [Fonts] {} = true und starte das Spiel neu.
+$MTFUI_Font_FixFont	Wähle in Data/SKSE/Plugins/SKSEMenuFramework.ini unter [Fonts] eine PrimaryFont mit diesen Buchstaben und starte das Spiel neu.
 $MTFUI_Status_ShortcutHint	|  Strg+S speichern, Strg+Z rückgängig, F5 anwenden (für mehr darüberfahren)
 $MTFUI_Tab_Presets	Presets
 $MTFUI_Tab_Tattoos	Tattoos
 $MTFUI_Tab_TattoosChoosing	Tattoos (Auswahl)
 $MTFUI_Tab_General	Allgemein
 $MTFUI_Tab_Plugins	Plugins
+$MTFUI_Tab_Spells	Zauber
 $MTFUI_Panels_PickHint	Wähle das Tattoo im Tab Tattoos von Magic Tattoos > Editor im Menü
 $MTFUI_Panels_Peek	Halten zum Durchsehen
 $MTFUI_Panels_PeekTip	Blendet die anderen Panels aus, solange du die Maustaste gedrückt hältst. Ziehe Panels an ihrer Titelleiste, um sie zu verschieben; die Anordnung wird gespeichert.
@@ -392,6 +444,77 @@ $MTFUI_Tiers_Base	Basis
 $MTFUI_Tiers_BaseHelp	Standard legt das Grundaussehen fest. Stufen, deren Tattoo auf "Wie Standard" steht, bauen darauf auf, und es wird gezeigt, wenn keine Stufe zutrifft.
 $MTFUI_Tiers_Header	Stufen (oben gewinnt)
 $MTFUI_Tiers_HeaderHelp	Ziehe Stufen, um die Priorität zu ändern, oder wähle eine aus und drücke Alt+Hoch / Alt+Runter. Rechtsklick auf eine Stufe, um sie zu kopieren, einzufügen oder zu leeren. Die erste Stufe, deren Bedingungen wahr sind, wird gezeigt; Standard gilt, wenn keine wahr ist.
+$MTFUI_Tiers_Extra	Zusätzliche Stufen (nicht in MTFs Menü)
+$MTFUI_Tiers_ExtraHelp	MTF prüft diese wie jede andere Stufe, zeigt in seinem eigenen Menü aber nur die ersten {}, daher werden sie hier bearbeitet. Beim Speichern aus MTFs Menü bleiben sie erhalten.
+$MTFUI_Tiers_Add	Stufe hinzufügen
+$MTFUI_Gradient_TierName	{} {}
+$MTFUI_Gradient_Open	Verlaufsstufen...
+$MTFUI_Gradient_OpenHelp	Erstellt aus einem Wert, etwa der Gesundheit, eine Leiter aus Stufen, sodass die Tattoo-Farbe ihm wie eine Lebensleiste folgt.
+$MTFUI_Gradient_Title	Verlaufsstufen
+$MTFUI_Gradient_Intro	MTF kann einen Wert nicht direkt auf eine Farbe abbilden, daher entsteht hier pro Wertschritt eine Stufe, jeweils ein Farbton entlang deiner Farben. Der Übergang des Presets blendet zwischen benachbarten Stufen über.
+$MTFUI_Gradient_FromSaved	Das sind die Einstellungen, mit denen die Stufen dieses Presets erstellt wurden.
+$MTFUI_Gradient_FromSavedEdited	Das sind die Einstellungen, mit denen die Stufen dieses Presets erstellt wurden, aber die Stufen wurden seitdem geändert. Neues Erstellen ersetzt diese Änderungen.
+$MTFUI_Gradient_FromTiers	Aus den Stufen dieses Presets gelesene Einstellungen. Die Farben stammen von den Enden und der Mitte des Bereichs, prüfe sie also, bevor du die Stufen neu erstellst.
+$MTFUI_Gradient_Condition	Wert
+$MTFUI_Gradient_NoCondition	Keine installierte Bedingung hat einen Schwellenwert-Regler.
+$MTFUI_Gradient_Below	Unter (Stufe 1 = niedrigste)
+$MTFUI_Gradient_Above	Ab (Stufe 1 = höchste)
+$MTFUI_Gradient_DirectionHelp	In welche Richtung die Bedingung vergleicht. „Unter Gesundheit %“ ist Unter; „Über Gesundheit %“ ist Ab. Beides ergibt dieselben Farben; es muss nur zur Bedingung passen.
+$MTFUI_Gradient_Range	Bereich
+$MTFUI_Gradient_From_Fmt	von %d
+$MTFUI_Gradient_To_Fmt	bis %d
+$MTFUI_Gradient_Steps	Stufen
+$MTFUI_Gradient_StepsInfo	{} Stufen plus Standard, je etwa {}
+$MTFUI_Gradient_PastMenu	MTFs eigenes Menü zeigt nur die ersten {} Stufen. Der Rest funktioniert; bearbeite sie hier.
+$MTFUI_Gradient_TintSection	Tönung
+$MTFUI_Gradient_GlowSection	Leuchten
+$MTFUI_Gradient_ColorsHelp	Vom unteren Ende des Bereichs (oben, links im Streifen) bis zum oberen Ende. Zwei bis vier Farben, gleichmäßig verteilt. Ausgeschaltet behalten die Stufen die Farbe von Standard.
+$MTFUI_Gradient_SameAsTint	Wie Tönung
+$MTFUI_Gradient_RemoveColor	Entfernen
+$MTFUI_Gradient_AddColor	Farbe hinzufügen
+$MTFUI_Gradient_Reverse	Umkehren
+$MTFUI_Gradient_Swap	Tauschen
+$MTFUI_Gradient_SwapTip	Unteren und oberen Wert vertauschen
+$MTFUI_Gradient_HealthBar	Lebensleiste
+$MTFUI_Gradient_Tint	Tönung ändern
+$MTFUI_Gradient_Emissive	Leuchtfarbe ändern
+$MTFUI_Gradient_Glow	Leuchtstärke-Verlauf
+$MTFUI_Gradient_GlowHelp	Leuchtstärke an jedem Ende des Bereichs. Eine Leuchtfarbe ist nur mit etwas Stärke sichtbar; die übrigen Ebeneneinstellungen kommen von Standard.
+$MTFUI_Gradient_LowEnd_Fmt	unteres Ende %.1f
+$MTFUI_Gradient_HighEnd_Fmt	oberes Ende %.1f
+$MTFUI_Gradient_Opacity	Deckkraft-Verlauf
+$MTFUI_Gradient_LowEndPct_Fmt	unteres Ende %d%%
+$MTFUI_Gradient_HighEndPct_Fmt	oberes Ende %d%%
+$MTFUI_Gradient_PulseSection	Puls
+$MTFUI_Gradient_PulseHelp	Lässt den Puls über den Bereich ansteigen, wie ein Herzschlag, der mit sinkender Gesundheit schneller wird. Aus behalten die Stufen den Puls von Standard. MTF startet den Puls beim Stufenwechsel eventuell neu, daher können weniger, breitere Stufen flüssiger wirken.
+$MTFUI_Gradient_PulseSpeed	Tempo-Verlauf
+$MTFUI_Gradient_PulseDepth	Tiefen-Verlauf
+$MTFUI_Gradient_PulsePause	Pausen-Verlauf
+$MTFUI_Gradient_LowEndRate_Fmt	unteres Ende %.2f/s
+$MTFUI_Gradient_HighEndRate_Fmt	oberes Ende %.2f/s
+$MTFUI_Gradient_LowEndSec_Fmt	unteres Ende %.1f s
+$MTFUI_Gradient_HighEndSec_Fmt	oberes Ende %.1f s
+$MTFUI_Gradient_LowShape	Andere Form am unteren Ende
+$MTFUI_Gradient_LowShapeHelp	Stufen im untersten Teil des Bereichs nutzen diese Pulsform; die übrigen behalten die von Standard.
+$MTFUI_Gradient_LowShapeUpTo_Fmt	unterste %d%%
+$MTFUI_Gradient_PulseNoGlow	Der Puls animiert nur das Leuchten, und Standard hat keine Leuchtstärke. Schalte den Leuchtstärke-Verlauf ein oder gib Standard etwas Leuchten.
+$MTFUI_Gradient_EffectsSection	Effekte
+$MTFUI_Gradient_EffectsHelp	Gibt jeder Stufe diese Effekte, wobei jeder Regler und jede Farbe entlang des Bereichs gesetzt wird, etwa RaceMenus Akteursgröße, die mit sinkender Gesundheit von 100 % auf 150 % wächst, oder seine Haarfarbe, die von Braun zu Weiß wechselt. Farben gehen vom Farbton des unteren zu dem des oberen Endes über. Menüs und andere Einstellungen sind auf jeder Stufe gleich. Die Effekte jeder Stufe laufen, solange sie aktiv ist, der Wert springt also von Stufe zu Stufe; Effekte mit eigenem Übergang, wie bei RaceMenu, gleiten zwischen den Schritten.
+$MTFUI_Gradient_AddEffect	Effekt hinzufügen
+$MTFUI_Gradient_LowEndParam	unteres Ende {}
+$MTFUI_Gradient_HighEndParam	oberes Ende {}
+$MTFUI_Gradient_LowEndColor	Unteres Ende
+$MTFUI_Gradient_HighEndColor	Oberes Ende
+$MTFUI_Gradient_EffectsOnDefault	Standard bekommt sie auch
+$MTFUI_Gradient_EffectsOnDefaultHelp	Standard wird außerhalb der Stufen an seinem Ende des Bereichs angezeigt. Ein: Es bekommt an diesem Ende jeden Effekt und ersetzt einen gleichartigen, den es schon hat. Aus: Die Effekte von Standard bleiben wie sie sind, daher enden die Effekte außerhalb der Stufen.
+$MTFUI_Gradient_TransitionHint	Der Übergang ist kurz, daher springt die Farbe von Stufe zu Stufe. Etwa eine Sekunde lässt sie gleiten.
+$MTFUI_Gradient_SetTransition	Übergang auf 1 s setzen
+$MTFUI_Gradient_Replaces	Ersetzt alle Stufen. Standard behält sein Tattoo und seine Effekte. Rückgängig bringt sie zurück.
+$MTFUI_Gradient_ReplacesWithDefaultEffects	Ersetzt alle Stufen. Standard behält sein Tattoo und seine anderen Effekte und bekommt die obigen Effekte. Rückgängig bringt sie zurück.
+$MTFUI_Gradient_Create	Stufen erstellen
+$MTFUI_Toast_GradientMade	{} Verlaufsstufen erstellt. Speichern, um sie zu behalten.
+$MTFUI_Tiers_AddHelp	Fügt unten eine Stufe hinzu. MTFs Menü zeigt {} Stufen; MTF selbst prüft bis zu {} (iMaxConditions in MagicTattoosFramework.ini).
+$MTFUI_Tiers_AddFull	MTF prüft höchstens {} Stufen. Erhöhe iMaxConditions in Data/SKSE/Plugins/MagicTattoosFramework.ini und starte das Spiel neu, um mehr zu erhalten.
 $MTFUI_Header_Revert	Zurücksetzen
 $MTFUI_Header_Undo	Rückgängig
 $MTFUI_Header_Redo	Wiederholen
@@ -439,10 +562,13 @@ $MTFUI_Lint_NotAnOption	{}: '{}' ist keine Option für {}
 $MTFUI_Lint_BadFileName	Der Dateiname muss aus 1-32 Buchstaben, Ziffern, '_' oder '-' bestehen
 $MTFUI_Lint_NoDisplayName	Anzeigename ist leer; MTF zeigt den Dateinamen
 $MTFUI_Lint_NoCondition	{} hat ein Aussehen oder Effekte, aber keine Bedingung, und wird daher nie aktiv
+$MTFUI_Lint_PastLimit	{} liegt hinter den {} Stufen, die MTF prüft, und wird daher nie aktiv. Erhöhe iMaxConditions in MagicTattoosFramework.ini.
 $MTFUI_Lint_Shadowed	{} kann nie aktiv werden: {} steht weiter oben in der Liste und trifft immer zuerst zu. Schiebe sie nach oben.
 $MTFUI_Lint_ConditionMissing	Bedingung '{}' ist nicht installiert; diese Stufe wird nicht aktiv
 $MTFUI_Lint_ConditionDisabled	{} ist in MTF deaktiviert; '{}' wird nie wahr
 $MTFUI_Lint_EmptyText	{}: Text ist leer, was meist auf alles zutrifft
+$MTFUI_Lint_LookupEmpty	{}: kein {} gewählt, daher passiert nichts
+$MTFUI_Lint_LookupMissing	{}: '{}' ist in diesem Spiel nicht vorhanden. Das Plugin wurde vielleicht entfernt
 $MTFUI_Lint_PackMissing	Tattoo-Paket '{}' ist nicht installiert
 $MTFUI_Lint_NoEntry	Ein Paket ist gewählt, aber kein Tattoo; es wird nichts angezeigt
 $MTFUI_Lint_EntryMissing	Tattoo '{}' fehlt in {}
@@ -497,3 +623,62 @@ $MTFUI_Tattoos_TextureFiles	Texturdateien
 $MTFUI_Tattoos_NewPresetTitle	Neues Preset aus Tattoo
 $MTFUI_Tattoos_DefaultLook	Standard-Aussehen: {} ({})
 $MTFUI_Tattoos_UnsavedWarning	Du wirst gefragt, was mit den ungespeicherten Änderungen am geöffneten Preset geschehen soll.
+$MTFUI_Spells_Intro	Zauber aus Magic Tattoos Tactical. Jeder legt ein Preset auf den Getroffenen, als Fluch oder Segen; was es im Spiel bewirkt, kommt von den Stufeneffekten des Presets. Speichere, dann lerne die Zauber, die dieser Charakter kennen soll.
+$MTFUI_Spells_Save	Zauber speichern
+$MTFUI_Spells_Revert	Zurücksetzen
+$MTFUI_Spells_Unsaved	Ungespeicherte Änderungen
+$MTFUI_Spells_ColPreset	Preset
+$MTFUI_Spells_ColCasting	Wirkweise und Schule
+$MTFUI_Spells_ColCostOnly	Kosten
+$MTFUI_Spells_DispelSection	Bannen
+$MTFUI_Spells_SpellsSection	Tattoo-Zauber
+$MTFUI_Spells_Empty	Noch keine Tattoo-Zauber. Klicke auf Neuer Zauber, um einen einzurichten.
+$MTFUI_Spells_New	+ Neuer Zauber
+$MTFUI_Spells_FullTip	Alle Zauber sind belegt. Entferne einen, um einen anderen einzurichten.
+$MTFUI_Spells_Count	{} von {} Zaubern
+$MTFUI_Spells_Remove	Entfernen
+$MTFUI_Spells_RemoveTip	Leert diesen Zauber. Nach dem Speichern vergisst dieser Charakter ihn, falls er ihn kennt.
+$MTFUI_Spells_DefaultName	Tattoo-Zauber {}
+$MTFUI_Spells_DispelDefaultName	Tattoos bannen
+$MTFUI_Spells_DispelAbout	Entfernt jedes Tattoo, das diese Zauber auf das Ziel gelegt haben, auch dauerhafte. Presets, die es von anderswo trägt, bleiben bestehen.
+$MTFUI_Spells_NoPreset	(kein Preset)
+$MTFUI_Spells_PresetMissing	Dieses Preset existiert nicht mehr
+$MTFUI_Spells_CastSelf	Selbst
+$MTFUI_Spells_CastSelfChannel	Selbst, kanalisiert
+$MTFUI_Spells_CastTouch	Berührung, kanalisiert
+$MTFUI_Spells_CastRanged	Fernkampf
+$MTFUI_Spells_Alteration	Veränderung
+$MTFUI_Spells_Conjuration	Beschwörung
+$MTFUI_Spells_Destruction	Zerstörung
+$MTFUI_Spells_Illusion	Illusion
+$MTFUI_Spells_Restoration	Wiederherstellung
+$MTFUI_Spells_Hex	Fluch
+$MTFUI_Spells_HexTip	Zählt als Angriff. Schleichst du und bist unentdeckt, setzt sich das Mal leise und das Ziel weiß nicht, wer es war.
+$MTFUI_Spells_Blessing	Segen
+$MTFUI_Spells_BlessingTip	Wird nie als Angriff gewertet und ist nie ein Verbrechen.
+$MTFUI_Spells_Cost_Fmt	%d Magicka
+$MTFUI_Spells_CostPerSecond_Fmt	%d Magicka pro Sekunde
+$MTFUI_Spells_CostTip	Vor den Kostenvorteilen der Schule. Strg+Klick, um einen Wert einzutippen.
+$MTFUI_Spells_Permanent	Dauerhaft
+$MTFUI_Spells_PermanentTip	Das Tattoo bleibt, bis Bannen es entfernt oder der Träger stirbt.
+$MTFUI_Spells_Decay_Fmt	Hält %.0f s
+$MTFUI_Spells_DecayTip	Wie lange das Tattoo nach dem Auftreffen bleibt. Erneutes Wirken startet die Zeit neu.
+$MTFUI_Spells_DecayChannelTip	Wie lange das Tattoo nach dem Ende der Kanalisierung bleibt. Es bleibt, solange du kanalisierst.
+$MTFUI_Spells_NoGame	Lade ein Spiel, um Zauber zu lernen
+$MTFUI_Spells_Reading	Lese...
+$MTFUI_Spells_Known	Bekannt
+$MTFUI_Spells_NotKnown	Unbekannt
+$MTFUI_Spells_Learn	Lernen
+$MTFUI_Spells_Forget	Vergessen
+$MTFUI_Spells_LearnNeedsPreset	Wähle zuerst ein Preset und speichere.
+$MTFUI_Spells_LearnNeedsSave	Speichere zuerst deine Änderungen.
+$MTFUI_Spells_DuplicatePreset	Dasselbe Preset wie Zauber {}
+$MTFUI_Spells_DuplicatePresetTip	Zwei Zauber können sich ein Preset teilen, aber der zuletzt gewirkte besitzt das Tattoo. Sein Timer oder Bannen entfernt es.
+$MTFUI_Toast_SpellsSaved	Zauber gespeichert
+$MTFUI_Toast_SpellsSaveFailed	Zauber konnten nicht gespeichert werden: {}
+$MTFUI_Toast_SpellLearned	{} gelernt. Rüste ihn im Magie-Menü aus.
+$MTFUI_Toast_SpellForgotten	{} vergessen
+$MTFUI_Toast_SpellForgottenOne	Einen Zauber vergessen, dessen Preset geleert wurde. Rüste ihn im Magie-Menü aus, wenn du ihn wieder lernst.
+$MTFUI_Toast_SpellForgottenN	{} Zauber vergessen, deren Presets geleert wurden.
+$MTFUI_Toast_SpellSwappedOne	Zauberart geändert: Rüste den Zauber im Magie-Menü erneut aus (Favoriten und Tastenbelegungen wurden gelöscht).
+$MTFUI_Toast_SpellSwappedN	Zauberart bei {} Zaubern geändert: Rüste sie im Magie-Menü erneut aus (Favoriten und Tastenbelegungen wurden gelöscht).
