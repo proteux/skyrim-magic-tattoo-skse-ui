@@ -2,6 +2,22 @@
 
 Versions follow `<major>.<feature>.<patch>`, as described in `AGENTS.md`.
 
+Version 1.8.22
+
+Change: Cast an aura helpful tip matches harmful — both hit the wearer's side and skip the wearer (MTF Plugin - Skyrim 0.3.10+).
+
+Version 1.8.21
+
+Change: the spell picker table has a Duration column (longest lasting effect), sortable and searchable. Instant spells leave it blank.
+
+Version 1.8.20
+
+Change: spell cards put Learn/Forget beside the name, and a full-width Remove button at the bottom of each tile.
+
+Version 1.8.19
+
+Change: Cast an aura harmful/helpful tips match the wearer's-side targeting in MTF Plugin - Skyrim 0.3.8+. Cloaks are no longer hidden as awkward spells (they land on the wearer's side like other helpful auras).
+
 Version 1.8.18
 
 Change: the fire-and-forget tip covers Cast an aura's pulse spacing too (effect duration or cast time), matching Skyrim connector 0.3.9.

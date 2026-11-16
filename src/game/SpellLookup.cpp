@@ -28,7 +28,7 @@ namespace mtfui::game {
                 return SpellCaveat::Ward;
             }
             switch (effect.GetArchetype()) {
-                case A::kCloak: return SpellCaveat::Cloak;
+                // Cloaks count as helpful and land on the wearer's side via Cast an aura — not awkward.
                 case A::kSummonCreature:
                 case A::kBoundWeapon:
                 case A::kCommandSummoned: return SpellCaveat::Summon;
@@ -133,6 +133,9 @@ namespace mtfui::game {
                 info.magnitude = base.data.flags.any(F::kNoMagnitude) ? 0.0f : effect->effectItem.magnitude;
                 info.area = base.data.flags.any(F::kNoArea) ? 0 : effect->effectItem.area;
                 info.duration = base.data.flags.any(F::kNoDuration) ? 0 : effect->effectItem.duration;
+                if (info.duration > e.duration) {
+                    e.duration = info.duration;
+                }
                 e.effects.push_back(std::move(info));
             }
             spells_.push_back(std::move(e));

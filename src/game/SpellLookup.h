@@ -4,7 +4,7 @@
 
 namespace mtfui::game {
     // Why a spell suits being applied straight to actors poorly, whatever the tattoo effect.
-    enum class SpellCaveat { None, Cloak, Summon, Corpse, CasterOnly, Ward };
+    enum class SpellCaveat { None, Summon, Corpse, CasterOnly, Ward };
 
     struct SpellEffectInfo {
         std::string name;
@@ -20,6 +20,7 @@ namespace mtfui::game {
         bool concentration = false;
         int delivery = 0;  // RE::MagicSystem::Delivery
         int cost = 0;  // base magicka, per second for concentration spells
+        std::uint32_t duration = 0;  // longest lasting effect, seconds; 0 when every effect is instant
         bool harmful = false;  // the costliest effect is hostile
         SpellCaveat caveat = SpellCaveat::None;
         std::vector<SpellEffectInfo> effects;

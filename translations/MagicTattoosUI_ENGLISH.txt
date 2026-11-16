@@ -27,17 +27,18 @@ $MTFUI_Lookup_AllSchools	All schools
 $MTFUI_Lookup_KnownOnly	Known by player
 $MTFUI_Lookup_KnownOnlyTip	Only spells the player knows. Needs a loaded game.
 $MTFUI_Lookup_ShowAwkward	Show awkward spells
-$MTFUI_Lookup_ShowAwkwardTip	Cloaks, wards, summons, bound weapons, caster-only spells (Telekinesis, Candlelight), and corpse spells. Hidden by default because they do little or the wrong thing from a tattoo.
+$MTFUI_Lookup_ShowAwkwardTip	Wards, summons, bound weapons, caster-only spells (Telekinesis, Candlelight), and corpse spells. Hidden by default because they do little or the wrong thing from a tattoo.
 $MTFUI_Lookup_Reading	Reading the player's spells...
 $MTFUI_Lookup_NoMatch	No spells match
 $MTFUI_Lookup_Count	{} spells
 $MTFUI_Lookup_NoSchool	No school
-$MTFUI_Lookup_SearchTip	Matches the name, school, level, type, Harmful or Helpful, and the plugin.
+$MTFUI_Lookup_SearchTip	Matches the name, school, level, type, duration, Harmful or Helpful, and the plugin.
 $MTFUI_Lookup_ColSpell	Spell
 $MTFUI_Lookup_ColSchool	School
 $MTFUI_Lookup_ColLevel	Level
 $MTFUI_Lookup_ColType	Type
 $MTFUI_Lookup_ColCost	Cost
+$MTFUI_Lookup_ColDuration	Duration
 $MTFUI_Lookup_ColTargets	Targets
 $MTFUI_Lookup_Novice	Novice
 $MTFUI_Lookup_Apprentice	Apprentice
@@ -58,12 +59,12 @@ $MTFUI_Lookup_Helpful	Helpful
 $MTFUI_Lookup_TipSummary	{}, {}, cost {}
 $MTFUI_Lookup_LevelSchool	{} {}
 $MTFUI_Lookup_EffectArea	{} ft area
+$MTFUI_Lookup_Duration	{} s
 $MTFUI_Lookup_EffectDuration	for {} s
 $MTFUI_Lookup_TipConcentration	Concentration: every trigger will channel for 10 seconds. Magicka is drained from the caster per pulse. When they can't afford it, pulses pause until magicka recovers.
 $MTFUI_Lookup_TipFireAndForget	Fire and forget: each trigger applies the whole spell. Repeats based on the spell's duration or cast time for the lifetime of the tattoo.
-$MTFUI_Lookup_TipHarmful	Harmful: Cast an Aura hits actors allied with the wearer, but not the wearer themselves.
-$MTFUI_Lookup_TipHelpful	Helpful: Beneficial spell that targets either the wearer or those allied with the wearer.
-$MTFUI_Lookup_CaveatCloak	A cloak counts as helpful, so it goes on the wearer and friendly actors nearby, not on enemies.
+$MTFUI_Lookup_TipHarmful	Harmful: Cast an aura hits actors on the wearer's side (not enemies of them), never the wearer.
+$MTFUI_Lookup_TipHelpful	Helpful: Cast an aura hits actors on the wearer's side (not enemies of them), never the wearer.
 $MTFUI_Lookup_CaveatSummon	Summons and bound weapons are made to come from their caster, and do little when applied to an actor.
 $MTFUI_Lookup_CaveatCorpse	Made for corpses, and tattoo effects only reach living actors.
 $MTFUI_Lookup_CaveatCasterOnly	Works through its caster's hands or surroundings, and does nothing when applied to an actor.
@@ -653,15 +654,15 @@ $MTFUI_Spells_Destruction	Destruction
 $MTFUI_Spells_Illusion	Illusion
 $MTFUI_Spells_Restoration	Restoration
 $MTFUI_Spells_Hex	Hex
-$MTFUI_Spells_HexTip	When the target can see you, a Hex counts as an attack — they turn hostile, and casting it on a non-enemy can be a crime. While you are sneaking and undetected, the mark lands quietly and they do not know who did it. Harmful tattoo effects such as Cast a spell or Cast an aura still credit you when they hit.
+$MTFUI_Spells_HexTip	Counts as an attack. While you are sneaking and undetected, the mark lands quietly and they do not know who did it.
 $MTFUI_Spells_Blessing	Blessing
-$MTFUI_Spells_BlessingTip	Friendly: the target does not treat it as an attack, and it is never a crime. Use Blessings on yourself and allies.
+$MTFUI_Spells_BlessingTip	Never treated as an attack, and it is never a crime.
 
 $MTFUI_Spells_Cost_Fmt	%d magicka
 $MTFUI_Spells_CostPerSecond_Fmt	%d magicka per second
 $MTFUI_Spells_CostTip	Before the school's cost perks. Ctrl+click to type a value.
 $MTFUI_Spells_Permanent	Permanent
-$MTFUI_Spells_PermanentTip	The tattoo stays until Dispel removes it.
+$MTFUI_Spells_PermanentTip	The tattoo stays until Dispel removes it or the wearer dies.
 $MTFUI_Spells_Decay_Fmt	Lasts %.0f s
 $MTFUI_Spells_DecayTip	How long the tattoo stays after it lands. Casting it again restarts the time.
 $MTFUI_Spells_DecayChannelTip	How long the tattoo stays after the channel ends. It stays on for as long as you channel.

@@ -10,14 +10,14 @@ namespace mtfui::ui {
     using namespace ImGuiMCP;
 
     namespace {
-        enum SpellColumn { kColName, kColSchool, kColLevel, kColType, kColCost, kColTargets, kColCount };
+        enum SpellColumn { kColName, kColSchool, kColLevel, kColType, kColCost, kColDuration, kColTargets, kColCount };
 
         // Only one picker is open at a time, so they share this.
         struct SpellPickerState {
             std::string search;
             int school = -1;  // -1: every school
             bool knownOnly = true;
-            bool showAwkward = false;  // cloaks, wards, summons, caster-only, corpse
+            bool showAwkward = false;  // wards, summons, caster-only, corpse
             bool reading = false;
             std::optional<std::unordered_set<RE::FormID>> known;
             std::vector<std::size_t> order;  // indices into SpellLookup::All(), in the table's sort order
@@ -54,13 +54,16 @@ namespace mtfui::ui {
             return e.concentration ? TF("$MTFUI_Lookup_CostPerSecond", e.cost) : std::to_string(e.cost);
         }
 
+        std::string DurationText(const game::SpellEntry& e) {
+            return e.duration > 0 ? TF("$MTFUI_Lookup_Duration", e.duration) : "";
+        }
+
         const char* TargetsText(const game::SpellEntry& e) {
             return T(e.harmful ? "$MTFUI_Lookup_Harmful" : "$MTFUI_Lookup_Helpful");
         }
 
         const char* CaveatText(game::SpellCaveat caveat) {
             switch (caveat) {
-                case game::SpellCaveat::Cloak: return T("$MTFUI_Lookup_CaveatCloak");
                 case game::SpellCaveat::Summon: return T("$MTFUI_Lookup_CaveatSummon");
                 case game::SpellCaveat::Corpse: return T("$MTFUI_Lookup_CaveatCorpse");
                 case game::SpellCaveat::CasterOnly: return T("$MTFUI_Lookup_CaveatCasterOnly");
@@ -111,6 +114,7 @@ namespace mtfui::ui {
                     case kColLevel: return e.level;
                     case kColType: return (e.concentration ? 10 : 0) + e.delivery;
                     case kColCost: return e.cost;
+                    case kColDuration: return static_cast<int>(e.duration);
                     case kColTargets: return e.harmful ? 1 : 0;
                     default: return 0;
                 }
@@ -162,6 +166,8 @@ namespace mtfui::ui {
             TableNextColumn();
             TextUnformatted(CostText(e).c_str());
             TableNextColumn();
+            TextUnformatted(DurationText(e).c_str());
+            TableNextColumn();
             TextColored(e.harmful ? kError : kGood, "%s", TargetsText(e));
             return clicked;
         }
@@ -171,7 +177,7 @@ namespace mtfui::ui {
             const auto current = model::ParamStr(value);
             const auto* chosen = current.empty() ? nullptr : lookup.Find(current);
             const std::string preview = current.empty() ? std::string(T("$MTFUI_Lookup_None")) : chosen ? chosen->name : TF("$MTFUI_Lookup_Missing", current);
-            SetNextWindowSizeConstraints(ImVec2{ 760, 0 }, ImVec2{ FLT_MAX, 560 });
+            SetNextWindowSizeConstraints(ImVec2{ 820, 0 }, ImVec2{ FLT_MAX, 560 });
             if (!BeginCombo(label, preview.c_str(), 0)) {
                 if (chosen && BeginItemTooltip()) {
                     SpellTooltip(*chosen);
@@ -235,6 +241,7 @@ namespace mtfui::ui {
                 TableSetupColumn(T("$MTFUI_Lookup_ColLevel"), ImGuiTableColumnFlags_WidthFixed, 85.0f);
                 TableSetupColumn(T("$MTFUI_Lookup_ColType"), ImGuiTableColumnFlags_WidthFixed, 175.0f);
                 TableSetupColumn(T("$MTFUI_Lookup_ColCost"), ImGuiTableColumnFlags_WidthFixed, 55.0f);
+                TableSetupColumn(T("$MTFUI_Lookup_ColDuration"), ImGuiTableColumnFlags_WidthFixed, 60.0f);
                 TableSetupColumn(T("$MTFUI_Lookup_ColTargets"), ImGuiTableColumnFlags_WidthFixed, 70.0f);
                 TableHeadersRow();
                 if (auto* specs = TableGetSortSpecs(); specs && (specs->SpecsDirty || st.order.size() != all.size())) {
@@ -255,7 +262,8 @@ namespace mtfui::ui {
                         continue;
                     }
                     if (!st.search.empty()) {
-                        const auto haystack = std::format("{} {} {} {} {} {}", e.name, SchoolName(e.school), LevelName(e.level), TypeText(e), TargetsText(e), e.plugin);
+                        const auto haystack = std::format("{} {} {} {} {} {} {}", e.name, SchoolName(e.school), LevelName(e.level), TypeText(e),
+                            DurationText(e), TargetsText(e), e.plugin);
                         if (!model::MatchesSearch(haystack, st.search)) {
                             continue;
                         }

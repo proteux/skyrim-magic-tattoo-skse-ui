@@ -120,6 +120,22 @@ namespace mtfui::ui {
             }
         }
 
+        // Width of the Known/Learn/Forget cluster so the name field can leave room for it.
+        float KnownTrailWidth(App& app, int index) {
+            const float frame = GetStyle()->FramePadding.x * 2.0f;
+            const float gap = GetStyle()->ItemSpacing.x;
+            if (!app.inGame) {
+                return CalcTextSize(T("$MTFUI_Spells_NoGame")).x;
+            }
+            if (!app.spellsKnown) {
+                return CalcTextSize(T("$MTFUI_Spells_Reading")).x;
+            }
+            if ((*app.spellsKnown)[index] >= 0) {
+                return CalcTextSize(T("$MTFUI_Spells_Known")).x + gap + CalcTextSize(T("$MTFUI_Spells_Forget")).x + frame;
+            }
+            return CalcTextSize(T("$MTFUI_Spells_NotKnown")).x + gap + CalcTextSize(T("$MTFUI_Spells_Learn")).x + frame;
+        }
+
         // Known or not, with Learn or Forget. ready: the spell's saved setup can be learned as it is.
         void KnownCell(App& app, int index, bool ready, const char* notReady) {
             const auto name = game::TacticalBridge::SpellName(game::TacticalBridge::Get().Config(), index);
@@ -216,24 +232,21 @@ namespace mtfui::ui {
             }
         }
 
-        // Name on the first row (with Remove when the spell can go), known/learn on the next.
-        bool CardHeader(App& app, int index, std::string& name, const char* hint, bool ready, const char* notReady, bool removable) {
-            bool clicked = false;
-            if (removable) {
-                const char* label = T("$MTFUI_Spells_Remove");
-                const float removeW = CalcTextSize(label).x + GetStyle()->FramePadding.x * 2.0f;
-                SetNextItemWidth(-(removeW + GetStyle()->ItemSpacing.x));
-                InputString("##name", name, hint, 0, 64);
-                SameLine();
-                clicked = SmallButton(label);
-                if (IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
-                    SetTooltip("%s", T("$MTFUI_Spells_RemoveTip"));
-                }
-            } else {
-                SetNextItemWidth(-1.0f);
-                InputString("##name", name, hint, 0, 64);
-            }
+        // Name with Learn/Forget on the same row.
+        void CardHeader(App& app, int index, std::string& name, const char* hint, bool ready, const char* notReady) {
+            SetNextItemWidth(-(KnownTrailWidth(app, index) + GetStyle()->ItemSpacing.x));
+            InputString("##name", name, hint, 0, 64);
+            SameLine();
             KnownCell(app, index, ready, notReady);
+        }
+
+        bool RemoveButton() {
+            Dummy(ImVec2{ 0.0f, 8.0f });
+            const bool clicked = Button(T("$MTFUI_Spells_Remove"), ImVec2{ -1.0f, 0.0f });
+            if (IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
+                SetTooltip("%s", T("$MTFUI_Spells_RemoveTip"));
+            }
+            Dummy(ImVec2{ 0.0f, 2.0f });
             return clicked;
         }
 
@@ -253,8 +266,8 @@ namespace mtfui::ui {
             bool removed = false;
             if (BeginCard("##card")) {
                 const bool ready = !saved.preset.empty() && s == saved;
-                removed = CardHeader(app, i, s.name, TF("$MTFUI_Spells_DefaultName", i + 1).c_str(), ready,
-                    saved.preset.empty() ? T("$MTFUI_Spells_LearnNeedsPreset") : T("$MTFUI_Spells_LearnNeedsSave"), true);
+                CardHeader(app, i, s.name, TF("$MTFUI_Spells_DefaultName", i + 1).c_str(), ready,
+                    saved.preset.empty() ? T("$MTFUI_Spells_LearnNeedsPreset") : T("$MTFUI_Spells_LearnNeedsSave"));
                 SlotFields(app, s);
                 if (const int other = model::DuplicatePresetSlot(draft, i); other >= 0) {
                     TextColored(kWarn, "%s", TF("$MTFUI_Spells_DuplicatePreset", other + 1).c_str());
@@ -262,6 +275,7 @@ namespace mtfui::ui {
                         SetTooltip("%s", T("$MTFUI_Spells_DuplicatePresetTip"));
                     }
                 }
+                removed = RemoveButton();
             }
             EndCard();
             PopID();
@@ -271,7 +285,7 @@ namespace mtfui::ui {
         void DispelCard(App& app, model::TacticalDispel& d, const model::TacticalDispel& saved) {
             PushID("dispel");
             if (BeginCard("##card")) {
-                CardHeader(app, game::kTacticalDispel, d.name, T("$MTFUI_Spells_DispelDefaultName"), d == saved, T("$MTFUI_Spells_LearnNeedsSave"), false);
+                CardHeader(app, game::kTacticalDispel, d.name, T("$MTFUI_Spells_DispelDefaultName"), d == saved, T("$MTFUI_Spells_LearnNeedsSave"));
                 TextWrapped("%s", T("$MTFUI_Spells_DispelAbout"));
                 PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2{ 8.0f, 2.0f });
                 if (BeginTable("##dispel_fields", 2, ImGuiTableFlags_SizingStretchSame)) {
