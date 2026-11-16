@@ -1,20 +1,23 @@
 #pragma once
 
 #include "model/TacticalConfig.h"
+#include "model/TacticalLayout.h"
 
-// FormIDs in MagicTattoosTactical.esp, as its generator (skyrim-magic-tattoo-tactical, tools/EspGen) lays them out.
-// Saves reference them, so they never move.
+// FormIDs in MagicTattoosTactical.esp. Formulas live in model/TacticalLayout.h and tools/EspGen/layout.json
+// (copied to tests/fixtures/tactical-layout.json). Saves reference them, so they never move.
 namespace mtfui::game {
     inline constexpr const char* kTacticalPlugin = "MagicTattoosTactical.esp";
     inline constexpr int kDispelVersions = 3;  // self, touch, ranged
+    inline constexpr int kTacticalLayoutVersion = model::kTacticalLayoutVersion;
 
     // Version v of slot i, v being a model::CastType.
-    constexpr RE::FormID TacticalCastEffect(int v, int slot) { return 0x800 + v * 0x20 + slot; }
-    constexpr RE::FormID TacticalCastSpell(int v, int slot) { return 0x900 + v * 0x20 + slot; }
-    constexpr RE::FormID TacticalDecayEffect(int slot) { return 0x880 + slot; }
-    constexpr RE::FormID TacticalDecaySpell(int slot) { return 0x980 + slot; }
-    constexpr RE::FormID TacticalDispelEffect(int d) { return 0xA00 + d; }
-    constexpr RE::FormID TacticalDispelSpell(int d) { return 0xA03 + d; }
+    constexpr RE::FormID TacticalCastEffect(int v, int slot) { return model::TacticalCastEffectId(v, slot); }
+    constexpr RE::FormID TacticalCastSpell(int v, int slot) { return model::TacticalCastSpellId(v, slot); }
+    constexpr RE::FormID TacticalDecayEffect(int slot) { return model::TacticalDecayEffectId(slot); }
+    constexpr RE::FormID TacticalDecaySpell(int slot) { return model::TacticalDecaySpellId(slot); }
+    constexpr RE::FormID TacticalDispelEffect(int d) { return model::TacticalDispelEffectId(d); }
+    constexpr RE::FormID TacticalDispelSpell(int d) { return model::TacticalDispelSpellId(d); }
+    constexpr RE::FormID TacticalLayoutVersionGlobal() { return model::kTacticalLayoutVersionGlobal; }
 
     // AlterationNovice00 to RestorationNovice00 in Skyrim.esm, in model::School order. A spell's casting perk is what
     // makes the school's cost-reduction perks apply to it.

@@ -11,6 +11,13 @@ namespace mtfui::game {
     // Per spell, the version the player knows (a model::CastType value), or -1.
     using KnownSpells = std::array<int, kTacticalSpells>;
 
+    // What SyncKnown did while saving or loading: forgotten presets and cast-type swaps (hotkeys need re-equip).
+    struct KnownSync {
+        KnownSpells known{};
+        int forgotten = 0;
+        int swapped = 0;
+    };
+
     // Magic Tattoos Tactical, when its ESP is loaded. Its spells are set up here: the UI writes spells.json, and the
     // names, costs, schools, hostility, casting visuals and decay times go onto the ESP's records while the game
     // runs. Those changes aren't saved, so they go on again at every load. Which spells the player knows is the
@@ -24,8 +31,8 @@ namespace mtfui::game {
         const model::TacticalConfig& Config() const { return config_; }
 
         // Writes spells.json, makes PapyrusUtil reread it, updates the records, and swaps a known spell to the
-        // version for its new cast type. done gets what the player knows afterwards.
-        bool Save(const model::TacticalConfig& config, std::string* error, std::function<void(KnownSpells)> done);
+        // version for its new cast type. done gets what the player knows afterwards, plus forget/swap counts.
+        bool Save(const model::TacticalConfig& config, std::string* error, std::function<void(KnownSync)> done);
         void OnGameLoaded();
 
         void ReadKnown(std::function<void(KnownSpells)> done);
@@ -39,7 +46,7 @@ namespace mtfui::game {
     private:
         RE::SpellItem* Version(int index, int cast) const;  // nullptr for a cast type the spell doesn't have
         void ApplyRecords(const model::TacticalConfig& config);  // game thread
-        void SyncKnown(const model::TacticalConfig& config);  // game thread
+        KnownSync SyncKnown(const model::TacticalConfig& config);  // game thread
         void SetKnown(int index, int cast);  // game thread; cast -1 forgets every version
         KnownSpells ReadKnownNow() const;  // game thread
 

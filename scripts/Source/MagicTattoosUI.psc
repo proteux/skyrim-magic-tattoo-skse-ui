@@ -11,3 +11,8 @@ Function CastAs(Actor akCaster, Spell akSpell, ObjectReference akTarget) global 
 ; Same as CastAs, then multiplies every effect's magnitude by afScale (0.5 for a half-strength Spell aura hit).
 ; Since 1.8.6.
 Function CastAsScaled(Actor akCaster, Spell akSpell, ObjectReference akTarget, float afScale) global native
+
+; Magic Tattoos Tactical slot setup from the UI's in-memory config (empty / false when Tactical isn't loaded).
+; Since 1.8.14.
+string Function GetSlotPreset(int slot) global native
+bool Function IsSlotPermanent(int slot) global native

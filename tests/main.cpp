@@ -11,6 +11,7 @@
 #include "model/Preset.h"
 #include "model/Slots.h"
 #include "model/TacticalConfig.h"
+#include "model/TacticalLayout.h"
 #include "model/Text.h"
 #include "model/Usage.h"
 
@@ -891,6 +892,44 @@ namespace {
         Check(model::IsChanneled(model::CastType::Touch) && model::IsChanneled(model::CastType::SelfChannel) &&
                   !model::IsChanneled(model::CastType::Ranged),
             "touch and self channeled are the channeled cast types");
+
+        model::TacticalConfig shared;
+        shared.slots[0].preset = "ruin_mark";
+        shared.slots[5].preset = "ruin_mark";
+        shared.slots[2].preset = "other";
+        Check(model::DuplicatePresetSlot(shared, 0) == 5, "duplicate preset finds the other slot");
+        Check(model::DuplicatePresetSlot(shared, 5) == 0, "duplicate preset is symmetric");
+        Check(model::DuplicatePresetSlot(shared, 2) < 0, "a unique preset has no duplicate");
+        Check(model::DuplicatePresetSlot(shared, 1) < 0, "an empty preset has no duplicate");
+    }
+
+    // FormID layout must match skyrim-magic-tattoo-tactical/tools/EspGen/layout.json. Copy that file here when it changes.
+    void TacticalLayout(const fs::path& root) {
+        const auto path = root / "tests" / "fixtures" / "tactical-layout.json";
+        const auto j = io::ReadJson(path);
+        Check(j.has_value(), "tactical-layout.json is readable (copy tools/EspGen/layout.json from Tactical)");
+        if (!j) {
+            return;
+        }
+        auto hex = [&](const char* key) -> std::uint32_t {
+            Check(j->contains(key) && (*j)[key].is_string(), std::string(key) + " is a hex string in tactical-layout.json");
+            return static_cast<std::uint32_t>(std::stoul((*j)[key].get<std::string>(), nullptr, 0));
+        };
+        Check((*j)["layoutVersion"].get<int>() == model::kTacticalLayoutVersion, "layoutVersion matches TacticalLayout.h");
+        Check((*j)["slots"].get<int>() == model::kTacticalSlots, "slots matches kTacticalSlots");
+        Check((*j)["castTypes"].get<int>() == model::kCastTypeCount, "castTypes matches kCastTypeCount");
+        Check(hex("quest") == model::kTacticalQuest, "quest FormID matches");
+        Check(hex("layoutVersionGlobal") == model::kTacticalLayoutVersionGlobal, "layoutVersionGlobal FormID matches");
+        Check(hex("castEffectBase") == model::kCastEffectBase, "castEffectBase matches");
+        Check(hex("castSpellBase") == model::kCastSpellBase, "castSpellBase matches");
+        Check(hex("decayEffectBase") == model::kDecayEffectBase, "decayEffectBase matches");
+        Check(hex("decaySpellBase") == model::kDecaySpellBase, "decaySpellBase matches");
+        Check(hex("dispelEffectBase") == model::kDispelEffectBase, "dispelEffectBase matches");
+        Check(hex("dispelSpellBase") == model::kDispelSpellBase, "dispelSpellBase matches");
+        Check(hex("castStride") == model::kCastStride, "castStride matches");
+        Check(model::TacticalCastSpellId(0, 0) == 0x900 && model::TacticalCastSpellId(3, 19) == 0x900 + 3 * 0x20 + 19,
+            "cast spell FormID formula matches EspGen");
+        Check(model::TacticalDecaySpellId(7) == 0x987 && model::TacticalDispelSpellId(2) == 0xA05, "decay and dispel FormIDs match EspGen");
     }
 
     // Every key the code uses has English text, and the files only hold keys the code uses.
@@ -956,6 +995,7 @@ int main(int argc, char** argv) {
     HiddenPresets(fixtures);
     OverlaySlots();
     Tactical();
+    TacticalLayout(root);
     if (g_failures == 0) {
         std::printf("All tests passed\n");
         return 0;

@@ -16,7 +16,7 @@ namespace mtfui::ui {
         struct SpellPickerState {
             std::string search;
             int school = -1;  // -1: every school
-            bool knownOnly = false;
+            bool knownOnly = true;
             bool showAwkward = false;  // cloaks, wards, summons, caster-only, corpse
             bool reading = false;
             std::optional<std::unordered_set<RE::FormID>> known;

@@ -10,10 +10,11 @@ namespace mtfui::game {
         constexpr const char* kJsonUtilFile = "MagicTattoosTactical/spells";
 
         // A callback from before a save loaded describes a player that is gone; drop it. Never empty.
-        std::function<void(KnownSpells)> Guarded(std::function<void(KnownSpells)> fn) {
-            return [s = MtfBridge::Session(), fn = std::move(fn)](KnownSpells known) {
+        template <class T>
+        std::function<void(T)> Guarded(std::function<void(T)> fn) {
+            return [s = MtfBridge::Session(), fn = std::move(fn)](T value) {
                 if (fn && s == MtfBridge::Session()) {
-                    fn(known);
+                    fn(std::move(value));
                 }
             };
         }
@@ -132,6 +133,13 @@ namespace mtfui::game {
             logger::error("{}: {} spells are missing, so the Spells tab is off. Is the ESP from an older or newer build?", kTacticalPlugin, missing);
             return;
         }
+        auto* layoutGlobal = data->LookupForm<RE::TESGlobal>(TacticalLayoutVersionGlobal(), kTacticalPlugin);
+        const int layoutVersion = layoutGlobal ? static_cast<int>(layoutGlobal->value) : -1;
+        if (layoutVersion != kTacticalLayoutVersion) {
+            logger::error("{}: layout version is {}, expected {}. Copy tools/EspGen/layout.json into tests/fixtures and rebuild both mods.",
+                kTacticalPlugin, layoutVersion, kTacticalLayoutVersion);
+            return;
+        }
         file_ = configFile;
         std::string error;
         if (auto j = io::ReadJson(file_, &error)) {
@@ -165,12 +173,11 @@ namespace mtfui::game {
                 Name(spell, name);
                 SetCasting(spell, slot.cost, slot.school);
                 SetVisuals(spell, slot.school, slot.hostile, v);
+                // Never mark the script effect Hostile/Detrimental. Hex vs Blessing still drives visuals and
+                // spells.json; Magic Tattoos Tactical blames the caster in Papyrus when a Hex lands and the
+                // caster isn't hidden, so a sneak hex can mark without the engine treating the land as an attack.
                 if (auto* effect = EffectOf(spell)) {
-                    if (slot.hostile) {
-                        effect->data.flags.set(RE::EffectSetting::EffectSettingData::Flag::kHostile, RE::EffectSetting::EffectSettingData::Flag::kDetrimental);
-                    } else {
-                        effect->data.flags.reset(RE::EffectSetting::EffectSettingData::Flag::kHostile, RE::EffectSetting::EffectSettingData::Flag::kDetrimental);
-                    }
+                    effect->data.flags.reset(RE::EffectSetting::EffectSettingData::Flag::kHostile, RE::EffectSetting::EffectSettingData::Flag::kDetrimental);
                 }
             }
             Name(decay_[i], name);
@@ -224,27 +231,35 @@ namespace mtfui::game {
         }
     }
 
-    void TacticalBridge::SyncKnown(const model::TacticalConfig& config) {
-        const auto known = ReadKnownNow();
+    KnownSync TacticalBridge::SyncKnown(const model::TacticalConfig& config) {
+        KnownSync sync;
+        sync.known = ReadKnownNow();
         for (int i = 0; i < kTacticalSpells; ++i) {
-            if (known[i] < 0) {
+            if (sync.known[i] < 0) {
                 continue;
             }
             if (i != kTacticalDispel && config.slots[i].preset.empty()) {
                 logger::info("{}: spell {} has no preset now, forgetting it", kTacticalPlugin, i + 1);
                 SetKnown(i, -1);
+                ++sync.forgotten;
                 continue;
             }
             const int want = static_cast<int>(i == kTacticalDispel ? config.dispel.cast : config.slots[i].cast);
-            if (known[i] != want) {
+            if (sync.known[i] != want) {
                 logger::info("{}: swapping the known version of spell {} to cast type {}", kTacticalPlugin, i + 1, want);
                 SetKnown(i, want);
+                ++sync.swapped;
             }
         }
+        sync.known = ReadKnownNow();
+        return sync;
     }
 
-    bool TacticalBridge::Save(const model::TacticalConfig& config, std::string* error, std::function<void(KnownSpells)> done) {
+    bool TacticalBridge::Save(const model::TacticalConfig& config, std::string* error, std::function<void(KnownSync)> done) {
         if (!installed_) {
+            if (error) {
+                *error = "MagicTattoosTactical.esp isn't loaded";
+            }
             return false;
         }
         std::error_code ec;
@@ -257,8 +272,8 @@ namespace mtfui::game {
         MtfBridge::RunOnGame([this, config, done = std::move(done)] {
             CallStatic("JsonUtil", "Unload", {}, RE::BSFixedString(kJsonUtilFile), false, false);
             ApplyRecords(config);
-            SyncKnown(config);
-            MtfBridge::PostToUi([done, known = ReadKnownNow()] { done(known); });
+            auto sync = SyncKnown(config);
+            MtfBridge::PostToUi([done, sync = std::move(sync)] { done(sync); });
         });
         return true;
     }

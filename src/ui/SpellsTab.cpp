@@ -237,7 +237,7 @@ namespace mtfui::ui {
         }
 
         // Returns true when the spell is removed.
-        bool SlotCard(App& app, int i, model::TacticalSlot& s, const model::TacticalSlot& saved) {
+        bool SlotCard(App& app, int i, model::TacticalSlot& s, const model::TacticalSlot& saved, const model::TacticalConfig& draft) {
             PushID(i);
             bool removed = false;
             if (BeginCard("##card")) {
@@ -248,6 +248,12 @@ namespace mtfui::ui {
                 if (BeginFields()) {
                     SlotFields(app, s);
                     EndTable();
+                }
+                if (const int other = model::DuplicatePresetSlot(draft, i); other >= 0) {
+                    TextColored(kWarn, "%s", TF("$MTFUI_Spells_DuplicatePreset", other + 1).c_str());
+                    if (IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
+                        SetTooltip("%s", T("$MTFUI_Spells_DuplicatePresetTip"));
+                    }
                 }
             }
             EndChild();
@@ -316,7 +322,18 @@ namespace mtfui::ui {
         BeginDisabled(!dirty);
         if (Button(T("$MTFUI_Spells_Save"))) {
             std::string error;
-            if (bridge.Save(draft, &error, [&app](game::KnownSpells known) { app.spellsKnown = known; })) {
+            if (bridge.Save(draft, &error, [&app](game::KnownSync sync) {
+                    app.spellsKnown = sync.known;
+                    if (sync.forgotten > 0) {
+                        app.Toast(sync.forgotten == 1 ? std::string(T("$MTFUI_Toast_SpellForgottenOne"))
+                                                      : TF("$MTFUI_Toast_SpellForgottenN", sync.forgotten),
+                            true);
+                    }
+                    if (sync.swapped > 0) {
+                        app.Toast(sync.swapped == 1 ? std::string(T("$MTFUI_Toast_SpellSwappedOne"))
+                                                   : TF("$MTFUI_Toast_SpellSwappedN", sync.swapped));
+                    }
+                })) {
                 app.Toast(T("$MTFUI_Toast_SpellsSaved"));
             } else {
                 app.Toast(TF("$MTFUI_Toast_SpellsSaveFailed", error), true);
@@ -376,7 +393,7 @@ namespace mtfui::ui {
             if (!g_added[i] && draft.slots[i] == model::TacticalSlot{}) {
                 continue;
             }
-            if (SlotCard(app, i, draft.slots[i], saved.slots[i])) {
+            if (SlotCard(app, i, draft.slots[i], saved.slots[i], draft)) {
                 draft.slots[i] = {};
                 g_added[i] = false;
             }

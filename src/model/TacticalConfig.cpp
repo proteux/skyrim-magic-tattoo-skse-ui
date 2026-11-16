@@ -89,6 +89,22 @@ namespace mtfui::model {
         }
     }
 
+    int DuplicatePresetSlot(const TacticalConfig& config, int slot) {
+        if (slot < 0 || slot >= kTacticalSlots) {
+            return -1;
+        }
+        const auto& preset = config.slots[slot].preset;
+        if (preset.empty()) {
+            return -1;
+        }
+        for (int i = 0; i < kTacticalSlots; ++i) {
+            if (i != slot && config.slots[i].preset == preset) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     TacticalConfig TacticalFromJson(const Json& j) {
         TacticalConfig c;
         if (!j.is_object()) {

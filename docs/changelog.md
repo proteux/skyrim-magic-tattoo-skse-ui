@@ -2,6 +2,26 @@
 
 Versions follow `<major>.<feature>.<patch>`, as described in `AGENTS.md`.
 
+Version 1.8.14
+
+New: `MagicTattoosUI.GetSlotPreset` and `IsSlotPermanent` for Magic Tattoos Tactical cast scripts. The Spells tab also checks `MTFT_LayoutVersion` from the ESP against the UI's layout fixture, and hides itself if they disagree.
+
+Version 1.8.13
+
+Change: the Hex and Blessing radio tooltips explain when a Hex counts as an attack, that a sneak mark can land quietly, and that Blessings stay friendly.
+
+Version 1.8.12
+
+Change: the spell picker defaults to "Known by player", so it opens on spells the character knows instead of the full load order.
+
+Version 1.8.11
+
+Change: Magic Tattoos Tactical Hex effects no longer use the engine Hostile flag. Tactical blames the caster in script when a Hex lands and the caster isn't hidden, so a sneak hex can mark without aggro; open casts and Blessings behave as before.
+
+Version 1.8.10
+
+Change: the Spells tab warns when two tattoo spells share a preset (the last cast owns the tattoo). Saving spells toasts when a cleared preset made the character forget a spell, or when a cast-type change swapped the known version so it needs re-equipping.
+
 Version 1.8.9
 
 Change: the spell picker's concentration tip matches MTF Plugin - Skyrim 0.3.5: each pulse is about ten seconds of the spell, the wearer always pays magicka each second, and empty magicka pauses the channel until it recovers.

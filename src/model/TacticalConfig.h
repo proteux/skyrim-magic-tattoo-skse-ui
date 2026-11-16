@@ -55,6 +55,10 @@ namespace mtfui::model {
     // The Dispel version index (0 self, 1 touch, 2 ranged) for a cast type; SelfChannel counts as self.
     int DispelVersion(CastType cast);
 
+    // First other slot that shares this slot's preset, or -1. Two spells may share a preset; the last cast owns
+    // the tattoo, so the Spells tab warns when this returns a slot.
+    int DuplicatePresetSlot(const TacticalConfig& config, int slot);
+
     // Missing or malformed values keep their defaults, and every value is clamped to what the spells support.
     TacticalConfig TacticalFromJson(const nlohmann::json& j);
     nlohmann::json TacticalToJson(const TacticalConfig& config);

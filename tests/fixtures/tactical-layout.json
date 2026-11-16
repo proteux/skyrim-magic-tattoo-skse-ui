@@ -1,0 +1,15 @@
+{
+  "layoutVersion": 1,
+  "slots": 20,
+  "castTypes": 4,
+  "dispelVersions": 3,
+  "quest": "0xA80",
+  "layoutVersionGlobal": "0xA81",
+  "castEffectBase": "0x800",
+  "castSpellBase": "0x900",
+  "decayEffectBase": "0x880",
+  "decaySpellBase": "0x980",
+  "dispelEffectBase": "0xA00",
+  "dispelSpellBase": "0xA03",
+  "castStride": "0x20"
+}

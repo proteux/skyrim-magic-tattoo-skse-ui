@@ -655,9 +655,10 @@ $MTFUI_Spells_Destruction	Destruction
 $MTFUI_Spells_Illusion	Illusion
 $MTFUI_Spells_Restoration	Restoration
 $MTFUI_Spells_Hex	Hex
-$MTFUI_Spells_HexTip	Hostile: the target takes it as an attack, and casting it on someone who isn't an enemy can be a crime.
+$MTFUI_Spells_HexTip	When the target can see you, a Hex counts as an attack — they turn hostile, and casting it on a non-enemy can be a crime. While you are sneaking and undetected, the mark lands quietly and they do not know who did it. Harmful tattoo effects such as Cast a spell or Spell aura still credit you when they hit.
 $MTFUI_Spells_Blessing	Blessing
-$MTFUI_Spells_BlessingTip	Friendly: nobody minds being blessed.
+$MTFUI_Spells_BlessingTip	Friendly: the target does not treat it as an attack, and it is never a crime. Use Blessings on yourself and allies.
+
 $MTFUI_Spells_Cost_Fmt	%d magicka
 $MTFUI_Spells_CostPerSecond_Fmt	%d magicka per second
 $MTFUI_Spells_CostTip	Before the school's cost perks. Ctrl+click to type a value.
@@ -674,7 +675,13 @@ $MTFUI_Spells_Learn	Learn
 $MTFUI_Spells_Forget	Forget
 $MTFUI_Spells_LearnNeedsPreset	Choose a preset and save first.
 $MTFUI_Spells_LearnNeedsSave	Save your changes first.
+$MTFUI_Spells_DuplicatePreset	Same preset as spell {}
+$MTFUI_Spells_DuplicatePresetTip	Two spells can share a preset, but the last one cast owns the tattoo. Its timer or Dispel is what takes it off.
 $MTFUI_Toast_SpellsSaved	Saved the spells
 $MTFUI_Toast_SpellsSaveFailed	Couldn't save the spells: {}
 $MTFUI_Toast_SpellLearned	Learned {}. Equip it from the Magic menu.
 $MTFUI_Toast_SpellForgotten	Forgot {}
+$MTFUI_Toast_SpellForgottenOne	Forgot a spell whose preset was cleared. Equip from the Magic menu if you learn it again.
+$MTFUI_Toast_SpellForgottenN	Forgot {} spells whose presets were cleared.
+$MTFUI_Toast_SpellSwappedOne	Cast type changed: equip the spell again from the Magic menu (favorites and hotkeys were cleared).
+$MTFUI_Toast_SpellSwappedN	Cast type changed on {} spells: equip them again from the Magic menu (favorites and hotkeys were cleared).
