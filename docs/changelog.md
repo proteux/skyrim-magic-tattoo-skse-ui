@@ -2,6 +2,14 @@
 
 Versions follow `<major>.<feature>.<patch>`, as described in `AGENTS.md`.
 
+Version 1.8.24
+
+Change: the Spells tab Save / Revert / New bar sits under the list with a top border and padding.
+
+Version 1.8.23
+
+Change: the spell picker drops the Level column and opens wider so Cost, Duration, and Targets headers fit. Level still shows on hover and matches search.
+
 Version 1.8.22
 
 Change: Cast an aura helpful tip matches harmful — both hit the wearer's side and skip the wearer (MTF Plugin - Skyrim 0.3.10+).

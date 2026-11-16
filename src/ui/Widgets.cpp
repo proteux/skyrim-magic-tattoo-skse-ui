@@ -10,7 +10,7 @@ namespace mtfui::ui {
     using namespace ImGuiMCP;
 
     namespace {
-        enum SpellColumn { kColName, kColSchool, kColLevel, kColType, kColCost, kColDuration, kColTargets, kColCount };
+        enum SpellColumn { kColName, kColSchool, kColType, kColCost, kColDuration, kColTargets, kColCount };
 
         // Only one picker is open at a time, so they share this.
         struct SpellPickerState {
@@ -111,7 +111,6 @@ namespace mtfui::ui {
             auto key = [column](const game::SpellEntry& e) -> int {
                 switch (column) {
                     case kColSchool: return e.school;
-                    case kColLevel: return e.level;
                     case kColType: return (e.concentration ? 10 : 0) + e.delivery;
                     case kColCost: return e.cost;
                     case kColDuration: return static_cast<int>(e.duration);
@@ -160,8 +159,6 @@ namespace mtfui::ui {
             TableNextColumn();
             TextUnformatted(e.school < 0 ? "" : SchoolName(e.school));
             TableNextColumn();
-            TextUnformatted(LevelName(e.level));
-            TableNextColumn();
             TextUnformatted(TypeText(e).c_str());
             TableNextColumn();
             TextUnformatted(CostText(e).c_str());
@@ -177,7 +174,7 @@ namespace mtfui::ui {
             const auto current = model::ParamStr(value);
             const auto* chosen = current.empty() ? nullptr : lookup.Find(current);
             const std::string preview = current.empty() ? std::string(T("$MTFUI_Lookup_None")) : chosen ? chosen->name : TF("$MTFUI_Lookup_Missing", current);
-            SetNextWindowSizeConstraints(ImVec2{ 820, 0 }, ImVec2{ FLT_MAX, 560 });
+            SetNextWindowSizeConstraints(ImVec2{ 920, 0 }, ImVec2{ FLT_MAX, 560 });
             if (!BeginCombo(label, preview.c_str(), 0)) {
                 if (chosen && BeginItemTooltip()) {
                     SpellTooltip(*chosen);
@@ -237,12 +234,11 @@ namespace mtfui::ui {
             } else if (BeginTable("##spells", kColCount, flags, ImVec2{ 0, 400 })) {
                 TableSetupScrollFreeze(0, 1);
                 TableSetupColumn(T("$MTFUI_Lookup_ColSpell"), ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_DefaultSort);
-                TableSetupColumn(T("$MTFUI_Lookup_ColSchool"), ImGuiTableColumnFlags_WidthFixed, 95.0f);
-                TableSetupColumn(T("$MTFUI_Lookup_ColLevel"), ImGuiTableColumnFlags_WidthFixed, 85.0f);
+                TableSetupColumn(T("$MTFUI_Lookup_ColSchool"), ImGuiTableColumnFlags_WidthFixed, 100.0f);
                 TableSetupColumn(T("$MTFUI_Lookup_ColType"), ImGuiTableColumnFlags_WidthFixed, 175.0f);
                 TableSetupColumn(T("$MTFUI_Lookup_ColCost"), ImGuiTableColumnFlags_WidthFixed, 55.0f);
-                TableSetupColumn(T("$MTFUI_Lookup_ColDuration"), ImGuiTableColumnFlags_WidthFixed, 60.0f);
-                TableSetupColumn(T("$MTFUI_Lookup_ColTargets"), ImGuiTableColumnFlags_WidthFixed, 70.0f);
+                TableSetupColumn(T("$MTFUI_Lookup_ColDuration"), ImGuiTableColumnFlags_WidthFixed, 70.0f);
+                TableSetupColumn(T("$MTFUI_Lookup_ColTargets"), ImGuiTableColumnFlags_WidthFixed, 75.0f);
                 TableHeadersRow();
                 if (auto* specs = TableGetSortSpecs(); specs && (specs->SpecsDirty || st.order.size() != all.size())) {
                     const bool any = specs->SpecsCount > 0;

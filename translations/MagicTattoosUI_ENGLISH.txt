@@ -35,7 +35,6 @@ $MTFUI_Lookup_NoSchool	No school
 $MTFUI_Lookup_SearchTip	Matches the name, school, level, type, duration, Harmful or Helpful, and the plugin.
 $MTFUI_Lookup_ColSpell	Spell
 $MTFUI_Lookup_ColSchool	School
-$MTFUI_Lookup_ColLevel	Level
 $MTFUI_Lookup_ColType	Type
 $MTFUI_Lookup_ColCost	Cost
 $MTFUI_Lookup_ColDuration	Duration

@@ -333,7 +333,48 @@ namespace mtfui::ui {
         const bool full = shown >= model::kTacticalSlots;
         const bool dirty = draft != saved;
 
-        // Save / Revert on the left, New on the right; the list scrolls under this row.
+        // List scrolls above a fixed bar: top border, padding, Save / Revert / New.
+        constexpr float kBarPad = 8.0f;
+        const float footer = GetStyle()->ItemSpacing.y + 1.0f + kBarPad + GetFrameHeight() + kBarPad;
+        if (!BeginChild("##spells_list", ImVec2{ 0, -footer })) {
+            EndChild();
+            return;
+        }
+        TextWrapped("%s", T("$MTFUI_Spells_Intro"));
+        Gap();
+
+        SeparatorText(T("$MTFUI_Spells_DispelSection"));
+        DispelCard(app, draft.dispel, saved.dispel);
+        Gap();
+
+        SeparatorText(T("$MTFUI_Spells_SpellsSection"));
+        if (shown == 0) {
+            TextDisabled("%s", T("$MTFUI_Spells_Empty"));
+        } else {
+            PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2{ 6.0f, 6.0f });
+            if (BeginTable("##spell_grid", 3, ImGuiTableFlags_SizingStretchSame)) {
+                for (int i = 0; i < model::kTacticalSlots; ++i) {
+                    if (!g_added[i] && draft.slots[i] == model::TacticalSlot{}) {
+                        continue;
+                    }
+                    TableNextColumn();
+                    if (SlotCard(app, i, draft.slots[i], saved.slots[i], draft)) {
+                        draft.slots[i] = {};
+                        g_added[i] = false;
+                    }
+                    if (i == g_scrollTo) {
+                        SetScrollHereY(1.0f);
+                        g_scrollTo = -1;
+                    }
+                }
+                EndTable();
+            }
+            PopStyleVar();
+        }
+        EndChild();
+
+        Separator();
+        Dummy(ImVec2{ 0, kBarPad });
         BeginDisabled(!dirty);
         if (Button(T("$MTFUI_Spells_Save"))) {
             std::string error;
@@ -388,42 +429,6 @@ namespace mtfui::ui {
         if (full && IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
             SetTooltip("%s", T("$MTFUI_Spells_FullTip"));
         }
-
-        if (!BeginChild("##spells_list", ImVec2{ 0, 0 })) {
-            EndChild();
-            return;
-        }
-        TextWrapped("%s", T("$MTFUI_Spells_Intro"));
-        Gap();
-
-        SeparatorText(T("$MTFUI_Spells_DispelSection"));
-        DispelCard(app, draft.dispel, saved.dispel);
-        Gap();
-
-        SeparatorText(T("$MTFUI_Spells_SpellsSection"));
-        if (shown == 0) {
-            TextDisabled("%s", T("$MTFUI_Spells_Empty"));
-        } else {
-            PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2{ 6.0f, 6.0f });
-            if (BeginTable("##spell_grid", 3, ImGuiTableFlags_SizingStretchSame)) {
-                for (int i = 0; i < model::kTacticalSlots; ++i) {
-                    if (!g_added[i] && draft.slots[i] == model::TacticalSlot{}) {
-                        continue;
-                    }
-                    TableNextColumn();
-                    if (SlotCard(app, i, draft.slots[i], saved.slots[i], draft)) {
-                        draft.slots[i] = {};
-                        g_added[i] = false;
-                    }
-                    if (i == g_scrollTo) {
-                        SetScrollHereY(1.0f);
-                        g_scrollTo = -1;
-                    }
-                }
-                EndTable();
-            }
-            PopStyleVar();
-        }
-        EndChild();
+        Dummy(ImVec2{ 0, kBarPad });
     }
 }
