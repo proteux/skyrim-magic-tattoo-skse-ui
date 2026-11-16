@@ -68,6 +68,19 @@ namespace mtfui::game {
                 }
                 magnitude *= scale;
 
+                // AddTarget keeps effectItem.duration. Firebolt-style FF ValueModifiers use duration 1 as a
+                // vestigial projectile value; left alone they multi-hit for that second. Concentration pulses
+                // already bake time into afScale, so they need a single burst too. Lasting Fear / poison / buffs
+                // (other archetypes, or VM duration > 1) keep their duration.
+                const auto archetype = effect->baseEffect->GetArchetype();
+                const bool valueMod = archetype == RE::EffectArchetype::kValueModifier || archetype == RE::EffectArchetype::kDualValueModifier;
+                const bool burst = valueMod && (effect->baseEffect->data.castingType == RE::MagicSystem::CastingType::kConcentration ||
+                                                effect->effectItem.duration <= 1);
+                const auto savedDuration = effect->effectItem.duration;
+                if (burst) {
+                    effect->effectItem.duration = 0;
+                }
+
                 RE::MagicTarget::AddTargetData data{};
                 data.caster = caster;
                 data.magicItem = spell;
@@ -82,6 +95,10 @@ namespace mtfui::game {
                 data.areaTarget = false;
                 data.dualCasted = false;
                 magicTarget->AddTarget(data);
+
+                if (burst) {
+                    effect->effectItem.duration = savedDuration;
+                }
             }
         }
 

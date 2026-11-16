@@ -2,6 +2,10 @@
 
 Versions follow `<major>.<feature>.<patch>`, as described in `AGENTS.md`.
 
+Version 1.8.26
+
+Fix: `CastAs` / `CastAsScaled` no longer leave vestigial Firebolt-style durations on the target, so each Cast a spell or Cast an aura pulse deals damage once like a real projectile hit (concentration pulses stay a single scaled burst; lasting Fear / poison / buffs keep their duration).
+
 Version 1.8.25
 
 Change: French, German, Italian, Spanish, and Russian translations catch up with English (spell lookup, Spells tab, gradient tiers, and related tips).
