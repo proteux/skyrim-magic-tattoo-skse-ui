@@ -60,7 +60,7 @@ namespace mtfui::ui {
                 Separator();
                 auto item = [&](const model::PresetFileInfo& p) {
                     PushID(p.name.c_str());
-                    const auto label = p.displayName.empty() || p.displayName == p.name ? p.name : p.displayName + "  (" + p.name + ")";
+                    const auto& label = p.displayName.empty() ? p.name : p.displayName;
                     if (MenuItem(label.c_str(), nullptr, model::IEquals(p.name, preset))) {
                         preset = p.name;
                         changed = true;
