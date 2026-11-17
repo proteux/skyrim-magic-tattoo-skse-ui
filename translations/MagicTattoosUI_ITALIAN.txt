@@ -632,9 +632,7 @@ $MTFUI_Spells_ColCasting	Lancio e scuola
 $MTFUI_Spells_ColCostOnly	Costo
 $MTFUI_Spells_DispelSection	Dissolvi
 $MTFUI_Spells_SpellsSection	Incantesimi tatuaggio
-$MTFUI_Spells_Empty	Nessun incantesimo tatuaggio per ora. Clicca Nuovo incantesimo per crearne uno.
 $MTFUI_Spells_New	+ Nuovo incantesimo
-$MTFUI_Spells_FullTip	Tutti gli incantesimi sono in uso. Rimuovine uno per crearne un altro.
 $MTFUI_Spells_Count	{} di {} incantesimi
 $MTFUI_Spells_Remove	Rimuovi
 $MTFUI_Spells_RemoveTip	Svuota questo incantesimo. Dopo il salvataggio, questo personaggio lo dimentica se lo conosce.

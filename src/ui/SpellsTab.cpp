@@ -303,6 +303,20 @@ namespace mtfui::ui {
             PopID();
         }
 
+        // Empty slot at the end of the grid; click to open the next free spell.
+        bool NewSpellCard() {
+            PushID("new");
+            bool clicked = false;
+            if (BeginCard("##card")) {
+                Dummy(ImVec2{ 0.0f, 12.0f });
+                clicked = Button(T("$MTFUI_Spells_New"), ImVec2{ -1.0f, 0.0f });
+                Dummy(ImVec2{ 0.0f, 12.0f });
+            }
+            EndCard();
+            PopID();
+            return clicked;
+        }
+
         void Gap() {
             Dummy(ImVec2{ 0.0f, 4.0f });
         }
@@ -333,7 +347,7 @@ namespace mtfui::ui {
         const bool full = shown >= model::kTacticalSlots;
         const bool dirty = draft != saved;
 
-        // List scrolls above a fixed bar: top border, padding, Save / Revert / New.
+        // List scrolls above a fixed bar: top border, padding, Revert / Save.
         constexpr float kBarPad = 8.0f;
         const float footer = GetStyle()->ItemSpacing.y + 1.0f + kBarPad + GetFrameHeight() + kBarPad;
         if (!BeginChild("##spells_list", ImVec2{ 0, -footer })) {
@@ -348,35 +362,67 @@ namespace mtfui::ui {
         Gap();
 
         SeparatorText(T("$MTFUI_Spells_SpellsSection"));
-        if (shown == 0) {
-            TextDisabled("%s", T("$MTFUI_Spells_Empty"));
-        } else {
-            PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2{ 6.0f, 6.0f });
-            if (BeginTable("##spell_grid", 3, ImGuiTableFlags_SizingStretchSame)) {
-                for (int i = 0; i < model::kTacticalSlots; ++i) {
-                    if (!g_added[i] && draft.slots[i] == model::TacticalSlot{}) {
-                        continue;
-                    }
-                    TableNextColumn();
-                    if (SlotCard(app, i, draft.slots[i], saved.slots[i], draft)) {
-                        draft.slots[i] = {};
-                        g_added[i] = false;
-                    }
-                    if (i == g_scrollTo) {
-                        SetScrollHereY(1.0f);
-                        g_scrollTo = -1;
+        PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2{ 6.0f, 6.0f });
+        if (BeginTable("##spell_grid", 3, ImGuiTableFlags_SizingStretchSame)) {
+            for (int i = 0; i < model::kTacticalSlots; ++i) {
+                if (!g_added[i] && draft.slots[i] == model::TacticalSlot{}) {
+                    continue;
+                }
+                TableNextColumn();
+                if (SlotCard(app, i, draft.slots[i], saved.slots[i], draft)) {
+                    draft.slots[i] = {};
+                    g_added[i] = false;
+                }
+                if (i == g_scrollTo) {
+                    SetScrollHereY(1.0f);
+                    g_scrollTo = -1;
+                }
+            }
+            if (!full) {
+                TableNextColumn();
+                if (NewSpellCard()) {
+                    for (int i = 0; i < model::kTacticalSlots; ++i) {
+                        if (!g_added[i] && draft.slots[i] == model::TacticalSlot{}) {
+                            g_added[i] = true;
+                            g_scrollTo = i;
+                            break;
+                        }
                     }
                 }
-                EndTable();
             }
-            PopStyleVar();
+            EndTable();
         }
+        PopStyleVar();
         EndChild();
 
         Separator();
         Dummy(ImVec2{ 0, kBarPad });
         BeginDisabled(!dirty);
-        if (Button(T("$MTFUI_Spells_Save"))) {
+        if (Button(T("$MTFUI_Spells_Revert"))) {
+            draft = saved;
+            g_added.fill(false);
+        }
+        EndDisabled();
+        SameLine();
+        const std::string count = TF("$MTFUI_Spells_Count", shown, model::kTacticalSlots);
+        TextDisabled("%s", count.c_str());
+
+        const char* saveLabel = T("$MTFUI_Spells_Save");
+        const char* unsaved = T("$MTFUI_Spells_Unsaved");
+        const float gap = GetStyle()->ItemSpacing.x;
+        const float saveW = CalcTextSize(saveLabel).x + GetStyle()->FramePadding.x * 2.0f;
+        float rightW = saveW;
+        if (dirty) {
+            rightW += gap + CalcTextSize(unsaved).x;
+        }
+        SameLine();
+        SetCursorPosX(std::max(GetCursorPosX(), GetWindowContentRegionMax().x - rightW));
+        if (dirty) {
+            TextColored(kWarn, "%s", unsaved);
+            SameLine(0.0f, gap);
+        }
+        BeginDisabled(!dirty);
+        if (Button(saveLabel)) {
             std::string error;
             if (bridge.Save(draft, &error, [&app](game::KnownSync sync) {
                     app.spellsKnown = sync.known;
@@ -395,40 +441,7 @@ namespace mtfui::ui {
                 app.Toast(TF("$MTFUI_Toast_SpellsSaveFailed", error), true);
             }
         }
-        SameLine();
-        if (Button(T("$MTFUI_Spells_Revert"))) {
-            draft = saved;
-            g_added.fill(false);
-        }
         EndDisabled();
-        if (dirty) {
-            SameLine();
-            TextColored(kWarn, "%s", T("$MTFUI_Spells_Unsaved"));
-        }
-
-        const char* newLabel = T("$MTFUI_Spells_New");
-        const std::string count = TF("$MTFUI_Spells_Count", shown, model::kTacticalSlots);
-        const float newW = CalcTextSize(newLabel).x + GetStyle()->FramePadding.x * 2.0f;
-        const float countW = CalcTextSize(count.c_str()).x;
-        const float right = GetWindowContentRegionMax().x - newW - 12.0f - countW;
-        SameLine();
-        SetCursorPosX(std::max(GetCursorPosX(), right));
-        TextDisabled("%s", count.c_str());
-        SameLine(0.0f, 12.0f);
-        BeginDisabled(full);
-        if (Button(newLabel)) {
-            for (int i = 0; i < model::kTacticalSlots; ++i) {
-                if (!g_added[i] && draft.slots[i] == model::TacticalSlot{}) {
-                    g_added[i] = true;
-                    g_scrollTo = i;
-                    break;
-                }
-            }
-        }
-        EndDisabled();
-        if (full && IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
-            SetTooltip("%s", T("$MTFUI_Spells_FullTip"));
-        }
         Dummy(ImVec2{ 0, kBarPad });
     }
 }

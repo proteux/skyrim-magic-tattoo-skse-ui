@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-// FormID layout for MagicTattoosTactical.esp. Source of truth is skyrim-magic-tattoo-tactical's
+// FormID layout for MagicTattoosTactical.esp. Source of truth is skyrim-magic-tattoo-spellbook's
 // tools/EspGen/layout.json (copied to tests/fixtures/tactical-layout.json). Saves reference these IDs, so they
 // never move; bump layoutVersion in that JSON when the layout itself changes.
 namespace mtfui::model {

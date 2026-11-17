@@ -632,9 +632,7 @@ $MTFUI_Spells_ColCasting	Lanzamiento y escuela
 $MTFUI_Spells_ColCostOnly	Coste
 $MTFUI_Spells_DispelSection	Disipar
 $MTFUI_Spells_SpellsSection	Hechizos de tatuaje
-$MTFUI_Spells_Empty	Aún no hay hechizos de tatuaje. Pulsa Nuevo hechizo para crear uno.
 $MTFUI_Spells_New	+ Nuevo hechizo
-$MTFUI_Spells_FullTip	Todos los hechizos están en uso. Quita uno para crear otro.
 $MTFUI_Spells_Count	{} de {} hechizos
 $MTFUI_Spells_Remove	Quitar
 $MTFUI_Spells_RemoveTip	Vacía este hechizo. Al guardar, este personaje lo olvida si lo conoce.

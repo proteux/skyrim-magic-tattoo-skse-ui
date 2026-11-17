@@ -632,9 +632,7 @@ $MTFUI_Spells_ColCasting	Casting and school
 $MTFUI_Spells_ColCostOnly	Cost
 $MTFUI_Spells_DispelSection	Dispel
 $MTFUI_Spells_SpellsSection	Tattoo spells
-$MTFUI_Spells_Empty	No tattoo spells yet. Click New spell to set one up.
 $MTFUI_Spells_New	+ New spell
-$MTFUI_Spells_FullTip	All the spells are in use. Remove one to set up another.
 $MTFUI_Spells_Count	{} of {} spells
 $MTFUI_Spells_Remove	Remove
 $MTFUI_Spells_RemoveTip	Clears this spell. Once you save, this character forgets it if they know it.

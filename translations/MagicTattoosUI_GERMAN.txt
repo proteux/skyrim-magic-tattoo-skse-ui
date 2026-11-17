@@ -632,9 +632,7 @@ $MTFUI_Spells_ColCasting	Wirkweise und Schule
 $MTFUI_Spells_ColCostOnly	Kosten
 $MTFUI_Spells_DispelSection	Bannen
 $MTFUI_Spells_SpellsSection	Tattoo-Zauber
-$MTFUI_Spells_Empty	Noch keine Tattoo-Zauber. Klicke auf Neuer Zauber, um einen einzurichten.
 $MTFUI_Spells_New	+ Neuer Zauber
-$MTFUI_Spells_FullTip	Alle Zauber sind belegt. Entferne einen, um einen anderen einzurichten.
 $MTFUI_Spells_Count	{} von {} Zaubern
 $MTFUI_Spells_Remove	Entfernen
 $MTFUI_Spells_RemoveTip	Leert diesen Zauber. Nach dem Speichern vergisst dieser Charakter ihn, falls er ihn kennt.

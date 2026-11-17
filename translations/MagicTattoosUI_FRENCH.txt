@@ -632,9 +632,7 @@ $MTFUI_Spells_ColCasting	Incantation et école
 $MTFUI_Spells_ColCostOnly	Coût
 $MTFUI_Spells_DispelSection	Dissipation
 $MTFUI_Spells_SpellsSection	Sorts de tatouage
-$MTFUI_Spells_Empty	Aucun sort de tatouage pour l'instant. Cliquez sur Nouveau sort pour en configurer un.
 $MTFUI_Spells_New	+ Nouveau sort
-$MTFUI_Spells_FullTip	Tous les sorts sont utilisés. Retirez-en un pour en configurer un autre.
 $MTFUI_Spells_Count	{} sorts sur {}
 $MTFUI_Spells_Remove	Retirer
 $MTFUI_Spells_RemoveTip	Efface ce sort. Une fois enregistré, ce personnage l'oublie s'il le connaît.

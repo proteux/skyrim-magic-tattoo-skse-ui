@@ -903,7 +903,7 @@ namespace {
         Check(model::DuplicatePresetSlot(shared, 1) < 0, "an empty preset has no duplicate");
     }
 
-    // FormID layout must match skyrim-magic-tattoo-tactical/tools/EspGen/layout.json. Copy that file here when it changes.
+    // FormID layout must match skyrim-magic-tattoo-spellbook/tools/EspGen/layout.json. Copy that file here when it changes.
     void TacticalLayout(const fs::path& root) {
         const auto path = root / "tests" / "fixtures" / "tactical-layout.json";
         const auto j = io::ReadJson(path);

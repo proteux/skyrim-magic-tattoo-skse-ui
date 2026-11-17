@@ -632,9 +632,7 @@ $MTFUI_Spells_ColCasting	Сотворение и школа
 $MTFUI_Spells_ColCostOnly	Цена
 $MTFUI_Spells_DispelSection	Рассеивание
 $MTFUI_Spells_SpellsSection	Заклинания-татуировки
-$MTFUI_Spells_Empty	Заклинаний-татуировок пока нет. Нажмите «Новое заклинание», чтобы создать.
 $MTFUI_Spells_New	+ Новое заклинание
-$MTFUI_Spells_FullTip	Все заклинания заняты. Уберите одно, чтобы создать другое.
 $MTFUI_Spells_Count	{} из {} заклинаний
 $MTFUI_Spells_Remove	Убрать
 $MTFUI_Spells_RemoveTip	Очищает это заклинание. После сохранения этот персонаж забудет его, если знает.
