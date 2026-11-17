@@ -1,5 +1,5 @@
 #include "game/MtfBridge.h"
-#include "game/TacticalBridge.h"
+#include "game/SpellbookBridge.h"
 #include "ui/App.h"
 #include "ui/Tabs.h"
 #include "ui/Widgets.h"
@@ -14,7 +14,7 @@ namespace mtfui::ui {
 
         int g_lastFrame = -100;
         int g_readSession = -1;  // a read of the known spells is under way in this session
-        std::array<bool, model::kTacticalSlots> g_added{};  // empty spells opened with New, shown until removed or reverted
+        std::array<bool, model::kSpellbookSlots> g_added{};  // empty spells opened with New, shown until removed or reverted
         int g_scrollTo = -1;
 
         void ReadKnown(App& app) {
@@ -22,7 +22,7 @@ namespace mtfui::ui {
                 return;
             }
             g_readSession = game::MtfBridge::Session();
-            game::TacticalBridge::Get().ReadKnown([&app](game::KnownSpells known) {
+            game::SpellbookBridge::Get().ReadKnown([&app](game::KnownSpells known) {
                 g_readSession = -1;
                 app.spellsKnown = known;
             });
@@ -114,7 +114,7 @@ namespace mtfui::ui {
         void CostSlider(int& cost, model::CastType cast) {
             SetNextItemWidth(-1.0f);
             SliderInt("##cost", &cost, 0, 300, model::IsChanneled(cast) ? T("$MTFUI_Spells_CostPerSecond_Fmt") : T("$MTFUI_Spells_Cost_Fmt"));
-            cost = std::clamp(cost, 0, model::kTacticalCostMax);
+            cost = std::clamp(cost, 0, model::kSpellbookCostMax);
             if (IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
                 SetTooltip("%s", T("$MTFUI_Spells_CostTip"));
             }
@@ -138,7 +138,7 @@ namespace mtfui::ui {
 
         // Known or not, with Learn or Forget. ready: the spell's saved setup can be learned as it is.
         void KnownCell(App& app, int index, bool ready, const char* notReady) {
-            const auto name = game::TacticalBridge::SpellName(game::TacticalBridge::Get().Config(), index);
+            const auto name = game::SpellbookBridge::SpellName(game::SpellbookBridge::Get().Config(), index);
             if (!app.inGame) {
                 TextDisabled("%s", T("$MTFUI_Spells_NoGame"));
                 return;
@@ -152,7 +152,7 @@ namespace mtfui::ui {
                 TextColored(kGood, "%s", T("$MTFUI_Spells_Known"));
                 SameLine();
                 if (SmallButton(T("$MTFUI_Spells_Forget"))) {
-                    game::TacticalBridge::Get().Forget(index, done);
+                    game::SpellbookBridge::Get().Forget(index, done);
                     app.Toast(TF("$MTFUI_Toast_SpellForgotten", name));
                 }
                 return;
@@ -161,7 +161,7 @@ namespace mtfui::ui {
             SameLine();
             BeginDisabled(!ready);
             if (SmallButton(T("$MTFUI_Spells_Learn"))) {
-                game::TacticalBridge::Get().Learn(index, done);
+                game::SpellbookBridge::Get().Learn(index, done);
                 app.Toast(TF("$MTFUI_Toast_SpellLearned", name));
             }
             EndDisabled();
@@ -250,7 +250,7 @@ namespace mtfui::ui {
             return clicked;
         }
 
-        void SlotFields(App& app, model::TacticalSlot& s) {
+        void SlotFields(App& app, model::SpellbookSlot& s) {
             Caption("$MTFUI_Spells_ColPreset");
             SetNextItemWidth(-1.0f);
             PresetCombo(app, s.preset);
@@ -261,7 +261,7 @@ namespace mtfui::ui {
         }
 
         // Returns true when the spell is removed.
-        bool SlotCard(App& app, int i, model::TacticalSlot& s, const model::TacticalSlot& saved, const model::TacticalConfig& draft) {
+        bool SlotCard(App& app, int i, model::SpellbookSlot& s, const model::SpellbookSlot& saved, const model::SpellbookConfig& draft) {
             PushID(i);
             bool removed = false;
             if (BeginCard("##card")) {
@@ -282,10 +282,10 @@ namespace mtfui::ui {
             return removed;
         }
 
-        void DispelCard(App& app, model::TacticalDispel& d, const model::TacticalDispel& saved) {
+        void DispelCard(App& app, model::SpellbookDispel& d, const model::SpellbookDispel& saved) {
             PushID("dispel");
             if (BeginCard("##card")) {
-                CardHeader(app, game::kTacticalDispel, d.name, T("$MTFUI_Spells_DispelDefaultName"), d == saved, T("$MTFUI_Spells_LearnNeedsSave"));
+                CardHeader(app, game::kSpellbookDispel, d.name, T("$MTFUI_Spells_DispelDefaultName"), d == saved, T("$MTFUI_Spells_LearnNeedsSave"));
                 TextWrapped("%s", T("$MTFUI_Spells_DispelAbout"));
                 PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2{ 8.0f, 2.0f });
                 if (BeginTable("##dispel_fields", 2, ImGuiTableFlags_SizingStretchSame)) {
@@ -323,7 +323,7 @@ namespace mtfui::ui {
     }
 
     void DrawSpellsTab(App& app) {
-        auto& bridge = game::TacticalBridge::Get();
+        auto& bridge = game::SpellbookBridge::Get();
         const auto& saved = bridge.Config();
         if (!app.spellsDraft) {
             app.spellsDraft = saved;
@@ -339,12 +339,12 @@ namespace mtfui::ui {
         }
 
         int shown = 0;
-        for (int i = 0; i < model::kTacticalSlots; ++i) {
-            if (g_added[i] || draft.slots[i] != model::TacticalSlot{}) {
+        for (int i = 0; i < model::kSpellbookSlots; ++i) {
+            if (g_added[i] || draft.slots[i] != model::SpellbookSlot{}) {
                 ++shown;
             }
         }
-        const bool full = shown >= model::kTacticalSlots;
+        const bool full = shown >= model::kSpellbookSlots;
         const bool dirty = draft != saved;
 
         // List scrolls above a fixed bar: top border, padding, Revert / Save.
@@ -364,8 +364,8 @@ namespace mtfui::ui {
         SeparatorText(T("$MTFUI_Spells_SpellsSection"));
         PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2{ 6.0f, 6.0f });
         if (BeginTable("##spell_grid", 3, ImGuiTableFlags_SizingStretchSame)) {
-            for (int i = 0; i < model::kTacticalSlots; ++i) {
-                if (!g_added[i] && draft.slots[i] == model::TacticalSlot{}) {
+            for (int i = 0; i < model::kSpellbookSlots; ++i) {
+                if (!g_added[i] && draft.slots[i] == model::SpellbookSlot{}) {
                     continue;
                 }
                 TableNextColumn();
@@ -381,8 +381,8 @@ namespace mtfui::ui {
             if (!full) {
                 TableNextColumn();
                 if (NewSpellCard()) {
-                    for (int i = 0; i < model::kTacticalSlots; ++i) {
-                        if (!g_added[i] && draft.slots[i] == model::TacticalSlot{}) {
+                    for (int i = 0; i < model::kSpellbookSlots; ++i) {
+                        if (!g_added[i] && draft.slots[i] == model::SpellbookSlot{}) {
                             g_added[i] = true;
                             g_scrollTo = i;
                             break;
@@ -404,7 +404,7 @@ namespace mtfui::ui {
         }
         EndDisabled();
         SameLine();
-        const std::string count = TF("$MTFUI_Spells_Count", shown, model::kTacticalSlots);
+        const std::string count = TF("$MTFUI_Spells_Count", shown, model::kSpellbookSlots);
         TextDisabled("%s", count.c_str());
 
         const char* saveLabel = T("$MTFUI_Spells_Save");

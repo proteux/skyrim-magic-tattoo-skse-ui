@@ -19,7 +19,7 @@
 #include "game/OverlayVisibility.h"
 #include "game/PapyrusNatives.h"
 #include "game/SpellLookup.h"
-#include "game/TacticalBridge.h"
+#include "game/SpellbookBridge.h"
 #include "io/UiSettings.h"
 #include "render/DdsCache.h"
 #include "ui/App.h"
@@ -110,8 +110,8 @@ namespace {
                 logger::critical("Magic Tattoos UI failed to start: {}", e.what());
             }
             // After App::Init, which loads the translations the default spell names come from.
-            mtfui::game::TacticalBridge::Get().OnDataLoaded(
-                mtfui::ui::GameDataDir() / "SKSE" / "Plugins" / "StorageUtilData" / "MagicTattoosTactical" / "spells.json");
+            mtfui::game::SpellbookBridge::Get().OnDataLoaded(
+                mtfui::ui::GameDataDir() / "SKSE" / "Plugins" / "StorageUtilData" / "MagicTattoosSpellbook" / "spells.json");
             break;
         }
         case SKSE::MessagingInterface::kPostLoadGame:

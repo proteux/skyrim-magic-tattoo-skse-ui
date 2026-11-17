@@ -623,7 +623,7 @@ $MTFUI_Tattoos_TextureFiles	Texture files
 $MTFUI_Tattoos_NewPresetTitle	New preset from tattoo
 $MTFUI_Tattoos_DefaultLook	Default look: {} ({})
 $MTFUI_Tattoos_UnsavedWarning	You'll be asked what to do with the unsaved changes to the open preset.
-$MTFUI_Spells_Intro	Spells from Magic Tattoos Tactical. Each one puts a preset on whoever it hits, as a hex or a blessing; what it does in play comes from the preset's tier effects. Save, then learn the spells you want this character to know.
+$MTFUI_Spells_Intro	Spells from Magic Tattoos Spellbook. Each one puts a preset on whoever it hits, as a hex or a blessing; what it does in play comes from the preset's tier effects. Save, then learn the spells you want this character to know.
 $MTFUI_Spells_Save	Save spells
 $MTFUI_Spells_Revert	Revert
 $MTFUI_Spells_Unsaved	Unsaved changes

@@ -623,7 +623,7 @@ $MTFUI_Tattoos_TextureFiles	Archivos de textura
 $MTFUI_Tattoos_NewPresetTitle	Nuevo preset con un tatuaje
 $MTFUI_Tattoos_DefaultLook	Apariencia predeterminada: {} ({})
 $MTFUI_Tattoos_UnsavedWarning	Se te preguntará qué hacer con los cambios sin guardar del preset abierto.
-$MTFUI_Spells_Intro	Hechizos de Magic Tattoos Tactical. Cada uno pone un preset en quien alcanza, como maleficio o bendición; lo que hace en el juego viene de los efectos de nivel del preset. Guarda y luego aprende los hechizos que quieras que conozca este personaje.
+$MTFUI_Spells_Intro	Hechizos de Magic Tattoos Spellbook. Cada uno pone un preset en quien alcanza, como maleficio o bendición; lo que hace en el juego viene de los efectos de nivel del preset. Guarda y luego aprende los hechizos que quieras que conozca este personaje.
 $MTFUI_Spells_Save	Guardar hechizos
 $MTFUI_Spells_Revert	Revertir
 $MTFUI_Spells_Unsaved	Cambios sin guardar

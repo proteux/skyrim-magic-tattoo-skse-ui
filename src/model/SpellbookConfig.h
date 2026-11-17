@@ -5,13 +5,13 @@
 #include <array>
 #include <string>
 
-// Magic Tattoos Tactical's spell setup, kept in StorageUtilData/MagicTattoosTactical/spells.json in PapyrusUtil's
+// Magic Tattoos Spellbook's spell setup, kept in StorageUtilData/MagicTattoosSpellbook/spells.json in PapyrusUtil's
 // flat JsonUtil layout ({"float": {...}, "int": {...}, "string": {...}}), because its scripts read it with JsonUtil.
 // Only this UI writes it.
 namespace mtfui::model {
-    inline constexpr int kTacticalSlots = 20;  // the spell slots MagicTattoosTactical.esp carries
+    inline constexpr int kSpellbookSlots = 20;  // the spell slots MagicTattoosSpellbook.esp carries
     inline constexpr int kSchoolCount = 5;
-    inline constexpr int kTacticalCostMax = 1000;
+    inline constexpr int kSpellbookCostMax = 1000;
     inline constexpr double kDecayMin = 1.0;
     inline constexpr double kDecayMax = 86400.0;
 
@@ -25,7 +25,7 @@ namespace mtfui::model {
     // Schools in the order of the novice perks AlterationNovice00 (0x0F2CA6) to RestorationNovice00 (0x0F2CAA).
     enum class School : int { Alteration = 0, Conjuration = 1, Destruction = 2, Illusion = 3, Restoration = 4 };
 
-    struct TacticalSlot {
+    struct SpellbookSlot {
         std::string name;    // empty: the default name
         std::string preset;  // MTF preset file name; empty: not set up
         CastType cast = CastType::Ranged;
@@ -34,22 +34,22 @@ namespace mtfui::model {
         School school = School::Illusion;
         double decay = 60.0;  // seconds the tattoo lasts after the cast or the channel ends
         bool permanent = false;
-        bool operator==(const TacticalSlot&) const = default;
+        bool operator==(const SpellbookSlot&) const = default;
     };
 
     // The Dispel spell only comes as self, touch or ranged.
-    struct TacticalDispel {
+    struct SpellbookDispel {
         std::string name;
         CastType cast = CastType::Ranged;
         int cost = 30;
         School school = School::Alteration;
-        bool operator==(const TacticalDispel&) const = default;
+        bool operator==(const SpellbookDispel&) const = default;
     };
 
-    struct TacticalConfig {
-        std::array<TacticalSlot, kTacticalSlots> slots;
-        TacticalDispel dispel;
-        bool operator==(const TacticalConfig&) const = default;
+    struct SpellbookConfig {
+        std::array<SpellbookSlot, kSpellbookSlots> slots;
+        SpellbookDispel dispel;
+        bool operator==(const SpellbookConfig&) const = default;
     };
 
     // The Dispel version index (0 self, 1 touch, 2 ranged) for a cast type; SelfChannel counts as self.
@@ -57,9 +57,9 @@ namespace mtfui::model {
 
     // First other slot that shares this slot's preset, or -1. Two spells may share a preset; the last cast owns
     // the tattoo, so the Spells tab warns when this returns a slot.
-    int DuplicatePresetSlot(const TacticalConfig& config, int slot);
+    int DuplicatePresetSlot(const SpellbookConfig& config, int slot);
 
     // Missing or malformed values keep their defaults, and every value is clamped to what the spells support.
-    TacticalConfig TacticalFromJson(const nlohmann::json& j);
-    nlohmann::json TacticalToJson(const TacticalConfig& config);
+    SpellbookConfig SpellbookFromJson(const nlohmann::json& j);
+    nlohmann::json SpellbookToJson(const SpellbookConfig& config);
 }

@@ -2,6 +2,10 @@
 
 Versions follow `<major>.<feature>.<patch>`, as described in `AGENTS.md`.
 
+Version 1.8.28
+
+Change: Spells tab follows Magic Tattoos Spellbook (`MagicTattoosSpellbook.esp`, `StorageUtilData/MagicTattoosSpellbook/spells.json`). If the new spells.json is missing, copies once from the old MagicTattoosTactical path.
+
 Version 1.8.26
 
 Fix: `CastAs` / `CastAsScaled` no longer leave vestigial Firebolt-style durations on the target, so each Cast a spell or Cast an aura pulse deals damage once like a real projectile hit (concentration pulses stay a single scaled burst; lasting Fear / poison / buffs keep their duration).
@@ -52,7 +56,7 @@ Change: the Spells tab lays tattoo spells out in a three-column grid with tighte
 
 Version 1.8.14
 
-New: `MagicTattoosUI.GetSlotPreset` and `IsSlotPermanent` for Magic Tattoos Tactical cast scripts. The Spells tab also checks `MTFT_LayoutVersion` from the ESP against the UI's layout fixture, and hides itself if they disagree.
+New: `MagicTattoosUI.GetSlotPreset` and `IsSlotPermanent` for Magic Tattoos Spellbook cast scripts. The Spells tab also checks `MTFS_LayoutVersion` from the ESP against the UI's layout fixture, and hides itself if they disagree.
 
 Version 1.8.13
 
@@ -64,7 +68,7 @@ Change: the spell picker defaults to "Known by player", so it opens on spells th
 
 Version 1.8.11
 
-Change: Magic Tattoos Tactical Hex effects no longer use the engine Hostile flag. Tactical blames the caster in script when a Hex lands and the caster isn't hidden, so a sneak hex can mark without aggro; open casts and Blessings behave as before.
+Change: Magic Tattoos Spellbook Hex effects no longer use the engine Hostile flag. Spellbook blames the caster in script when a Hex lands and the caster isn't hidden, so a sneak hex can mark without aggro; open casts and Blessings behave as before.
 
 Version 1.8.10
 
@@ -76,7 +80,7 @@ Change: the spell picker's concentration tip matches MTF Plugin - Skyrim 0.3.5: 
 
 Version 1.8.8
 
-Change: Magic Tattoos Tactical spells take their hand glow, light, projectile and hit FX from a vanilla spell that matches the school and whether they're a Hex or a Blessing, so a Restoration blessing no longer looks like an Illusion hex in your hands.
+Change: Magic Tattoos Spellbook spells take their hand glow, light, projectile and hit FX from a vanilla spell that matches the school and whether they're a Hex or a Blessing, so a Restoration blessing no longer looks like an Illusion hex in your hands.
 
 Version 1.8.6
 
@@ -92,11 +96,11 @@ Change: `MagicTattoosUI.CastAs` puts the spell's effects on the target in place.
 
 Version 1.8.3
 
-New: a Papyrus function, `MagicTattoosUI.CastAs`, that lands a spell on a target as if an actor cast it, counting that actor's perks and Fortify (School) potions. MTF Plugin - Skyrim 0.3.1 uses it, so a Cast a spell or Cast an aura on a Magic Tattoos Tactical hex hits as hard as the caster's own spell. The package now has `Scripts/MagicTattoosUI.pex`.
+New: a Papyrus function, `MagicTattoosUI.CastAs`, that lands a spell on a target as if an actor cast it, counting that actor's perks and Fortify (School) potions. MTF Plugin - Skyrim 0.3.1 uses it, so a Cast a spell or Cast an aura on a Magic Tattoos Spellbook hex hits as hard as the caster's own spell. The package now has `Scripts/MagicTattoosUI.pex`.
 
 Version 1.8.2
 
-Change: the spell picker leaves out Magic Tattoos Tactical's own spells. A tier that cast one would put a tattoo on again and again.
+Change: the spell picker leaves out Magic Tattoos Spellbook's own spells. A tier that cast one would put a tattoo on again and again.
 
 Version 1.8.1
 
@@ -113,7 +117,7 @@ Change: the Spells tab's preset menu is grouped like the library, with a submenu
 
 Version 1.7.0
 
-New: a Spells tab for Magic Tattoos Tactical, shown when its plugin is loaded. Set up to 20 hex and blessing spells that put a preset on whoever they hit (self, touch or ranged), with their name, magicka cost, school, and how long the tattoo lasts, plus a Dispel spell. Learn and forget each spell for the current character from the tab.
+New: a Spells tab for Magic Tattoos Spellbook, shown when its plugin is loaded. Set up to 20 hex and blessing spells that put a preset on whoever they hit (self, touch or ranged), with their name, magicka cost, school, and how long the tattoo lasts, plus a Dispel spell. Learn and forget each spell for the current character from the tab.
 
 Version 1.6.8
 

@@ -607,7 +607,7 @@ namespace mtfui::ui {
         ReadSlotUsage();
         inGame = true;
         spellsKnown.reset();
-        game::TacticalBridge::Get().OnGameLoaded();
+        game::SpellbookBridge::Get().OnGameLoaded();
     }
 
     void App::OnSaving() {

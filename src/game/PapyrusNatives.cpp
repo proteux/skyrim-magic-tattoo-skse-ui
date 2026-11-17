@@ -1,7 +1,7 @@
 #include "game/PapyrusNatives.h"
 
-#include "game/TacticalBridge.h"
-#include "model/TacticalConfig.h"
+#include "game/SpellbookBridge.h"
+#include "model/SpellbookConfig.h"
 
 namespace mtfui::game {
     namespace {
@@ -106,20 +106,20 @@ namespace mtfui::game {
             CastAsScaled(tag, caster, spell, target, 1.0f);
         }
 
-        // Magic Tattoos Tactical slot fields the scripts need at cast time. Read from the UI's in-memory config so
+        // Magic Tattoos Spellbook slot fields the scripts need at cast time. Read from the UI's in-memory config so
         // they don't depend on PapyrusUtil reloading spells.json.
         RE::BSFixedString GetSlotPreset(RE::StaticFunctionTag*, std::int32_t slot) {
-            if (!TacticalBridge::Get().Installed() || slot < 0 || slot >= model::kTacticalSlots) {
+            if (!SpellbookBridge::Get().Installed() || slot < 0 || slot >= model::kSpellbookSlots) {
                 return "";
             }
-            return TacticalBridge::Get().Config().slots[slot].preset.c_str();
+            return SpellbookBridge::Get().Config().slots[slot].preset.c_str();
         }
 
         bool IsSlotPermanent(RE::StaticFunctionTag*, std::int32_t slot) {
-            if (!TacticalBridge::Get().Installed() || slot < 0 || slot >= model::kTacticalSlots) {
+            if (!SpellbookBridge::Get().Installed() || slot < 0 || slot >= model::kSpellbookSlots) {
                 return false;
             }
-            return TacticalBridge::Get().Config().slots[slot].permanent;
+            return SpellbookBridge::Get().Config().slots[slot].permanent;
         }
 
         bool Register(RE::BSScript::IVirtualMachine* vm) {

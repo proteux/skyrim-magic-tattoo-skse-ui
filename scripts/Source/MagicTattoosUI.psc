@@ -12,7 +12,7 @@ Function CastAs(Actor akCaster, Spell akSpell, ObjectReference akTarget) global 
 ; Since 1.8.6.
 Function CastAsScaled(Actor akCaster, Spell akSpell, ObjectReference akTarget, float afScale) global native
 
-; Magic Tattoos Tactical slot setup from the UI's in-memory config (empty / false when Tactical isn't loaded).
+; Magic Tattoos Spellbook slot setup from the UI's in-memory config (empty / false when Spellbook isn't loaded).
 ; Since 1.8.14.
 string Function GetSlotPreset(int slot) global native
 bool Function IsSlotPermanent(int slot) global native

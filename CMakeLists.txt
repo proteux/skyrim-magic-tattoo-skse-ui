@@ -38,7 +38,7 @@ add_library(mtfui_core STATIC
     src/model/Usage.cpp
     src/model/Text.cpp
     src/model/Slots.cpp
-    src/model/TacticalConfig.cpp
+    src/model/SpellbookConfig.cpp
 )
 target_include_directories(mtfui_core PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_link_libraries(mtfui_core PUBLIC nlohmann_json::nlohmann_json)
@@ -56,7 +56,7 @@ add_commonlibsse_plugin(${PROJECT_NAME}
         src/game/Papyrus.cpp
         src/game/PapyrusNatives.cpp
         src/game/MtfBridge.cpp
-        src/game/TacticalBridge.cpp
+        src/game/SpellbookBridge.cpp
         src/game/SpellLookup.cpp
         src/game/OverlayVisibility.cpp
         src/game/Targets.cpp

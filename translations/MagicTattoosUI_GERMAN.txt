@@ -623,7 +623,7 @@ $MTFUI_Tattoos_TextureFiles	Texturdateien
 $MTFUI_Tattoos_NewPresetTitle	Neues Preset aus Tattoo
 $MTFUI_Tattoos_DefaultLook	Standard-Aussehen: {} ({})
 $MTFUI_Tattoos_UnsavedWarning	Du wirst gefragt, was mit den ungespeicherten Änderungen am geöffneten Preset geschehen soll.
-$MTFUI_Spells_Intro	Zauber aus Magic Tattoos Tactical. Jeder legt ein Preset auf den Getroffenen, als Fluch oder Segen; was es im Spiel bewirkt, kommt von den Stufeneffekten des Presets. Speichere, dann lerne die Zauber, die dieser Charakter kennen soll.
+$MTFUI_Spells_Intro	Zauber aus Magic Tattoos Spellbook. Jeder legt ein Preset auf den Getroffenen, als Fluch oder Segen; was es im Spiel bewirkt, kommt von den Stufeneffekten des Presets. Speichere, dann lerne die Zauber, die dieser Charakter kennen soll.
 $MTFUI_Spells_Save	Zauber speichern
 $MTFUI_Spells_Revert	Zurücksetzen
 $MTFUI_Spells_Unsaved	Ungespeicherte Änderungen

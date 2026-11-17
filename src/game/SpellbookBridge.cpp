@@ -1,4 +1,4 @@
-#include "game/TacticalBridge.h"
+#include "game/SpellbookBridge.h"
 
 #include "game/MtfBridge.h"
 #include "game/Papyrus.h"
@@ -7,7 +7,26 @@
 
 namespace mtfui::game {
     namespace {
-        constexpr const char* kJsonUtilFile = "MagicTattoosTactical/spells";
+        constexpr const char* kJsonUtilFile = "MagicTattoosSpellbook/spells";
+
+        // One-shot: copy the pre-rename spells.json if the Spellbook path is empty.
+        void MaybeMigrateSpellsJson(const std::filesystem::path& dest) {
+            if (std::filesystem::exists(dest)) {
+                return;
+            }
+            const auto legacy = dest.parent_path().parent_path() / "MagicTattoosTactical" / dest.filename();
+            if (!std::filesystem::exists(legacy)) {
+                return;
+            }
+            std::error_code ec;
+            std::filesystem::create_directories(dest.parent_path(), ec);
+            std::filesystem::copy_file(legacy, dest, ec);
+            if (ec) {
+                logger::warn("Couldn't copy {} to {}: {}", io::PathText(legacy), io::PathText(dest), ec.message());
+            } else {
+                logger::info("Copied spell setup from MagicTattoosTactical to MagicTattoosSpellbook");
+            }
+        }
 
         // A callback from before a save loaded describes a player that is gone; drop it. Never empty.
         template <class T>
@@ -83,89 +102,90 @@ namespace mtfui::game {
                 return;
             }
             const int s = std::clamp(static_cast<int>(school), 0, model::kSchoolCount - 1);
-            const auto id = kTacticalVisuals[s][hostile ? 1 : 0][cast];
+            const auto id = kSpellbookVisuals[s][hostile ? 1 : 0][cast];
             if (auto* src = RE::TESForm::LookupByID<RE::EffectSetting>(id)) {
                 CopyVisuals(effect, src);
             } else {
-                logger::warn("{}: visual template {:06X} is missing", kTacticalPlugin, id);
+                logger::warn("{}: visual template {:06X} is missing", kSpellbookPlugin, id);
             }
         }
     }
 
-    TacticalBridge& TacticalBridge::Get() {
-        static TacticalBridge instance;
+    SpellbookBridge& SpellbookBridge::Get() {
+        static SpellbookBridge instance;
         return instance;
     }
 
-    std::string TacticalBridge::SpellName(const model::TacticalConfig& config, int index) {
-        if (index == kTacticalDispel) {
+    std::string SpellbookBridge::SpellName(const model::SpellbookConfig& config, int index) {
+        if (index == kSpellbookDispel) {
             return config.dispel.name.empty() ? std::string(T("$MTFUI_Spells_DispelDefaultName")) : config.dispel.name;
         }
         const auto& name = config.slots[index].name;
         return name.empty() ? TF("$MTFUI_Spells_DefaultName", index + 1) : name;
     }
 
-    void TacticalBridge::OnDataLoaded(const std::filesystem::path& configFile) {
+    void SpellbookBridge::OnDataLoaded(const std::filesystem::path& configFile) {
         auto* data = RE::TESDataHandler::GetSingleton();
-        if (!data || !data->LookupModByName(kTacticalPlugin)) {
-            logger::info("{}: not loaded", kTacticalPlugin);
+        if (!data || !data->LookupModByName(kSpellbookPlugin)) {
+            logger::info("{}: not loaded", kSpellbookPlugin);
             return;
         }
         int missing = 0;
         auto spell = [&](RE::FormID id) {
-            auto* s = data->LookupForm<RE::SpellItem>(id, kTacticalPlugin);
+            auto* s = data->LookupForm<RE::SpellItem>(id, kSpellbookPlugin);
             if (!s || !EffectOf(s)) {
-                logger::error("{}: spell {:03X} is missing", kTacticalPlugin, id);
+                logger::error("{}: spell {:03X} is missing", kSpellbookPlugin, id);
                 ++missing;
             }
             return s;
         };
-        for (int i = 0; i < model::kTacticalSlots; ++i) {
+        for (int i = 0; i < model::kSpellbookSlots; ++i) {
             for (int v = 0; v < model::kCastTypeCount; ++v) {
-                cast_[i][v] = spell(TacticalCastSpell(v, i));
+                cast_[i][v] = spell(SpellbookCastSpell(v, i));
             }
-            decay_[i] = spell(TacticalDecaySpell(i));
+            decay_[i] = spell(SpellbookDecaySpell(i));
         }
         for (int d = 0; d < kDispelVersions; ++d) {
-            dispel_[d] = spell(TacticalDispelSpell(d));
+            dispel_[d] = spell(SpellbookDispelSpell(d));
         }
         if (missing > 0) {
-            logger::error("{}: {} spells are missing, so the Spells tab is off. Is the ESP from an older or newer build?", kTacticalPlugin, missing);
+            logger::error("{}: {} spells are missing, so the Spells tab is off. Is the ESP from an older or newer build?", kSpellbookPlugin, missing);
             return;
         }
-        auto* layoutGlobal = data->LookupForm<RE::TESGlobal>(TacticalLayoutVersionGlobal(), kTacticalPlugin);
+        auto* layoutGlobal = data->LookupForm<RE::TESGlobal>(SpellbookLayoutVersionGlobal(), kSpellbookPlugin);
         const int layoutVersion = layoutGlobal ? static_cast<int>(layoutGlobal->value) : -1;
-        if (layoutVersion != kTacticalLayoutVersion) {
+        if (layoutVersion != kSpellbookLayoutVersion) {
             logger::error("{}: layout version is {}, expected {}. Copy tools/EspGen/layout.json into tests/fixtures and rebuild both mods.",
-                kTacticalPlugin, layoutVersion, kTacticalLayoutVersion);
+                kSpellbookPlugin, layoutVersion, kSpellbookLayoutVersion);
             return;
         }
         file_ = configFile;
+        MaybeMigrateSpellsJson(file_);
         std::string error;
         if (auto j = io::ReadJson(file_, &error)) {
-            config_ = model::TacticalFromJson(*j);
+            config_ = model::SpellbookFromJson(*j);
         } else if (std::filesystem::exists(file_)) {
             logger::warn("Couldn't read {}: {}. The spells start from their defaults", io::PathText(file_), error);
         }
         installed_ = true;
         ApplyRecords(config_);
-        logger::info("{}: loaded, {} spells set up", kTacticalPlugin,
+        logger::info("{}: loaded, {} spells set up", kSpellbookPlugin,
             std::ranges::count_if(config_.slots, [](const auto& s) { return !s.preset.empty(); }));
     }
 
-    RE::SpellItem* TacticalBridge::Version(int index, int cast) const {
+    RE::SpellItem* SpellbookBridge::Version(int index, int cast) const {
         if (cast < 0 || cast >= model::kCastTypeCount) {
             return nullptr;
         }
-        if (index == kTacticalDispel) {
+        if (index == kSpellbookDispel) {
             const auto c = static_cast<model::CastType>(cast);
             return c == model::CastType::SelfChannel ? nullptr : dispel_[model::DispelVersion(c)];
         }
-        return index >= 0 && index < model::kTacticalSlots ? cast_[index][cast] : nullptr;
+        return index >= 0 && index < model::kSpellbookSlots ? cast_[index][cast] : nullptr;
     }
 
-    void TacticalBridge::ApplyRecords(const model::TacticalConfig& config) {
-        for (int i = 0; i < model::kTacticalSlots; ++i) {
+    void SpellbookBridge::ApplyRecords(const model::SpellbookConfig& config) {
+        for (int i = 0; i < model::kSpellbookSlots; ++i) {
             const auto& slot = config.slots[i];
             const auto name = SpellName(config, i);
             for (int v = 0; v < model::kCastTypeCount; ++v) {
@@ -174,7 +194,7 @@ namespace mtfui::game {
                 SetCasting(spell, slot.cost, slot.school);
                 SetVisuals(spell, slot.school, slot.hostile, v);
                 // Never mark the script effect Hostile/Detrimental. Hex vs Blessing still drives visuals and
-                // spells.json; Magic Tattoos Tactical blames the caster in Papyrus when a Hex lands and the
+                // spells.json; Magic Tattoos Spellbook blames the caster in Papyrus when a Hex lands and the
                 // caster isn't hidden, so a sneak hex can mark without the engine treating the land as an attack.
                 if (auto* effect = EffectOf(spell)) {
                     effect->data.flags.reset(RE::EffectSetting::EffectSettingData::Flag::kHostile, RE::EffectSetting::EffectSettingData::Flag::kDetrimental);
@@ -188,7 +208,7 @@ namespace mtfui::game {
         // Dispel versions are self, touch, ranged (no self-channeled).
         static constexpr int kDispelCast[] = {static_cast<int>(model::CastType::SelfInstant), static_cast<int>(model::CastType::Touch),
             static_cast<int>(model::CastType::Ranged)};
-        const auto dispelName = SpellName(config, kTacticalDispel);
+        const auto dispelName = SpellName(config, kSpellbookDispel);
         for (int d = 0; d < kDispelVersions; ++d) {
             Name(dispel_[d], dispelName);
             SetCasting(dispel_[d], config.dispel.cost, config.dispel.school);
@@ -196,14 +216,14 @@ namespace mtfui::game {
         }
     }
 
-    KnownSpells TacticalBridge::ReadKnownNow() const {
+    KnownSpells SpellbookBridge::ReadKnownNow() const {
         KnownSpells known;
         known.fill(-1);
         auto* player = RE::PlayerCharacter::GetSingleton();
         if (!player) {
             return known;
         }
-        for (int i = 0; i < kTacticalSpells; ++i) {
+        for (int i = 0; i < kSpellbookSpells; ++i) {
             for (int v = 0; v < model::kCastTypeCount; ++v) {
                 if (auto* spell = Version(i, v); spell && player->HasSpell(spell)) {
                     known[i] = v;
@@ -214,7 +234,7 @@ namespace mtfui::game {
         return known;
     }
 
-    void TacticalBridge::SetKnown(int index, int cast) {
+    void SpellbookBridge::SetKnown(int index, int cast) {
         auto* player = RE::PlayerCharacter::GetSingleton();
         if (!player) {
             return;
@@ -231,22 +251,22 @@ namespace mtfui::game {
         }
     }
 
-    KnownSync TacticalBridge::SyncKnown(const model::TacticalConfig& config) {
+    KnownSync SpellbookBridge::SyncKnown(const model::SpellbookConfig& config) {
         KnownSync sync;
         sync.known = ReadKnownNow();
-        for (int i = 0; i < kTacticalSpells; ++i) {
+        for (int i = 0; i < kSpellbookSpells; ++i) {
             if (sync.known[i] < 0) {
                 continue;
             }
-            if (i != kTacticalDispel && config.slots[i].preset.empty()) {
-                logger::info("{}: spell {} has no preset now, forgetting it", kTacticalPlugin, i + 1);
+            if (i != kSpellbookDispel && config.slots[i].preset.empty()) {
+                logger::info("{}: spell {} has no preset now, forgetting it", kSpellbookPlugin, i + 1);
                 SetKnown(i, -1);
                 ++sync.forgotten;
                 continue;
             }
-            const int want = static_cast<int>(i == kTacticalDispel ? config.dispel.cast : config.slots[i].cast);
+            const int want = static_cast<int>(i == kSpellbookDispel ? config.dispel.cast : config.slots[i].cast);
             if (sync.known[i] != want) {
-                logger::info("{}: swapping the known version of spell {} to cast type {}", kTacticalPlugin, i + 1, want);
+                logger::info("{}: swapping the known version of spell {} to cast type {}", kSpellbookPlugin, i + 1, want);
                 SetKnown(i, want);
                 ++sync.swapped;
             }
@@ -255,16 +275,16 @@ namespace mtfui::game {
         return sync;
     }
 
-    bool TacticalBridge::Save(const model::TacticalConfig& config, std::string* error, std::function<void(KnownSync)> done) {
+    bool SpellbookBridge::Save(const model::SpellbookConfig& config, std::string* error, std::function<void(KnownSync)> done) {
         if (!installed_) {
             if (error) {
-                *error = "MagicTattoosTactical.esp isn't loaded";
+                *error = "MagicTattoosSpellbook.esp isn't loaded";
             }
             return false;
         }
         std::error_code ec;
         std::filesystem::create_directories(file_.parent_path(), ec);
-        if (!io::WriteJsonStyled(file_, model::TacticalToJson(config), error)) {
+        if (!io::WriteJsonStyled(file_, model::SpellbookToJson(config), error)) {
             return false;
         }
         config_ = config;
@@ -278,7 +298,7 @@ namespace mtfui::game {
         return true;
     }
 
-    void TacticalBridge::OnGameLoaded() {
+    void SpellbookBridge::OnGameLoaded() {
         if (!installed_) {
             return;
         }
@@ -288,7 +308,7 @@ namespace mtfui::game {
         });
     }
 
-    void TacticalBridge::ReadKnown(std::function<void(KnownSpells)> done) {
+    void SpellbookBridge::ReadKnown(std::function<void(KnownSpells)> done) {
         if (!installed_) {
             return;
         }
@@ -298,11 +318,11 @@ namespace mtfui::game {
         });
     }
 
-    void TacticalBridge::Learn(int index, std::function<void(KnownSpells)> done) {
-        if (!installed_ || index < 0 || index >= kTacticalSpells) {
+    void SpellbookBridge::Learn(int index, std::function<void(KnownSpells)> done) {
+        if (!installed_ || index < 0 || index >= kSpellbookSpells) {
             return;
         }
-        const int cast = static_cast<int>(index == kTacticalDispel ? config_.dispel.cast : config_.slots[index].cast);
+        const int cast = static_cast<int>(index == kSpellbookDispel ? config_.dispel.cast : config_.slots[index].cast);
         done = Guarded(std::move(done));
         MtfBridge::RunOnGame([this, index, cast, done = std::move(done)] {
             SetKnown(index, cast);
@@ -310,8 +330,8 @@ namespace mtfui::game {
         });
     }
 
-    void TacticalBridge::Forget(int index, std::function<void(KnownSpells)> done) {
-        if (!installed_ || index < 0 || index >= kTacticalSpells) {
+    void SpellbookBridge::Forget(int index, std::function<void(KnownSpells)> done) {
+        if (!installed_ || index < 0 || index >= kSpellbookSpells) {
             return;
         }
         done = Guarded(std::move(done));

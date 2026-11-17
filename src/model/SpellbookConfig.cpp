@@ -1,4 +1,4 @@
-#include "model/TacticalConfig.h"
+#include "model/SpellbookConfig.h"
 
 #include <algorithm>
 #include <cmath>
@@ -71,7 +71,7 @@ namespace mtfui::model {
 
         void GetCost(const Json& j, const std::string& key, int& out) {
             if (GetInt(j, key, out)) {
-                out = std::clamp(out, 0, kTacticalCostMax);
+                out = std::clamp(out, 0, kSpellbookCostMax);
             }
         }
     }
@@ -89,15 +89,15 @@ namespace mtfui::model {
         }
     }
 
-    int DuplicatePresetSlot(const TacticalConfig& config, int slot) {
-        if (slot < 0 || slot >= kTacticalSlots) {
+    int DuplicatePresetSlot(const SpellbookConfig& config, int slot) {
+        if (slot < 0 || slot >= kSpellbookSlots) {
             return -1;
         }
         const auto& preset = config.slots[slot].preset;
         if (preset.empty()) {
             return -1;
         }
-        for (int i = 0; i < kTacticalSlots; ++i) {
+        for (int i = 0; i < kSpellbookSlots; ++i) {
             if (i != slot && config.slots[i].preset == preset) {
                 return i;
             }
@@ -105,12 +105,12 @@ namespace mtfui::model {
         return -1;
     }
 
-    TacticalConfig TacticalFromJson(const Json& j) {
-        TacticalConfig c;
+    SpellbookConfig SpellbookFromJson(const Json& j) {
+        SpellbookConfig c;
         if (!j.is_object()) {
             return c;
         }
-        for (int i = 0; i < kTacticalSlots; ++i) {
+        for (int i = 0; i < kSpellbookSlots; ++i) {
             auto& s = c.slots[i];
             GetString(j, SlotKey(i, "name"), s.name);
             GetString(j, SlotKey(i, "preset"), s.preset);
@@ -133,11 +133,11 @@ namespace mtfui::model {
         return c;
     }
 
-    Json TacticalToJson(const TacticalConfig& c) {
+    Json SpellbookToJson(const SpellbookConfig& c) {
         Json ints = Json::object();
         Json floats = Json::object();
         Json strings = Json::object();
-        for (int i = 0; i < kTacticalSlots; ++i) {
+        for (int i = 0; i < kSpellbookSlots; ++i) {
             const auto& s = c.slots[i];
             strings[SlotKey(i, "name")] = s.name;
             strings[SlotKey(i, "preset")] = s.preset;

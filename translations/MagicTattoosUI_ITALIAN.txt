@@ -623,7 +623,7 @@ $MTFUI_Tattoos_TextureFiles	File di texture
 $MTFUI_Tattoos_NewPresetTitle	Nuovo preset da tatuaggio
 $MTFUI_Tattoos_DefaultLook	Aspetto predefinito: {} ({})
 $MTFUI_Tattoos_UnsavedWarning	Ti verrà chiesto cosa fare con le modifiche non salvate al preset aperto.
-$MTFUI_Spells_Intro	Incantesimi di Magic Tattoos Tactical. Ognuno applica un preset a chi colpisce, come maledizione o benedizione; ciò che fa in gioco dipende dagli effetti dei livelli del preset. Salva, poi impara gli incantesimi che vuoi far conoscere a questo personaggio.
+$MTFUI_Spells_Intro	Incantesimi di Magic Tattoos Spellbook. Ognuno applica un preset a chi colpisce, come maledizione o benedizione; ciò che fa in gioco dipende dagli effetti dei livelli del preset. Salva, poi impara gli incantesimi che vuoi far conoscere a questo personaggio.
 $MTFUI_Spells_Save	Salva incantesimi
 $MTFUI_Spells_Revert	Ripristina
 $MTFUI_Spells_Unsaved	Modifiche non salvate

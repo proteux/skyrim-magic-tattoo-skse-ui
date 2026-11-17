@@ -623,7 +623,7 @@ $MTFUI_Tattoos_TextureFiles	Fichiers de texture
 $MTFUI_Tattoos_NewPresetTitle	Nouveau preset à partir d'un tatouage
 $MTFUI_Tattoos_DefaultLook	Apparence par défaut : {} ({})
 $MTFUI_Tattoos_UnsavedWarning	On vous demandera quoi faire des modifications non enregistrées du preset ouvert.
-$MTFUI_Spells_Intro	Sorts de Magic Tattoos Tactical. Chacun applique un preset à celui qu'il touche, comme une malédiction ou une bénédiction ; ce qu'il fait en jeu dépend des effets de palier du preset. Enregistrez, puis apprenez les sorts que ce personnage doit connaître.
+$MTFUI_Spells_Intro	Sorts de Magic Tattoos Spellbook. Chacun applique un preset à celui qu'il touche, comme une malédiction ou une bénédiction ; ce qu'il fait en jeu dépend des effets de palier du preset. Enregistrez, puis apprenez les sorts que ce personnage doit connaître.
 $MTFUI_Spells_Save	Enregistrer les sorts
 $MTFUI_Spells_Revert	Rétablir
 $MTFUI_Spells_Unsaved	Modifications non enregistrées

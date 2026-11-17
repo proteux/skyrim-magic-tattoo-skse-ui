@@ -10,8 +10,8 @@
 #include "model/Lint.h"
 #include "model/Preset.h"
 #include "model/Slots.h"
-#include "model/TacticalConfig.h"
-#include "model/TacticalLayout.h"
+#include "model/SpellbookConfig.h"
+#include "model/SpellbookLayout.h"
 #include "model/Text.h"
 #include "model/Usage.h"
 
@@ -850,9 +850,9 @@ namespace {
         Check(std::string(T("$Z")) == "Plain" && tr.ActiveCodepoints().empty(), "dropping the translation leaves English");
     }
 
-    // Magic Tattoos Tactical's spells.json: the scripts read it with JsonUtil, so the layout and keys are fixed.
-    void Tactical() {
-        model::TacticalConfig c;
+    // Magic Tattoos Spellbook's spells.json: the scripts read it with JsonUtil, so the layout and keys are fixed.
+    void Spellbook() {
+        model::SpellbookConfig c;
         auto& s = c.slots[3];
         s.name = "Mark of Ruin";
         s.preset = "ruin_mark";
@@ -864,25 +864,25 @@ namespace {
         s.permanent = true;
         c.dispel = { "Cleanse", model::CastType::SelfInstant, 40, model::School::Conjuration };
 
-        const auto j = model::TacticalToJson(c);
+        const auto j = model::SpellbookToJson(c);
         Check(j["string"]["slot3.preset"] == "ruin_mark" && j["int"]["slot3.cast"] == 2 && j["int"]["slot3.permanent"] == 1 &&
                   j["float"]["slot3.decay"] == 45.5 && j["string"]["dispel.name"] == "Cleanse",
-            "tactical config uses PapyrusUtil's typed sections and the keys the scripts read");
+            "spellbook config uses PapyrusUtil's typed sections and the keys the scripts read");
         const auto text = io::WriteStyled(j);
-        Check(model::TacticalFromJson(nlohmann::json::parse(text)) == c, "tactical config survives a write and reload");
-        Check(io::WriteStyled(model::TacticalToJson(model::TacticalFromJson(nlohmann::json::parse(text)))) == text,
-            "tactical config rewrites byte for byte");
+        Check(model::SpellbookFromJson(nlohmann::json::parse(text)) == c, "spellbook config survives a write and reload");
+        Check(io::WriteStyled(model::SpellbookToJson(model::SpellbookFromJson(nlohmann::json::parse(text)))) == text,
+            "spellbook config rewrites byte for byte");
 
-        Check(model::TacticalFromJson(nlohmann::json::object()) == model::TacticalConfig{}, "a missing file gives the defaults");
+        Check(model::SpellbookFromJson(nlohmann::json::object()) == model::SpellbookConfig{}, "a missing file gives the defaults");
         auto bad = j;
         bad["int"]["slot3.cast"] = 9;
         bad["int"]["slot3.cost"] = 99999;
         bad["float"]["slot3.decay"] = 0.0;
         bad["int"]["dispel.cast"] = 1;
         bad["string"]["slot3.preset"] = 5;
-        const auto clamped = model::TacticalFromJson(bad);
+        const auto clamped = model::SpellbookFromJson(bad);
         Check(clamped.slots[3].cast == model::CastType::Ranged, "an unknown cast type keeps the default");
-        Check(clamped.slots[3].cost == model::kTacticalCostMax, "cost is clamped");
+        Check(clamped.slots[3].cost == model::kSpellbookCostMax, "cost is clamped");
         Check(clamped.slots[3].decay == model::kDecayMin, "decay is clamped");
         Check(clamped.slots[3].preset.empty(), "a preset of the wrong type is ignored");
         Check(clamped.dispel.cast == model::CastType::SelfInstant, "a channeled Dispel becomes a self cast");
@@ -893,7 +893,7 @@ namespace {
                   !model::IsChanneled(model::CastType::Ranged),
             "touch and self channeled are the channeled cast types");
 
-        model::TacticalConfig shared;
+        model::SpellbookConfig shared;
         shared.slots[0].preset = "ruin_mark";
         shared.slots[5].preset = "ruin_mark";
         shared.slots[2].preset = "other";
@@ -904,22 +904,22 @@ namespace {
     }
 
     // FormID layout must match skyrim-magic-tattoo-spellbook/tools/EspGen/layout.json. Copy that file here when it changes.
-    void TacticalLayout(const fs::path& root) {
-        const auto path = root / "tests" / "fixtures" / "tactical-layout.json";
+    void SpellbookLayout(const fs::path& root) {
+        const auto path = root / "tests" / "fixtures" / "spellbook-layout.json";
         const auto j = io::ReadJson(path);
-        Check(j.has_value(), "tactical-layout.json is readable (copy tools/EspGen/layout.json from Tactical)");
+        Check(j.has_value(), "spellbook-layout.json is readable (copy tools/EspGen/layout.json from Spellbook)");
         if (!j) {
             return;
         }
         auto hex = [&](const char* key) -> std::uint32_t {
-            Check(j->contains(key) && (*j)[key].is_string(), std::string(key) + " is a hex string in tactical-layout.json");
+            Check(j->contains(key) && (*j)[key].is_string(), std::string(key) + " is a hex string in spellbook-layout.json");
             return static_cast<std::uint32_t>(std::stoul((*j)[key].get<std::string>(), nullptr, 0));
         };
-        Check((*j)["layoutVersion"].get<int>() == model::kTacticalLayoutVersion, "layoutVersion matches TacticalLayout.h");
-        Check((*j)["slots"].get<int>() == model::kTacticalSlots, "slots matches kTacticalSlots");
+        Check((*j)["layoutVersion"].get<int>() == model::kSpellbookLayoutVersion, "layoutVersion matches SpellbookLayout.h");
+        Check((*j)["slots"].get<int>() == model::kSpellbookSlots, "slots matches kSpellbookSlots");
         Check((*j)["castTypes"].get<int>() == model::kCastTypeCount, "castTypes matches kCastTypeCount");
-        Check(hex("quest") == model::kTacticalQuest, "quest FormID matches");
-        Check(hex("layoutVersionGlobal") == model::kTacticalLayoutVersionGlobal, "layoutVersionGlobal FormID matches");
+        Check(hex("quest") == model::kSpellbookQuest, "quest FormID matches");
+        Check(hex("layoutVersionGlobal") == model::kSpellbookLayoutVersionGlobal, "layoutVersionGlobal FormID matches");
         Check(hex("castEffectBase") == model::kCastEffectBase, "castEffectBase matches");
         Check(hex("castSpellBase") == model::kCastSpellBase, "castSpellBase matches");
         Check(hex("decayEffectBase") == model::kDecayEffectBase, "decayEffectBase matches");
@@ -927,9 +927,9 @@ namespace {
         Check(hex("dispelEffectBase") == model::kDispelEffectBase, "dispelEffectBase matches");
         Check(hex("dispelSpellBase") == model::kDispelSpellBase, "dispelSpellBase matches");
         Check(hex("castStride") == model::kCastStride, "castStride matches");
-        Check(model::TacticalCastSpellId(0, 0) == 0x900 && model::TacticalCastSpellId(3, 19) == 0x900 + 3 * 0x20 + 19,
+        Check(model::SpellbookCastSpellId(0, 0) == 0x900 && model::SpellbookCastSpellId(3, 19) == 0x900 + 3 * 0x20 + 19,
             "cast spell FormID formula matches EspGen");
-        Check(model::TacticalDecaySpellId(7) == 0x987 && model::TacticalDispelSpellId(2) == 0xA05, "decay and dispel FormIDs match EspGen");
+        Check(model::SpellbookDecaySpellId(7) == 0x987 && model::SpellbookDispelSpellId(2) == 0xA05, "decay and dispel FormIDs match EspGen");
     }
 
     // Every key the code uses has English text, and the files only hold keys the code uses.
@@ -994,8 +994,8 @@ int main(int argc, char** argv) {
     Settings();
     HiddenPresets(fixtures);
     OverlaySlots();
-    Tactical();
-    TacticalLayout(root);
+    Spellbook();
+    SpellbookLayout(root);
     if (g_failures == 0) {
         std::printf("All tests passed\n");
         return 0;

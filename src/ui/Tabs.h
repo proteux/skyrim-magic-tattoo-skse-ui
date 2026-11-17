@@ -8,7 +8,7 @@ namespace mtfui::ui {
     void DrawTattoosTab(App& app);
     void DrawGeneralTab(App& app);
     void DrawPluginsTab(App& app);
-    void DrawSpellsTab(App& app);  // only while Magic Tattoos Tactical is loaded
+    void DrawSpellsTab(App& app);  // only while Magic Tattoos Spellbook is loaded
 
     // Pieces of the Presets tab that also stand alone as panels of the split layout.
     void DrawLibraryPanel(App& app);
