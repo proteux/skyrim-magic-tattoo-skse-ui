@@ -24,6 +24,7 @@ $MTFUI_Param_TextHint	kommagetrennt, leer = alles
 $MTFUI_Lookup_None	(keine)
 $MTFUI_Lookup_Missing	(fehlt) {}
 $MTFUI_Lookup_AllSchools	Alle Schulen
+$MTFUI_Lookup_AllPlugins	Alle Plugins
 $MTFUI_Lookup_KnownOnly	Dem Spieler bekannt
 $MTFUI_Lookup_KnownOnlyTip	Nur Zauber, die der Spieler kennt. Benötigt ein geladenes Spiel.
 $MTFUI_Lookup_ShowAwkward	Unpraktische Zauber anzeigen
@@ -32,7 +33,7 @@ $MTFUI_Lookup_Reading	Zauber des Spielers werden gelesen...
 $MTFUI_Lookup_NoMatch	Keine passenden Zauber
 $MTFUI_Lookup_Count	{} Zauber
 $MTFUI_Lookup_NoSchool	Keine Schule
-$MTFUI_Lookup_SearchTip	Sucht in Name, Schule, Stufe, Typ, Dauer, Schädlich oder Nützlich und im Plugin.
+$MTFUI_Lookup_SearchTip	Sucht in Name, Schule, Stufe, Dauer, Schädlich oder Nützlich und im Plugin.
 $MTFUI_Lookup_ColSpell	Zauber
 $MTFUI_Lookup_ColSchool	Schule
 $MTFUI_Lookup_ColType	Typ

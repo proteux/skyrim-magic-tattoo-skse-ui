@@ -24,6 +24,7 @@ $MTFUI_Param_TextHint	separado por comas, vacío = cualquiera
 $MTFUI_Lookup_None	(ninguno)
 $MTFUI_Lookup_Missing	(falta) {}
 $MTFUI_Lookup_AllSchools	Todas las escuelas
+$MTFUI_Lookup_AllPlugins	Todos los plugins
 $MTFUI_Lookup_KnownOnly	Conocidos por el jugador
 $MTFUI_Lookup_KnownOnlyTip	Solo los hechizos que el jugador conoce. Necesita una partida cargada.
 $MTFUI_Lookup_ShowAwkward	Mostrar hechizos incómodos
@@ -32,7 +33,7 @@ $MTFUI_Lookup_Reading	Leyendo los hechizos del jugador...
 $MTFUI_Lookup_NoMatch	Ningún hechizo coincide
 $MTFUI_Lookup_Count	{} hechizos
 $MTFUI_Lookup_NoSchool	Sin escuela
-$MTFUI_Lookup_SearchTip	Busca en el nombre, la escuela, el nivel, el tipo, la duración, Dañino o Beneficioso, y el plugin.
+$MTFUI_Lookup_SearchTip	Busca en el nombre, la escuela, el nivel, la duración, Dañino o Beneficioso, y el plugin.
 $MTFUI_Lookup_ColSpell	Hechizo
 $MTFUI_Lookup_ColSchool	Escuela
 $MTFUI_Lookup_ColType	Tipo

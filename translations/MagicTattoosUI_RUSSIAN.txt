@@ -24,6 +24,7 @@ $MTFUI_Param_TextHint	через запятую, пусто = любое
 $MTFUI_Lookup_None	(нет)
 $MTFUI_Lookup_Missing	(отсутствует) {}
 $MTFUI_Lookup_AllSchools	Все школы
+$MTFUI_Lookup_AllPlugins	Все плагины
 $MTFUI_Lookup_KnownOnly	Известные игроку
 $MTFUI_Lookup_KnownOnlyTip	Только заклинания, которые знает игрок. Нужна загруженная игра.
 $MTFUI_Lookup_ShowAwkward	Показать неудобные заклинания
@@ -32,7 +33,7 @@ $MTFUI_Lookup_Reading	Чтение заклинаний игрока...
 $MTFUI_Lookup_NoMatch	Подходящих заклинаний нет
 $MTFUI_Lookup_Count	Заклинаний: {}
 $MTFUI_Lookup_NoSchool	Без школы
-$MTFUI_Lookup_SearchTip	Ищет по названию, школе, уровню, типу, длительности, «Вредное» или «Полезное» и по плагину.
+$MTFUI_Lookup_SearchTip	Ищет по названию, школе, уровню, длительности, «Вредное» или «Полезное» и по плагину.
 $MTFUI_Lookup_ColSpell	Заклинание
 $MTFUI_Lookup_ColSchool	Школа
 $MTFUI_Lookup_ColType	Тип

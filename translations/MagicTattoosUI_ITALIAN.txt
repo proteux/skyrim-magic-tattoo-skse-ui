@@ -24,6 +24,7 @@ $MTFUI_Param_TextHint	separati da virgole, vuoto = qualsiasi
 $MTFUI_Lookup_None	(nessuno)
 $MTFUI_Lookup_Missing	(mancante) {}
 $MTFUI_Lookup_AllSchools	Tutte le scuole
+$MTFUI_Lookup_AllPlugins	Tutti i plugin
 $MTFUI_Lookup_KnownOnly	Conosciuti dal giocatore
 $MTFUI_Lookup_KnownOnlyTip	Solo gli incantesimi che il giocatore conosce. Richiede una partita caricata.
 $MTFUI_Lookup_ShowAwkward	Mostra incantesimi scomodi
@@ -32,7 +33,7 @@ $MTFUI_Lookup_Reading	Lettura degli incantesimi del giocatore...
 $MTFUI_Lookup_NoMatch	Nessun incantesimo corrisponde
 $MTFUI_Lookup_Count	{} incantesimi
 $MTFUI_Lookup_NoSchool	Nessuna scuola
-$MTFUI_Lookup_SearchTip	Cerca nel nome, scuola, livello, tipo, durata, Dannoso o Benefico e nel plugin.
+$MTFUI_Lookup_SearchTip	Cerca nel nome, scuola, livello, durata, Dannoso o Benefico e nel plugin.
 $MTFUI_Lookup_ColSpell	Incantesimo
 $MTFUI_Lookup_ColSchool	Scuola
 $MTFUI_Lookup_ColType	Tipo

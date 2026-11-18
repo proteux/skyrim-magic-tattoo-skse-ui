@@ -24,6 +24,7 @@ $MTFUI_Param_TextHint	comma-separated, empty = any
 $MTFUI_Lookup_None	(none)
 $MTFUI_Lookup_Missing	(missing) {}
 $MTFUI_Lookup_AllSchools	All schools
+$MTFUI_Lookup_AllPlugins	All plugins
 $MTFUI_Lookup_KnownOnly	Known by player
 $MTFUI_Lookup_KnownOnlyTip	Only spells the player knows. Needs a loaded game.
 $MTFUI_Lookup_ShowAwkward	Show awkward spells
@@ -32,7 +33,7 @@ $MTFUI_Lookup_Reading	Reading the player's spells...
 $MTFUI_Lookup_NoMatch	No spells match
 $MTFUI_Lookup_Count	{} spells
 $MTFUI_Lookup_NoSchool	No school
-$MTFUI_Lookup_SearchTip	Matches the name, school, level, type, duration, Harmful or Helpful, and the plugin.
+$MTFUI_Lookup_SearchTip	Matches the name, school, level, duration, Harmful or Helpful, and the plugin.
 $MTFUI_Lookup_ColSpell	Spell
 $MTFUI_Lookup_ColSchool	School
 $MTFUI_Lookup_ColType	Type

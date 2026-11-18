@@ -2,6 +2,10 @@
 
 Versions follow `<major>.<feature>.<patch>`, as described in `AGENTS.md`.
 
+Version 1.8.30
+
+Change: spell picker has a plugin dropdown (with its own search) so Cast a spell and Cast an aura can narrow to one ESP/ESM. Search no longer matches type (concentration / fire and forget / delivery), so typing "fire" finds Firebolt and Flames instead of every fire-and-forget spell.
+
 Version 1.8.28
 
 Change: Spells tab follows Magic Tattoos Spellbook (`MagicTattoosSpellbook.esp`, `StorageUtilData/MagicTattoosSpellbook/spells.json`). If the new spells.json is missing, copies once from the old MagicTattoosTactical path.

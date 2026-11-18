@@ -16,12 +16,32 @@ namespace mtfui::ui {
         struct SpellPickerState {
             std::string search;
             int school = -1;  // -1: every school
+            std::string plugin;  // empty: every plugin
+            std::string pluginSearch;  // filter inside the plugin combo
+            std::vector<std::string> plugins;  // unique filenames from SpellLookup::All()
             bool knownOnly = true;
             bool showAwkward = false;  // wards, summons, caster-only, corpse
             bool reading = false;
             std::optional<std::unordered_set<RE::FormID>> known;
             std::vector<std::size_t> order;  // indices into SpellLookup::All(), in the table's sort order
         };
+
+        void RefreshPlugins(SpellPickerState& st, const std::vector<game::SpellEntry>& all) {
+            st.plugins.clear();
+            st.plugins.reserve(all.size());
+            for (const auto& e : all) {
+                st.plugins.push_back(e.plugin);
+            }
+            std::ranges::sort(st.plugins, [](const std::string& a, const std::string& b) { return _stricmp(a.c_str(), b.c_str()) < 0; });
+            st.plugins.erase(std::ranges::unique(st.plugins, [](const std::string& a, const std::string& b) { return _stricmp(a.c_str(), b.c_str()) == 0; }).begin(),
+                st.plugins.end());
+            if (!st.plugin.empty()) {
+                const bool stillThere = std::ranges::any_of(st.plugins, [&](const std::string& p) { return _stricmp(p.c_str(), st.plugin.c_str()) == 0; });
+                if (!stillThere) {
+                    st.plugin.clear();
+                }
+            }
+        }
 
         SpellPickerState& Picker() {
             static SpellPickerState state;
@@ -174,7 +194,7 @@ namespace mtfui::ui {
             const auto current = model::ParamStr(value);
             const auto* chosen = current.empty() ? nullptr : lookup.Find(current);
             const std::string preview = current.empty() ? std::string(T("$MTFUI_Lookup_None")) : chosen ? chosen->name : TF("$MTFUI_Lookup_Missing", current);
-            SetNextWindowSizeConstraints(ImVec2{ 920, 0 }, ImVec2{ FLT_MAX, 560 });
+            SetNextWindowSizeConstraints(ImVec2{ 1100, 0 }, ImVec2{ FLT_MAX, 560 });
             if (!BeginCombo(label, preview.c_str(), 0)) {
                 if (chosen && BeginItemTooltip()) {
                     SpellTooltip(*chosen);
@@ -183,22 +203,24 @@ namespace mtfui::ui {
                 return false;
             }
             auto& st = Picker();
+            const auto& all = lookup.All();
             if (IsWindowAppearing()) {
                 st.search.clear();
                 st.known.reset();
                 st.reading = false;
+                RefreshPlugins(st, all);
                 if (st.knownOnly) {
                     RequestKnown(st);
                 }
                 SetKeyboardFocusHere();
             }
-            SearchBox("##search", st.search, 200);
+            SearchBox("##search", st.search, 180);
             if (BeginItemTooltip()) {
                 TextUnformatted(T("$MTFUI_Lookup_SearchTip"));
                 EndTooltip();
             }
             SameLine();
-            SetNextItemWidth(140);
+            SetNextItemWidth(130);
             if (BeginCombo("##school", st.school < 0 ? T("$MTFUI_Lookup_AllSchools") : SchoolName(st.school), 0)) {
                 if (Selectable(T("$MTFUI_Lookup_AllSchools"), st.school < 0)) {
                     st.school = -1;
@@ -206,6 +228,28 @@ namespace mtfui::ui {
                 for (int s = 0; s < 5; ++s) {
                     if (Selectable(SchoolName(s), st.school == s)) {
                         st.school = s;
+                    }
+                }
+                EndCombo();
+            }
+            SameLine();
+            SetNextItemWidth(200);
+            const char* pluginPreview = st.plugin.empty() ? T("$MTFUI_Lookup_AllPlugins") : st.plugin.c_str();
+            if (BeginCombo("##plugin", pluginPreview, ImGuiComboFlags_HeightLarge)) {
+                if (IsWindowAppearing()) {
+                    st.pluginSearch.clear();
+                    SetKeyboardFocusHere();
+                }
+                SearchBox("##pluginsearch", st.pluginSearch, -1.0f);
+                if (Selectable(T("$MTFUI_Lookup_AllPlugins"), st.plugin.empty())) {
+                    st.plugin.clear();
+                }
+                for (const auto& p : st.plugins) {
+                    if (!st.pluginSearch.empty() && !model::MatchesSearch(p, st.pluginSearch)) {
+                        continue;
+                    }
+                    if (Selectable(p.c_str(), _stricmp(p.c_str(), st.plugin.c_str()) == 0)) {
+                        st.plugin = p;
                     }
                 }
                 EndCombo();
@@ -227,7 +271,6 @@ namespace mtfui::ui {
 
             bool changed = false;
             int shown = 0;
-            const auto& all = lookup.All();
             constexpr int flags = ImGuiTableFlags_Sortable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit;
             if (st.knownOnly && st.reading) {
                 TextDisabled("%s", T("$MTFUI_Lookup_Reading"));
@@ -250,6 +293,9 @@ namespace mtfui::ui {
                     if (st.school >= 0 && e.school != st.school) {
                         continue;
                     }
+                    if (!st.plugin.empty() && _stricmp(e.plugin.c_str(), st.plugin.c_str()) != 0) {
+                        continue;
+                    }
                     if (st.knownOnly && (!st.known || !st.known->contains(e.formId))) {
                         continue;
                     }
@@ -258,7 +304,8 @@ namespace mtfui::ui {
                         continue;
                     }
                     if (!st.search.empty()) {
-                        const auto haystack = std::format("{} {} {} {} {} {} {}", e.name, SchoolName(e.school), LevelName(e.level), TypeText(e),
+                        // Leave type out: "Fire and forget" makes every FAF spell match a typed "fire".
+                        const auto haystack = std::format("{} {} {} {} {} {}", e.name, SchoolName(e.school), LevelName(e.level),
                             DurationText(e), TargetsText(e), e.plugin);
                         if (!model::MatchesSearch(haystack, st.search)) {
                             continue;

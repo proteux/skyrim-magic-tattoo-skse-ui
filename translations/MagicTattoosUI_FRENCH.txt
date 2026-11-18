@@ -24,6 +24,7 @@ $MTFUI_Param_TextHint	séparés par des virgules, vide = tout
 $MTFUI_Lookup_None	(aucun)
 $MTFUI_Lookup_Missing	(manquant) {}
 $MTFUI_Lookup_AllSchools	Toutes les écoles
+$MTFUI_Lookup_AllPlugins	Tous les plugins
 $MTFUI_Lookup_KnownOnly	Connus du joueur
 $MTFUI_Lookup_KnownOnlyTip	Uniquement les sorts que le joueur connaît. Nécessite une partie chargée.
 $MTFUI_Lookup_ShowAwkward	Afficher les sorts peu pratiques
@@ -32,7 +33,7 @@ $MTFUI_Lookup_Reading	Lecture des sorts du joueur...
 $MTFUI_Lookup_NoMatch	Aucun sort correspondant
 $MTFUI_Lookup_Count	{} sorts
 $MTFUI_Lookup_NoSchool	Aucune école
-$MTFUI_Lookup_SearchTip	Recherche dans le nom, l'école, le niveau, le type, la durée, Nuisible ou Bénéfique, et le plugin.
+$MTFUI_Lookup_SearchTip	Recherche dans le nom, l'école, le niveau, la durée, Nuisible ou Bénéfique, et le plugin.
 $MTFUI_Lookup_ColSpell	Sort
 $MTFUI_Lookup_ColSchool	École
 $MTFUI_Lookup_ColType	Type
