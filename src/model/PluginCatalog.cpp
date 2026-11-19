@@ -7,6 +7,11 @@
 
 namespace mtfui::model {
     namespace {
+        LookupResolver& Resolver() {
+            static LookupResolver resolver;
+            return resolver;
+        }
+
         ParamSpec ParseSpec(const Json& j) {
             ParamSpec spec;
             if (!j.is_object()) {
@@ -20,6 +25,9 @@ namespace mtfui::model {
                         spec.menu.push_back({ o.value("id", std::string{}), o.value("label", o.value("id", std::string{})) });
                     }
                 }
+            } else if (auto l = j.find("lookup"); l != j.end() && l->is_string() && !l->get<std::string>().empty()) {
+                spec.kind = ParamKind::Lookup;
+                spec.lookup = l->get<std::string>();
             } else if (j.value("text", false)) {
                 spec.kind = ParamKind::Text;
             } else if (auto c = j.find("color"); c != j.end() && ((c->is_number() && c->get<int>() != 0) || (c->is_boolean() && c->get<bool>()))) {
@@ -75,6 +83,15 @@ namespace mtfui::model {
         }
     }
 
+    void SetLookupResolver(LookupResolver resolver) {
+        Resolver() = std::move(resolver);
+    }
+
+    LookupResult ResolveLookup(std::string_view kind, std::string_view value) {
+        const auto& resolver = Resolver();
+        return resolver ? resolver(kind, value) : LookupResult{};
+    }
+
     std::string ParamSpec::Display(const ParamValue& v) const {
         switch (kind) {
             case ParamKind::Menu: {
@@ -89,6 +106,14 @@ namespace mtfui::model {
             case ParamKind::Text: {
                 const auto s = ParamStr(v);
                 return s.empty() ? "(any)" : s;
+            }
+            case ParamKind::Lookup: {
+                const auto s = ParamStr(v);
+                if (s.empty()) {
+                    return "(none)";
+                }
+                auto found = ResolveLookup(lookup, s);
+                return found.state == LookupState::Found && !found.name.empty() ? found.name : s;
             }
             case ParamKind::Color: {
                 return FormatHexColor(static_cast<std::uint32_t>(ParamInt(v)));

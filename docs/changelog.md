@@ -1,6 +1,14 @@
 # Changelog
 
-Versions follow `<major>.<feature>.<patch>`, as described in `AGENTS.md`.
+Version 1.8.31
+
+New: Spells tab for Magic Tattoos Spellbook — up to 20 hex/blessing spells plus Dispel (name, preset, cast type, school, cost, duration). New/Remove, Learn/Forget, Save/Revert
+New: Spell picker for Cast a spell / Cast an aura — searchable load-order table with school, type, cost, duration, harmful/helpful, plugin filter
+New: `CastAs` / `CastAsScaled` so Spellbook hexes and auras use the caster's perks and Fortify School. Tips match the Skyrim connector.
+New: `GetSlotPreset` / `IsSlotPermanent` for Spellbook; Spells tab hides if ESP and UI layout versions disagree.
+Change: Hand FX follow school and Hex/Blessing. Warns on shared presets; save toasts for forget/re-equip. spells.json under MagicTattoosSpellbook (one-time copy from Tactical).
+Fix: CastAs no longer crashes on AE Fortify School or leaves vestigial projectile durations.
+
 
 Version 1.6.8
 

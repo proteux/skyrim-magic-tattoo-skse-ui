@@ -21,6 +21,55 @@ $MTFUI_Format_Seconds1_Fmt	%.1f s
 $MTFUI_Format_Milliseconds_Fmt	%d ms
 $MTFUI_Color_Palette	Tavolozza
 $MTFUI_Param_TextHint	separati da virgole, vuoto = qualsiasi
+$MTFUI_Lookup_None	(nessuno)
+$MTFUI_Lookup_Missing	(mancante) {}
+$MTFUI_Lookup_AllSchools	Tutte le scuole
+$MTFUI_Lookup_AllPlugins	Tutti i plugin
+$MTFUI_Lookup_KnownOnly	Conosciuti dal giocatore
+$MTFUI_Lookup_KnownOnlyTip	Solo gli incantesimi che il giocatore conosce. Richiede una partita caricata.
+$MTFUI_Lookup_ShowAwkward	Mostra incantesimi scomodi
+$MTFUI_Lookup_ShowAwkwardTip	Protezioni, evocazioni, armi vincolate, incantesimi solo per il lanciatore (Telecinesi, Luce di candela) e incantesimi per cadaveri. Nascosti di default perché da un tatuaggio fanno poco o la cosa sbagliata.
+$MTFUI_Lookup_Reading	Lettura degli incantesimi del giocatore...
+$MTFUI_Lookup_NoMatch	Nessun incantesimo corrisponde
+$MTFUI_Lookup_Count	{} incantesimi
+$MTFUI_Lookup_NoSchool	Nessuna scuola
+$MTFUI_Lookup_SearchTip	Cerca nel nome, scuola, livello, durata, Dannoso o Benefico e nel plugin.
+$MTFUI_Lookup_ColSpell	Incantesimo
+$MTFUI_Lookup_ColSchool	Scuola
+$MTFUI_Lookup_ColType	Tipo
+$MTFUI_Lookup_ColCost	Costo
+$MTFUI_Lookup_ColDuration	Durata
+$MTFUI_Lookup_ColTargets	Bersagli
+$MTFUI_Lookup_Novice	Novizio
+$MTFUI_Lookup_Apprentice	Apprendista
+$MTFUI_Lookup_Adept	Adepto
+$MTFUI_Lookup_Expert	Esperto
+$MTFUI_Lookup_Master	Maestro
+$MTFUI_Lookup_Concentration	Concentrazione
+$MTFUI_Lookup_FireAndForget	Lancia e dimentica
+$MTFUI_Lookup_Self	se stessi
+$MTFUI_Lookup_Touch	tocco
+$MTFUI_Lookup_Aimed	mirato
+$MTFUI_Lookup_TargetActor	attore bersaglio
+$MTFUI_Lookup_TargetLocation	luogo bersaglio
+$MTFUI_Lookup_Type	{}, {}
+$MTFUI_Lookup_CostPerSecond	{}/s
+$MTFUI_Lookup_Harmful	Dannoso
+$MTFUI_Lookup_Helpful	Benefico
+$MTFUI_Lookup_TipSummary	{}, {}, costo {}
+$MTFUI_Lookup_LevelSchool	{} {}
+$MTFUI_Lookup_EffectArea	area di {} ft
+$MTFUI_Lookup_Duration	{} s
+$MTFUI_Lookup_EffectDuration	per {} s
+$MTFUI_Lookup_TipConcentration	Concentrazione: ogni attivazione incanala per 10 secondi. La Magicka del lanciatore viene consumata a ogni impulso. Se non può permetterselo, gli impulsi si fermano finché la magicka non si recupera.
+$MTFUI_Lookup_TipFireAndForget	Lancia e dimentica: ogni attivazione applica l'intero incantesimo. Si ripete in base alla durata o al tempo di lancio dell'incantesimo per tutta la vita del tatuaggio.
+$MTFUI_Lookup_TipHarmful	Dannoso: Cast an aura colpisce gli attori dalla parte di chi lo indossa (non i suoi nemici), mai chi lo indossa.
+$MTFUI_Lookup_TipHelpful	Benefico: Cast an aura colpisce gli attori dalla parte di chi lo indossa (non i suoi nemici), mai chi lo indossa.
+$MTFUI_Lookup_CaveatSummon	Evocazioni e armi vincolate sono fatte per provenire dal loro lanciatore e fanno poco se applicate a un attore.
+$MTFUI_Lookup_CaveatCorpse	Fatto per i cadaveri, e gli effetti dei tatuaggi raggiungono solo attori vivi.
+$MTFUI_Lookup_CaveatCasterOnly	Agisce tramite le mani o l'ambiente del lanciatore e non fa nulla se applicato a un attore.
+$MTFUI_Lookup_CaveatWard	Una protezione regge solo mentre viene lanciata, quindi sfarfalla.
+$MTFUI_Lookup_TipSource	Da {}
 $MTFUI_Severity_Error	Errore
 $MTFUI_Severity_Warning	Avviso
 $MTFUI_Severity_Note	Nota
@@ -49,12 +98,16 @@ $MTFUI_Status_MtfDisabled	MTF è disattivato nelle sue impostazioni. I tatuaggi 
 $MTFUI_Status_PreviewOn	{} su {}
 $MTFUI_Status_LoadingTextures	Caricamento di {} texture...
 $MTFUI_Status_Shortcuts	Scorciatoie\nCtrl+S  salva\nCtrl+Z / Ctrl+Y  annulla / ripeti\nCtrl+N  nuovo preset\nCtrl+D  duplica\nCtrl+F  cerca preset\nF5  applica al bersaglio\nAlt+Su / Alt+Giù  sposta il livello selezionato
+$MTFUI_Font_Missing	Il carattere del menu non può disegnare le lettere {}, quindi questo menu è in inglese. Passa il mouse per la soluzione.
+$MTFUI_Font_FixSwitch	In Data/SKSE/Plugins/SKSEMenuFramework.ini imposta {} = true sotto [Fonts], poi riavvia il gioco.
+$MTFUI_Font_FixFont	In Data/SKSE/Plugins/SKSEMenuFramework.ini scegli un PrimaryFont sotto [Fonts] che abbia queste lettere, poi riavvia il gioco.
 $MTFUI_Status_ShortcutHint	|  Ctrl+S salva, Ctrl+Z annulla, F5 applica (passa il mouse per altro)
 $MTFUI_Tab_Presets	Preset
 $MTFUI_Tab_Tattoos	Tatuaggi
 $MTFUI_Tab_TattoosChoosing	Tatuaggi (scelta)
 $MTFUI_Tab_General	Generale
 $MTFUI_Tab_Plugins	Plugin
+$MTFUI_Tab_Spells	Incantesimi
 $MTFUI_Panels_PickHint	Scegli il tatuaggio nella scheda Tatuaggi di Magic Tattoos > Editor nel menu
 $MTFUI_Panels_Peek	Tieni premuto per vedere
 $MTFUI_Panels_PeekTip	Nasconde gli altri pannelli finché tieni premuto il pulsante del mouse. Trascina i pannelli dalla barra del titolo per spostarli; la disposizione viene ricordata.
@@ -392,6 +445,77 @@ $MTFUI_Tiers_Base	Base
 $MTFUI_Tiers_BaseHelp	Predefinito imposta l'aspetto di base. I livelli che lasciano il tatuaggio su "Uguale a Predefinito" partono da esso, e viene mostrato quando nessun livello corrisponde.
 $MTFUI_Tiers_Header	Livelli (vince quello in alto)
 $MTFUI_Tiers_HeaderHelp	Trascina i livelli per cambiarne la priorità, oppure selezionane uno e premi Alt+Su / Alt+Giù. Fai clic destro su un livello per copiarlo, incollarlo o svuotarlo. Viene mostrato il primo livello le cui condizioni sono vere; Predefinito si applica quando nessuna lo è.
+$MTFUI_Tiers_Extra	Livelli extra (non nel menu di MTF)
+$MTFUI_Tiers_ExtraHelp	MTF controlla questi come qualsiasi altro livello, ma il suo menu mostra solo i primi {}, quindi modificali qui. Salvare dal menu di MTF li mantiene.
+$MTFUI_Tiers_Add	Aggiungi livello
+$MTFUI_Gradient_TierName	{} {}
+$MTFUI_Gradient_Open	Livelli sfumati...
+$MTFUI_Gradient_OpenHelp	Crea una scala di livelli da un valore, come la salute, così il colore del tatuaggio lo segue come una barra della salute.
+$MTFUI_Gradient_Title	Livelli sfumati
+$MTFUI_Gradient_Intro	MTF non può associare un valore direttamente a un colore, quindi qui si crea un livello per ogni passo del valore, ciascuno una sfumatura lungo i tuoi colori. La transizione del preset sfuma tra i livelli vicini.
+$MTFUI_Gradient_FromSaved	Queste sono le impostazioni con cui sono stati creati i livelli di questo preset.
+$MTFUI_Gradient_FromSavedEdited	Queste sono le impostazioni con cui sono stati creati i livelli di questo preset, ma i livelli sono stati modificati da allora. Crearli di nuovo sostituisce quelle modifiche.
+$MTFUI_Gradient_FromTiers	Impostazioni lette dai livelli di questo preset. I colori sono presi dalle estremità e dal centro dell'intervallo, quindi controllali prima di creare di nuovo i livelli.
+$MTFUI_Gradient_Condition	Valore
+$MTFUI_Gradient_NoCondition	Nessuna condizione installata ha un cursore di soglia.
+$MTFUI_Gradient_Below	Sotto (livello 1 = più basso)
+$MTFUI_Gradient_Above	Pari o sopra (livello 1 = più alto)
+$MTFUI_Gradient_DirectionHelp	In che direzione la condizione confronta. «Sotto Salute %» è Sotto; «Sopra Salute %» è Pari o sopra. Entrambe danno gli stessi colori; deve solo corrispondere alla condizione.
+$MTFUI_Gradient_Range	Intervallo
+$MTFUI_Gradient_From_Fmt	da %d
+$MTFUI_Gradient_To_Fmt	a %d
+$MTFUI_Gradient_Steps	Livelli
+$MTFUI_Gradient_StepsInfo	{} livelli più Predefinito, circa {} ciascuno
+$MTFUI_Gradient_PastMenu	Il menu di MTF mostra solo i primi {} livelli. Gli altri funzionano; modificali qui.
+$MTFUI_Gradient_TintSection	Tinta
+$MTFUI_Gradient_GlowSection	Bagliore
+$MTFUI_Gradient_ColorsHelp	Dall'estremità bassa dell'intervallo (in alto, a sinistra nella striscia) a quella alta. Da due a quattro colori, equidistanti. Se disattivato, i livelli mantengono il colore di Predefinito.
+$MTFUI_Gradient_SameAsTint	Come la tinta
+$MTFUI_Gradient_RemoveColor	Rimuovi
+$MTFUI_Gradient_AddColor	Aggiungi colore
+$MTFUI_Gradient_Reverse	Inverti
+$MTFUI_Gradient_Swap	Scambia
+$MTFUI_Gradient_SwapTip	Scambia i valori dell'estremità bassa e alta
+$MTFUI_Gradient_HealthBar	Barra della salute
+$MTFUI_Gradient_Tint	Cambia tinta
+$MTFUI_Gradient_Emissive	Cambia colore del bagliore
+$MTFUI_Gradient_Glow	Rampa di intensità del bagliore
+$MTFUI_Gradient_GlowHelp	Intensità del bagliore a ciascuna estremità dell'intervallo. Un colore di bagliore si vede solo con una certa intensità; le altre impostazioni del livello vengono da Predefinito.
+$MTFUI_Gradient_LowEnd_Fmt	estremità bassa %.1f
+$MTFUI_Gradient_HighEnd_Fmt	estremità alta %.1f
+$MTFUI_Gradient_Opacity	Rampa di opacità
+$MTFUI_Gradient_LowEndPct_Fmt	estremità bassa %d%%
+$MTFUI_Gradient_HighEndPct_Fmt	estremità alta %d%%
+$MTFUI_Gradient_PulseSection	Pulsazione
+$MTFUI_Gradient_PulseHelp	Fa variare la pulsazione lungo l'intervallo, come un battito che accelera al calare della salute. Se disattivato, i livelli mantengono la pulsazione di Predefinito. MTF può riavviare la pulsazione al cambio di livello, quindi meno livelli più ampi possono risultare più fluidi.
+$MTFUI_Gradient_PulseSpeed	Rampa di velocità
+$MTFUI_Gradient_PulseDepth	Rampa di profondità
+$MTFUI_Gradient_PulsePause	Rampa di pausa
+$MTFUI_Gradient_LowEndRate_Fmt	estremità bassa %.2f/s
+$MTFUI_Gradient_HighEndRate_Fmt	estremità alta %.2f/s
+$MTFUI_Gradient_LowEndSec_Fmt	estremità bassa %.1f s
+$MTFUI_Gradient_HighEndSec_Fmt	estremità alta %.1f s
+$MTFUI_Gradient_LowShape	Forma diversa all'estremità bassa
+$MTFUI_Gradient_LowShapeHelp	I livelli nella parte più bassa dell'intervallo usano questa forma di pulsazione; gli altri mantengono quella di Predefinito.
+$MTFUI_Gradient_LowShapeUpTo_Fmt	più basso %d%%
+$MTFUI_Gradient_PulseNoGlow	La pulsazione anima solo il bagliore, e Predefinito non ha intensità di bagliore. Attiva la rampa di intensità del bagliore o dai a Predefinito un po' di bagliore.
+$MTFUI_Gradient_EffectsSection	Effetti
+$MTFUI_Gradient_EffectsHelp	Dà a ogni livello questi effetti, con ogni cursore e colore impostato lungo l'intervallo, come la Scala dell'attore di RaceMenu che cresce dal 100% al 150% al calare della salute, o il suo Colore dei capelli che passa da castano a bianco. I colori sfumano dal colore dell'estremità bassa a quello dell'estremità alta. Menu e altre impostazioni sono uguali su ogni livello. Gli effetti di ogni livello restano attivi finché è mostrato, quindi il valore passa a gradini da un livello all'altro; gli effetti con una transizione propria, come quelli di RaceMenu, scorrono tra i gradini.
+$MTFUI_Gradient_AddEffect	Aggiungi effetto
+$MTFUI_Gradient_LowEndParam	estremità bassa {}
+$MTFUI_Gradient_HighEndParam	estremità alta {}
+$MTFUI_Gradient_LowEndColor	Estremità bassa
+$MTFUI_Gradient_HighEndColor	Estremità alta
+$MTFUI_Gradient_EffectsOnDefault	Anche Predefinito li riceve
+$MTFUI_Gradient_EffectsOnDefaultHelp	Predefinito appare fuori dai livelli, alla sua estremità dell'intervallo. Attivo, riceve ogni effetto a quell'estremità, sostituendo un effetto dello stesso tipo che ha già. Disattivo, gli effetti di Predefinito restano come sono, quindi gli effetti si fermano fuori dai livelli.
+$MTFUI_Gradient_TransitionHint	La transizione è breve, quindi il colore salta da un livello all'altro. Circa un secondo lo fa scorrere.
+$MTFUI_Gradient_SetTransition	Imposta transizione a 1 s
+$MTFUI_Gradient_Replaces	Sostituisce tutti i livelli. Predefinito mantiene il suo tatuaggio e gli effetti. Annulla li ripristina.
+$MTFUI_Gradient_ReplacesWithDefaultEffects	Sostituisce tutti i livelli. Predefinito mantiene il suo tatuaggio e gli altri effetti, e riceve gli effetti qui sopra. Annulla li ripristina.
+$MTFUI_Gradient_Create	Crea livelli
+$MTFUI_Toast_GradientMade	Creati {} livelli sfumati. Salva per mantenerli.
+$MTFUI_Tiers_AddHelp	Aggiunge un livello in fondo. Il menu di MTF mostra {} livelli; MTF stesso ne controlla fino a {} (iMaxConditions in MagicTattoosFramework.ini).
+$MTFUI_Tiers_AddFull	MTF controlla al massimo {} livelli. Aumenta iMaxConditions in Data/SKSE/Plugins/MagicTattoosFramework.ini e riavvia il gioco per averne di più.
 $MTFUI_Header_Revert	Ripristina originale
 $MTFUI_Header_Undo	Annulla
 $MTFUI_Header_Redo	Ripeti
@@ -439,10 +563,13 @@ $MTFUI_Lint_NotAnOption	{}: '{}' non è un'opzione per {}
 $MTFUI_Lint_BadFileName	Il nome del file deve avere da 1 a 32 caratteri tra lettere, cifre, '_' o '-'
 $MTFUI_Lint_NoDisplayName	Il nome visualizzato è vuoto; MTF mostrerà il nome del file
 $MTFUI_Lint_NoCondition	{} ha un aspetto o degli effetti ma nessuna condizione, quindi non si attiva mai
+$MTFUI_Lint_PastLimit	{} è oltre i {} livelli che MTF controlla, quindi non si attiva mai. Aumenta iMaxConditions in MagicTattoosFramework.ini.
 $MTFUI_Lint_Shadowed	{} non può mai attivarsi: {} è più in alto nell'elenco e corrisponde sempre per primo. Spostalo su.
 $MTFUI_Lint_ConditionMissing	La condizione '{}' non è installata; questo livello non si attiverà
 $MTFUI_Lint_ConditionDisabled	{} è disattivato in MTF; '{}' non sarà mai vera
 $MTFUI_Lint_EmptyText	{}: il testo è vuoto, il che di solito corrisponde a qualsiasi cosa
+$MTFUI_Lint_LookupEmpty	{}: nessun {} scelto, quindi non fa nulla
+$MTFUI_Lint_LookupMissing	{}: '{}' non è in questo gioco. Il suo plugin potrebbe essere stato rimosso
 $MTFUI_Lint_PackMissing	Il pacchetto di tatuaggi '{}' non è installato
 $MTFUI_Lint_NoEntry	È scelto un pacchetto ma nessun tatuaggio; non verrà mostrato nulla
 $MTFUI_Lint_EntryMissing	Il tatuaggio '{}' manca da {}
@@ -497,3 +624,60 @@ $MTFUI_Tattoos_TextureFiles	File di texture
 $MTFUI_Tattoos_NewPresetTitle	Nuovo preset da tatuaggio
 $MTFUI_Tattoos_DefaultLook	Aspetto predefinito: {} ({})
 $MTFUI_Tattoos_UnsavedWarning	Ti verrà chiesto cosa fare con le modifiche non salvate al preset aperto.
+$MTFUI_Spells_Intro	Incantesimi di Magic Tattoos Spellbook. Ognuno applica un preset a chi colpisce, come maledizione o benedizione; ciò che fa in gioco dipende dagli effetti dei livelli del preset. Salva, poi impara gli incantesimi che vuoi far conoscere a questo personaggio.
+$MTFUI_Spells_Save	Salva incantesimi
+$MTFUI_Spells_Revert	Ripristina
+$MTFUI_Spells_Unsaved	Modifiche non salvate
+$MTFUI_Spells_ColPreset	Preset
+$MTFUI_Spells_ColCasting	Lancio e scuola
+$MTFUI_Spells_ColCostOnly	Costo
+$MTFUI_Spells_DispelSection	Dissolvi
+$MTFUI_Spells_SpellsSection	Incantesimi tatuaggio
+$MTFUI_Spells_New	+ Nuovo incantesimo
+$MTFUI_Spells_Count	{} di {} incantesimi
+$MTFUI_Spells_Remove	Rimuovi
+$MTFUI_Spells_RemoveTip	Svuota questo incantesimo. Dopo il salvataggio, questo personaggio lo dimentica se lo conosce.
+$MTFUI_Spells_DefaultName	Incantesimo tatuaggio {}
+$MTFUI_Spells_DispelDefaultName	Dissolvi tatuaggi
+$MTFUI_Spells_DispelAbout	Rimuove ogni tatuaggio che questi incantesimi hanno messo sul bersaglio, anche quelli permanenti. I preset che indossa da altre fonti restano.
+$MTFUI_Spells_NoPreset	(nessun preset)
+$MTFUI_Spells_PresetMissing	Questo preset non esiste più
+$MTFUI_Spells_CastSelf	Se stessi
+$MTFUI_Spells_CastSelfChannel	Se stessi, incanalato
+$MTFUI_Spells_CastTouch	Tocco, incanalato
+$MTFUI_Spells_CastRanged	A distanza
+$MTFUI_Spells_Alteration	Alterazione
+$MTFUI_Spells_Conjuration	Evocazione
+$MTFUI_Spells_Destruction	Distruzione
+$MTFUI_Spells_Illusion	Illusione
+$MTFUI_Spells_Restoration	Ripristino
+$MTFUI_Spells_Hex	Maledizione
+$MTFUI_Spells_HexTip	Conta come un attacco. Se sei furtivo e non rilevato, il marchio arriva in silenzio e il bersaglio non sa chi è stato.
+$MTFUI_Spells_Blessing	Benedizione
+$MTFUI_Spells_BlessingTip	Mai trattato come un attacco, e non è mai un crimine.
+$MTFUI_Spells_Cost_Fmt	%d magicka
+$MTFUI_Spells_CostPerSecond_Fmt	%d magicka al secondo
+$MTFUI_Spells_CostTip	Prima dei talenti di costo della scuola. Ctrl+clic per digitare un valore.
+$MTFUI_Spells_Permanent	Permanente
+$MTFUI_Spells_PermanentTip	Il tatuaggio resta finché Dissolvi non lo rimuove o chi lo porta muore.
+$MTFUI_Spells_Decay_Fmt	Dura %.0f s
+$MTFUI_Spells_DecayTip	Quanto resta il tatuaggio dopo l'impatto. Lanciarlo di nuovo riavvia il tempo.
+$MTFUI_Spells_DecayChannelTip	Quanto resta il tatuaggio dopo la fine del canale. Resta finché incanali.
+$MTFUI_Spells_NoGame	Carica una partita per imparare gli incantesimi
+$MTFUI_Spells_Reading	Lettura...
+$MTFUI_Spells_Known	Conosciuto
+$MTFUI_Spells_NotKnown	Non conosciuto
+$MTFUI_Spells_Learn	Impara
+$MTFUI_Spells_Forget	Dimentica
+$MTFUI_Spells_LearnNeedsPreset	Scegli prima un preset e salva.
+$MTFUI_Spells_LearnNeedsSave	Salva prima le modifiche.
+$MTFUI_Spells_DuplicatePreset	Stesso preset dell'incantesimo {}
+$MTFUI_Spells_DuplicatePresetTip	Due incantesimi possono condividere un preset, ma l'ultimo lanciato possiede il tatuaggio. È il suo timer o Dissolvi a toglierlo.
+$MTFUI_Toast_SpellsSaved	Incantesimi salvati
+$MTFUI_Toast_SpellsSaveFailed	Impossibile salvare gli incantesimi: {}
+$MTFUI_Toast_SpellLearned	Imparato {}. Equipaggialo dal menu Magia.
+$MTFUI_Toast_SpellForgotten	Dimenticato {}
+$MTFUI_Toast_SpellForgottenOne	Dimenticato un incantesimo il cui preset è stato svuotato. Equipaggialo dal menu Magia se lo impari di nuovo.
+$MTFUI_Toast_SpellForgottenN	Dimenticati {} incantesimi i cui preset sono stati svuotati.
+$MTFUI_Toast_SpellSwappedOne	Tipo di lancio cambiato: equipaggia di nuovo l'incantesimo dal menu Magia (preferiti e scorciatoie sono stati cancellati).
+$MTFUI_Toast_SpellSwappedN	Tipo di lancio cambiato su {} incantesimi: equipaggiali di nuovo dal menu Magia (preferiti e scorciatoie sono stati cancellati).

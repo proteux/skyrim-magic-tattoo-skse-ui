@@ -21,6 +21,55 @@ $MTFUI_Format_Seconds1_Fmt	%.1f s
 $MTFUI_Format_Milliseconds_Fmt	%d ms
 $MTFUI_Color_Palette	Palette
 $MTFUI_Param_TextHint	comma-separated, empty = any
+$MTFUI_Lookup_None	(none)
+$MTFUI_Lookup_Missing	(missing) {}
+$MTFUI_Lookup_AllSchools	All schools
+$MTFUI_Lookup_AllPlugins	All plugins
+$MTFUI_Lookup_KnownOnly	Known by player
+$MTFUI_Lookup_KnownOnlyTip	Only spells the player knows. Needs a loaded game.
+$MTFUI_Lookup_ShowAwkward	Show awkward spells
+$MTFUI_Lookup_ShowAwkwardTip	Wards, summons, bound weapons, caster-only spells (Telekinesis, Candlelight), and corpse spells. Hidden by default because they do little or the wrong thing from a tattoo.
+$MTFUI_Lookup_Reading	Reading the player's spells...
+$MTFUI_Lookup_NoMatch	No spells match
+$MTFUI_Lookup_Count	{} spells
+$MTFUI_Lookup_NoSchool	No school
+$MTFUI_Lookup_SearchTip	Matches the name, school, level, duration, Harmful or Helpful, and the plugin.
+$MTFUI_Lookup_ColSpell	Spell
+$MTFUI_Lookup_ColSchool	School
+$MTFUI_Lookup_ColType	Type
+$MTFUI_Lookup_ColCost	Cost
+$MTFUI_Lookup_ColDuration	Duration
+$MTFUI_Lookup_ColTargets	Targets
+$MTFUI_Lookup_Novice	Novice
+$MTFUI_Lookup_Apprentice	Apprentice
+$MTFUI_Lookup_Adept	Adept
+$MTFUI_Lookup_Expert	Expert
+$MTFUI_Lookup_Master	Master
+$MTFUI_Lookup_Concentration	Concentration
+$MTFUI_Lookup_FireAndForget	Fire and forget
+$MTFUI_Lookup_Self	self
+$MTFUI_Lookup_Touch	touch
+$MTFUI_Lookup_Aimed	aimed
+$MTFUI_Lookup_TargetActor	target actor
+$MTFUI_Lookup_TargetLocation	target location
+$MTFUI_Lookup_Type	{}, {}
+$MTFUI_Lookup_CostPerSecond	{}/s
+$MTFUI_Lookup_Harmful	Harmful
+$MTFUI_Lookup_Helpful	Helpful
+$MTFUI_Lookup_TipSummary	{}, {}, cost {}
+$MTFUI_Lookup_LevelSchool	{} {}
+$MTFUI_Lookup_EffectArea	{} ft area
+$MTFUI_Lookup_Duration	{} s
+$MTFUI_Lookup_EffectDuration	for {} s
+$MTFUI_Lookup_TipConcentration	Concentration: every trigger will channel for 10 seconds. Magicka is drained from the caster per pulse. When they can't afford it, pulses pause until magicka recovers.
+$MTFUI_Lookup_TipFireAndForget	Fire and forget: each trigger applies the whole spell. Repeats based on the spell's duration or cast time for the lifetime of the tattoo.
+$MTFUI_Lookup_TipHarmful	Harmful: Cast an aura hits actors on the wearer's side (not enemies of them), never the wearer.
+$MTFUI_Lookup_TipHelpful	Helpful: Cast an aura hits actors on the wearer's side (not enemies of them), never the wearer.
+$MTFUI_Lookup_CaveatSummon	Summons and bound weapons are made to come from their caster, and do little when applied to an actor.
+$MTFUI_Lookup_CaveatCorpse	Made for corpses, and tattoo effects only reach living actors.
+$MTFUI_Lookup_CaveatCasterOnly	Works through its caster's hands or surroundings, and does nothing when applied to an actor.
+$MTFUI_Lookup_CaveatWard	A ward only holds while it's being cast, so it flickers.
+$MTFUI_Lookup_TipSource	From {}
 $MTFUI_Severity_Error	Error
 $MTFUI_Severity_Warning	Warning
 $MTFUI_Severity_Note	Note
@@ -58,6 +107,7 @@ $MTFUI_Tab_Tattoos	Tattoos
 $MTFUI_Tab_TattoosChoosing	Tattoos (choosing)
 $MTFUI_Tab_General	General
 $MTFUI_Tab_Plugins	Plugins
+$MTFUI_Tab_Spells	Spells
 $MTFUI_Panels_PickHint	Choose the tattoo on the Tattoos tab of Magic Tattoos > Editor in the menu
 $MTFUI_Panels_Peek	Hold to peek
 $MTFUI_Panels_PeekTip	Hides the other panels while you hold the mouse button down. Drag panels by their title bar to move them; the layout is remembered.
@@ -518,6 +568,8 @@ $MTFUI_Lint_Shadowed	{} can never activate: {} is higher in the list and always 
 $MTFUI_Lint_ConditionMissing	Condition '{}' is not installed; this tier will not activate
 $MTFUI_Lint_ConditionDisabled	{} is disabled in MTF; '{}' will never be true
 $MTFUI_Lint_EmptyText	{}: text is empty, which usually matches anything
+$MTFUI_Lint_LookupEmpty	{}: no {} chosen, so it does nothing
+$MTFUI_Lint_LookupMissing	{}: '{}' isn't in this game. Its plugin may have been removed
 $MTFUI_Lint_PackMissing	Tattoo pack '{}' is not installed
 $MTFUI_Lint_NoEntry	A pack is chosen but no tattoo; nothing will show
 $MTFUI_Lint_EntryMissing	Tattoo '{}' is missing from {}
@@ -572,3 +624,61 @@ $MTFUI_Tattoos_TextureFiles	Texture files
 $MTFUI_Tattoos_NewPresetTitle	New preset from tattoo
 $MTFUI_Tattoos_DefaultLook	Default look: {} ({})
 $MTFUI_Tattoos_UnsavedWarning	You'll be asked what to do with the unsaved changes to the open preset.
+$MTFUI_Spells_Intro	Spells from Magic Tattoos Spellbook. Each one puts a preset on whoever it hits, as a hex or a blessing; what it does in play comes from the preset's tier effects. Save, then learn the spells you want this character to know.
+$MTFUI_Spells_Save	Save spells
+$MTFUI_Spells_Revert	Revert
+$MTFUI_Spells_Unsaved	Unsaved changes
+$MTFUI_Spells_ColPreset	Preset
+$MTFUI_Spells_ColCasting	Casting and school
+$MTFUI_Spells_ColCostOnly	Cost
+$MTFUI_Spells_DispelSection	Dispel
+$MTFUI_Spells_SpellsSection	Tattoo spells
+$MTFUI_Spells_New	+ New spell
+$MTFUI_Spells_Count	{} of {} spells
+$MTFUI_Spells_Remove	Remove
+$MTFUI_Spells_RemoveTip	Clears this spell. Once you save, this character forgets it if they know it.
+$MTFUI_Spells_DefaultName	Tattoo Spell {}
+$MTFUI_Spells_DispelDefaultName	Dispel Tattoos
+$MTFUI_Spells_DispelAbout	Removes every tattoo these spells put on the target, permanent ones included. Presets it wears from elsewhere stay on.
+$MTFUI_Spells_NoPreset	(no preset)
+$MTFUI_Spells_PresetMissing	This preset no longer exists
+$MTFUI_Spells_CastSelf	Self
+$MTFUI_Spells_CastSelfChannel	Self, channeled
+$MTFUI_Spells_CastTouch	Touch, channeled
+$MTFUI_Spells_CastRanged	Ranged
+$MTFUI_Spells_Alteration	Alteration
+$MTFUI_Spells_Conjuration	Conjuration
+$MTFUI_Spells_Destruction	Destruction
+$MTFUI_Spells_Illusion	Illusion
+$MTFUI_Spells_Restoration	Restoration
+$MTFUI_Spells_Hex	Hex
+$MTFUI_Spells_HexTip	Counts as an attack. While you are sneaking and undetected, the mark lands quietly and they do not know who did it.
+$MTFUI_Spells_Blessing	Blessing
+$MTFUI_Spells_BlessingTip	Never treated as an attack, and it is never a crime.
+
+$MTFUI_Spells_Cost_Fmt	%d magicka
+$MTFUI_Spells_CostPerSecond_Fmt	%d magicka per second
+$MTFUI_Spells_CostTip	Before the school's cost perks. Ctrl+click to type a value.
+$MTFUI_Spells_Permanent	Permanent
+$MTFUI_Spells_PermanentTip	The tattoo stays until Dispel removes it or the wearer dies.
+$MTFUI_Spells_Decay_Fmt	Lasts %.0f s
+$MTFUI_Spells_DecayTip	How long the tattoo stays after it lands. Casting it again restarts the time.
+$MTFUI_Spells_DecayChannelTip	How long the tattoo stays after the channel ends. It stays on for as long as you channel.
+$MTFUI_Spells_NoGame	Load a game to learn spells
+$MTFUI_Spells_Reading	Reading...
+$MTFUI_Spells_Known	Known
+$MTFUI_Spells_NotKnown	Not known
+$MTFUI_Spells_Learn	Learn
+$MTFUI_Spells_Forget	Forget
+$MTFUI_Spells_LearnNeedsPreset	Choose a preset and save first.
+$MTFUI_Spells_LearnNeedsSave	Save your changes first.
+$MTFUI_Spells_DuplicatePreset	Same preset as spell {}
+$MTFUI_Spells_DuplicatePresetTip	Two spells can share a preset, but the last one cast owns the tattoo. Its timer or Dispel is what takes it off.
+$MTFUI_Toast_SpellsSaved	Saved the spells
+$MTFUI_Toast_SpellsSaveFailed	Couldn't save the spells: {}
+$MTFUI_Toast_SpellLearned	Learned {}. Equip it from the Magic menu.
+$MTFUI_Toast_SpellForgotten	Forgot {}
+$MTFUI_Toast_SpellForgottenOne	Forgot a spell whose preset was cleared. Equip from the Magic menu if you learn it again.
+$MTFUI_Toast_SpellForgottenN	Forgot {} spells whose presets were cleared.
+$MTFUI_Toast_SpellSwappedOne	Cast type changed: equip the spell again from the Magic menu (favorites and hotkeys were cleared).
+$MTFUI_Toast_SpellSwappedN	Cast type changed on {} spells: equip them again from the Magic menu (favorites and hotkeys were cleared).

@@ -1,0 +1,65 @@
+#pragma once
+
+#include <nlohmann/json.hpp>
+
+#include <array>
+#include <string>
+
+// Magic Tattoos Spellbook's spell setup, kept in StorageUtilData/MagicTattoosSpellbook/spells.json in PapyrusUtil's
+// flat JsonUtil layout ({"float": {...}, "int": {...}, "string": {...}}), because its scripts read it with JsonUtil.
+// Only this UI writes it.
+namespace mtfui::model {
+    inline constexpr int kSpellbookSlots = 20;  // the spell slots MagicTattoosSpellbook.esp carries
+    inline constexpr int kSchoolCount = 5;
+    inline constexpr int kSpellbookCostMax = 1000;
+    inline constexpr double kDecayMin = 1.0;
+    inline constexpr double kDecayMax = 86400.0;
+
+    // The values are the scripts' and the ESP's: version v of slot i is spell 0x900 + v*0x20 + i.
+    enum class CastType : int { SelfInstant = 0, SelfChannel = 1, Touch = 2, Ranged = 3 };
+    inline constexpr int kCastTypeCount = 4;
+
+    // Concentration spells: the tattoo stays while the channel holds, and the cost is per second.
+    bool IsChanneled(CastType cast);
+
+    // Schools in the order of the novice perks AlterationNovice00 (0x0F2CA6) to RestorationNovice00 (0x0F2CAA).
+    enum class School : int { Alteration = 0, Conjuration = 1, Destruction = 2, Illusion = 3, Restoration = 4 };
+
+    struct SpellbookSlot {
+        std::string name;    // empty: the default name
+        std::string preset;  // MTF preset file name; empty: not set up
+        CastType cast = CastType::Ranged;
+        bool hostile = true;  // a Hex; false is a Blessing
+        int cost = 30;        // magicka, per second when channeled
+        School school = School::Illusion;
+        double decay = 60.0;  // seconds the tattoo lasts after the cast or the channel ends
+        bool permanent = false;
+        bool operator==(const SpellbookSlot&) const = default;
+    };
+
+    // The Dispel spell only comes as self, touch or ranged.
+    struct SpellbookDispel {
+        std::string name;
+        CastType cast = CastType::Ranged;
+        int cost = 30;
+        School school = School::Alteration;
+        bool operator==(const SpellbookDispel&) const = default;
+    };
+
+    struct SpellbookConfig {
+        std::array<SpellbookSlot, kSpellbookSlots> slots;
+        SpellbookDispel dispel;
+        bool operator==(const SpellbookConfig&) const = default;
+    };
+
+    // The Dispel version index (0 self, 1 touch, 2 ranged) for a cast type; SelfChannel counts as self.
+    int DispelVersion(CastType cast);
+
+    // First other slot that shares this slot's preset, or -1. Two spells may share a preset; the last cast owns
+    // the tattoo, so the Spells tab warns when this returns a slot.
+    int DuplicatePresetSlot(const SpellbookConfig& config, int slot);
+
+    // Missing or malformed values keep their defaults, and every value is clamped to what the spells support.
+    SpellbookConfig SpellbookFromJson(const nlohmann::json& j);
+    nlohmann::json SpellbookToJson(const SpellbookConfig& config);
+}

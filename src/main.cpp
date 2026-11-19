@@ -17,6 +17,9 @@
 #include "Version.h"
 #include "game/MtfBridge.h"
 #include "game/OverlayVisibility.h"
+#include "game/PapyrusNatives.h"
+#include "game/SpellLookup.h"
+#include "game/SpellbookBridge.h"
 #include "io/UiSettings.h"
 #include "render/DdsCache.h"
 #include "ui/App.h"
@@ -98,6 +101,7 @@ namespace {
         case SKSE::MessagingInterface::kDataLoaded: {
             LogEnvironment();
             mtfui::game::MtfBridge::Get().OnDataLoaded();
+            mtfui::game::SpellLookup::Get().OnDataLoaded();
             auto* device = reinterpret_cast<ID3D11Device*>(RE::BSGraphics::Renderer::GetDevice());
             mtfui::render::DdsCache::Get().Init(device);
             try {
@@ -105,6 +109,9 @@ namespace {
             } catch (const std::exception& e) {
                 logger::critical("Magic Tattoos UI failed to start: {}", e.what());
             }
+            // After App::Init, which loads the translations the default spell names come from.
+            mtfui::game::SpellbookBridge::Get().OnDataLoaded(
+                mtfui::ui::GameDataDir() / "SKSE" / "Plugins" / "StorageUtilData" / "MagicTattoosSpellbook" / "spells.json");
             break;
         }
         case SKSE::MessagingInterface::kPostLoadGame:
@@ -138,5 +145,6 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse) {
         logger::error("Could not register for SKSE messages");
         return false;
     }
+    mtfui::game::RegisterPapyrusNatives();
     return true;
 }

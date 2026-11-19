@@ -10,6 +10,8 @@
 #include "model/Lint.h"
 #include "model/Preset.h"
 #include "model/Slots.h"
+#include "model/SpellbookConfig.h"
+#include "model/SpellbookLayout.h"
 #include "model/Text.h"
 #include "model/Usage.h"
 
@@ -19,6 +21,7 @@
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
+#include <fstream>
 #include <regex>
 #include <set>
 #include <string>
@@ -609,6 +612,29 @@ namespace {
         Check(!model::ParsePresetText("not json", &error) && !error.empty(), "clipboard import rejects non-JSON");
         Check(!model::ParsePresetText("{\"a\":1}", &error), "clipboard import rejects non-presets");
         Check(model::ParsePresetText("{\"slot\":[]}", &error).has_value(), "clipboard import accepts a preset");
+
+        const auto catalogFile = fs::temp_directory_path() / "mtfui_lookup_catalog.json";
+        std::ofstream(catalogFile) << R"({"pluginid":"t","effects":[{"id":"e","param1":{"label":"Spell","text":true,"lookup":"spell","default":"Skyrim.esm|0x012FCD"}}]})";
+        const auto catalog = model::LoadPluginCatalog(catalogFile);
+        fs::remove(catalogFile);
+        Check(catalog && catalog->effects.size() == 1, "a catalog with a lookup param loads");
+        if (!catalog || catalog->effects.empty()) {
+            return;
+        }
+        const auto& spell = catalog->effects[0].params[0];
+        Check(spell.kind == model::ParamKind::Lookup && spell.lookup == "spell", "lookup wins over text");
+        Check(spell.IsString() && model::ParamStr(spell.def) == "Skyrim.esm|0x012FCD", "a lookup stores its default as a string");
+        Check(spell.Display(spell.def) == "Skyrim.esm|0x012FCD", "without the game's list a lookup shows its raw value");
+        model::SetLookupResolver([](std::string_view kind, std::string_view value) {
+            if (kind == "spell" && value == "Skyrim.esm|0x012FCD") {
+                return model::LookupResult{ model::LookupState::Found, "Flames" };
+            }
+            return model::LookupResult{ model::LookupState::Missing, {} };
+        });
+        Check(spell.Display(spell.def) == "Flames", "a found lookup shows its name");
+        Check(spell.Display(model::ParamValue{ std::string("Gone.esp|0x800") }) == "Gone.esp|0x800", "a missing lookup shows its raw value");
+        Check(spell.Display(model::ParamValue{ std::string() }) == "(none)", "an empty lookup shows none");
+        model::SetLookupResolver(nullptr);
     }
 
     std::vector<std::uint8_t> DdsHeader(std::uint32_t w, std::uint32_t h, std::uint32_t mips, const char* fourcc, std::uint32_t dxgi = 0) {
@@ -824,6 +850,88 @@ namespace {
         Check(std::string(T("$Z")) == "Plain" && tr.ActiveCodepoints().empty(), "dropping the translation leaves English");
     }
 
+    // Magic Tattoos Spellbook's spells.json: the scripts read it with JsonUtil, so the layout and keys are fixed.
+    void Spellbook() {
+        model::SpellbookConfig c;
+        auto& s = c.slots[3];
+        s.name = "Mark of Ruin";
+        s.preset = "ruin_mark";
+        s.cast = model::CastType::Touch;
+        s.hostile = false;
+        s.cost = 12;
+        s.school = model::School::Restoration;
+        s.decay = 45.5;
+        s.permanent = true;
+        c.dispel = { "Cleanse", model::CastType::SelfInstant, 40, model::School::Conjuration };
+
+        const auto j = model::SpellbookToJson(c);
+        Check(j["string"]["slot3.preset"] == "ruin_mark" && j["int"]["slot3.cast"] == 2 && j["int"]["slot3.permanent"] == 1 &&
+                  j["float"]["slot3.decay"] == 45.5 && j["string"]["dispel.name"] == "Cleanse",
+            "spellbook config uses PapyrusUtil's typed sections and the keys the scripts read");
+        const auto text = io::WriteStyled(j);
+        Check(model::SpellbookFromJson(nlohmann::json::parse(text)) == c, "spellbook config survives a write and reload");
+        Check(io::WriteStyled(model::SpellbookToJson(model::SpellbookFromJson(nlohmann::json::parse(text)))) == text,
+            "spellbook config rewrites byte for byte");
+
+        Check(model::SpellbookFromJson(nlohmann::json::object()) == model::SpellbookConfig{}, "a missing file gives the defaults");
+        auto bad = j;
+        bad["int"]["slot3.cast"] = 9;
+        bad["int"]["slot3.cost"] = 99999;
+        bad["float"]["slot3.decay"] = 0.0;
+        bad["int"]["dispel.cast"] = 1;
+        bad["string"]["slot3.preset"] = 5;
+        const auto clamped = model::SpellbookFromJson(bad);
+        Check(clamped.slots[3].cast == model::CastType::Ranged, "an unknown cast type keeps the default");
+        Check(clamped.slots[3].cost == model::kSpellbookCostMax, "cost is clamped");
+        Check(clamped.slots[3].decay == model::kDecayMin, "decay is clamped");
+        Check(clamped.slots[3].preset.empty(), "a preset of the wrong type is ignored");
+        Check(clamped.dispel.cast == model::CastType::SelfInstant, "a channeled Dispel becomes a self cast");
+        Check(model::DispelVersion(model::CastType::Touch) == 1 && model::DispelVersion(model::CastType::Ranged) == 2 &&
+                  model::DispelVersion(model::CastType::SelfInstant) == 0,
+            "Dispel versions follow the ESP's order");
+        Check(model::IsChanneled(model::CastType::Touch) && model::IsChanneled(model::CastType::SelfChannel) &&
+                  !model::IsChanneled(model::CastType::Ranged),
+            "touch and self channeled are the channeled cast types");
+
+        model::SpellbookConfig shared;
+        shared.slots[0].preset = "ruin_mark";
+        shared.slots[5].preset = "ruin_mark";
+        shared.slots[2].preset = "other";
+        Check(model::DuplicatePresetSlot(shared, 0) == 5, "duplicate preset finds the other slot");
+        Check(model::DuplicatePresetSlot(shared, 5) == 0, "duplicate preset is symmetric");
+        Check(model::DuplicatePresetSlot(shared, 2) < 0, "a unique preset has no duplicate");
+        Check(model::DuplicatePresetSlot(shared, 1) < 0, "an empty preset has no duplicate");
+    }
+
+    // FormID layout must match skyrim-magic-tattoo-spellbook/tools/EspGen/layout.json. Copy that file here when it changes.
+    void SpellbookLayout(const fs::path& root) {
+        const auto path = root / "tests" / "fixtures" / "spellbook-layout.json";
+        const auto j = io::ReadJson(path);
+        Check(j.has_value(), "spellbook-layout.json is readable (copy tools/EspGen/layout.json from Spellbook)");
+        if (!j) {
+            return;
+        }
+        auto hex = [&](const char* key) -> std::uint32_t {
+            Check(j->contains(key) && (*j)[key].is_string(), std::string(key) + " is a hex string in spellbook-layout.json");
+            return static_cast<std::uint32_t>(std::stoul((*j)[key].get<std::string>(), nullptr, 0));
+        };
+        Check((*j)["layoutVersion"].get<int>() == model::kSpellbookLayoutVersion, "layoutVersion matches SpellbookLayout.h");
+        Check((*j)["slots"].get<int>() == model::kSpellbookSlots, "slots matches kSpellbookSlots");
+        Check((*j)["castTypes"].get<int>() == model::kCastTypeCount, "castTypes matches kCastTypeCount");
+        Check(hex("quest") == model::kSpellbookQuest, "quest FormID matches");
+        Check(hex("layoutVersionGlobal") == model::kSpellbookLayoutVersionGlobal, "layoutVersionGlobal FormID matches");
+        Check(hex("castEffectBase") == model::kCastEffectBase, "castEffectBase matches");
+        Check(hex("castSpellBase") == model::kCastSpellBase, "castSpellBase matches");
+        Check(hex("decayEffectBase") == model::kDecayEffectBase, "decayEffectBase matches");
+        Check(hex("decaySpellBase") == model::kDecaySpellBase, "decaySpellBase matches");
+        Check(hex("dispelEffectBase") == model::kDispelEffectBase, "dispelEffectBase matches");
+        Check(hex("dispelSpellBase") == model::kDispelSpellBase, "dispelSpellBase matches");
+        Check(hex("castStride") == model::kCastStride, "castStride matches");
+        Check(model::SpellbookCastSpellId(0, 0) == 0x900 && model::SpellbookCastSpellId(3, 19) == 0x900 + 3 * 0x20 + 19,
+            "cast spell FormID formula matches EspGen");
+        Check(model::SpellbookDecaySpellId(7) == 0x987 && model::SpellbookDispelSpellId(2) == 0xA05, "decay and dispel FormIDs match EspGen");
+    }
+
     // Every key the code uses has English text, and the files only hold keys the code uses.
     void TranslationFiles(const fs::path& root) {
         const auto english = io::ReadText(root / "translations" / "MagicTattoosUI_ENGLISH.txt");
@@ -886,6 +994,8 @@ int main(int argc, char** argv) {
     Settings();
     HiddenPresets(fixtures);
     OverlaySlots();
+    Spellbook();
+    SpellbookLayout(root);
     if (g_failures == 0) {
         std::printf("All tests passed\n");
         return 0;

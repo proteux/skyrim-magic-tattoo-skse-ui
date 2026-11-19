@@ -21,6 +21,55 @@ $MTFUI_Format_Seconds1_Fmt	%.1f s
 $MTFUI_Format_Milliseconds_Fmt	%d ms
 $MTFUI_Color_Palette	Palette
 $MTFUI_Param_TextHint	séparés par des virgules, vide = tout
+$MTFUI_Lookup_None	(aucun)
+$MTFUI_Lookup_Missing	(manquant) {}
+$MTFUI_Lookup_AllSchools	Toutes les écoles
+$MTFUI_Lookup_AllPlugins	Tous les plugins
+$MTFUI_Lookup_KnownOnly	Connus du joueur
+$MTFUI_Lookup_KnownOnlyTip	Uniquement les sorts que le joueur connaît. Nécessite une partie chargée.
+$MTFUI_Lookup_ShowAwkward	Afficher les sorts peu pratiques
+$MTFUI_Lookup_ShowAwkwardTip	Protections, invocations, armes liées, sorts réservés au lanceur (Télékinésie, Lumière de bougie) et sorts pour cadavres. Masqués par défaut car ils font peu de chose, ou autre chose que prévu, depuis un tatouage.
+$MTFUI_Lookup_Reading	Lecture des sorts du joueur...
+$MTFUI_Lookup_NoMatch	Aucun sort correspondant
+$MTFUI_Lookup_Count	{} sorts
+$MTFUI_Lookup_NoSchool	Aucune école
+$MTFUI_Lookup_SearchTip	Recherche dans le nom, l'école, le niveau, la durée, Nuisible ou Bénéfique, et le plugin.
+$MTFUI_Lookup_ColSpell	Sort
+$MTFUI_Lookup_ColSchool	École
+$MTFUI_Lookup_ColType	Type
+$MTFUI_Lookup_ColCost	Coût
+$MTFUI_Lookup_ColDuration	Durée
+$MTFUI_Lookup_ColTargets	Cibles
+$MTFUI_Lookup_Novice	Novice
+$MTFUI_Lookup_Apprentice	Apprenti
+$MTFUI_Lookup_Adept	Adepte
+$MTFUI_Lookup_Expert	Expert
+$MTFUI_Lookup_Master	Maître
+$MTFUI_Lookup_Concentration	Concentration
+$MTFUI_Lookup_FireAndForget	Lancer et oublier
+$MTFUI_Lookup_Self	soi
+$MTFUI_Lookup_Touch	toucher
+$MTFUI_Lookup_Aimed	visé
+$MTFUI_Lookup_TargetActor	acteur ciblé
+$MTFUI_Lookup_TargetLocation	lieu ciblé
+$MTFUI_Lookup_Type	{}, {}
+$MTFUI_Lookup_CostPerSecond	{}/s
+$MTFUI_Lookup_Harmful	Nuisible
+$MTFUI_Lookup_Helpful	Bénéfique
+$MTFUI_Lookup_TipSummary	{}, {}, coût {}
+$MTFUI_Lookup_LevelSchool	{} {}
+$MTFUI_Lookup_EffectArea	zone de {} pieds
+$MTFUI_Lookup_Duration	{} s
+$MTFUI_Lookup_EffectDuration	pendant {} s
+$MTFUI_Lookup_TipConcentration	Concentration : chaque déclenchement canalise pendant 10 secondes. La Magicka du lanceur est drainée à chaque pulsation. S'il n'en a pas assez, les pulsations s'interrompent jusqu'à ce que la Magicka revienne.
+$MTFUI_Lookup_TipFireAndForget	Lancer et oublier : chaque déclenchement applique le sort en entier. Se répète selon la durée ou le temps d'incantation du sort pendant toute la vie du tatouage.
+$MTFUI_Lookup_TipHarmful	Nuisible : Cast an aura touche les acteurs du côté du porteur (pas ses ennemis), jamais le porteur.
+$MTFUI_Lookup_TipHelpful	Bénéfique : Cast an aura touche les acteurs du côté du porteur (pas ses ennemis), jamais le porteur.
+$MTFUI_Lookup_CaveatSummon	Les invocations et les armes liées sont conçues pour provenir de leur lanceur, et font peu de chose appliquées à un acteur.
+$MTFUI_Lookup_CaveatCorpse	Conçu pour les cadavres, alors que les effets de tatouage n'atteignent que les acteurs vivants.
+$MTFUI_Lookup_CaveatCasterOnly	Agit par les mains ou l'environnement de son lanceur, et ne fait rien appliqué à un acteur.
+$MTFUI_Lookup_CaveatWard	Une protection ne tient que pendant son incantation, elle scintille donc.
+$MTFUI_Lookup_TipSource	De {}
 $MTFUI_Severity_Error	Erreur
 $MTFUI_Severity_Warning	Avertissement
 $MTFUI_Severity_Note	Remarque
@@ -49,12 +98,16 @@ $MTFUI_Status_MtfDisabled	MTF est désactivé dans ses réglages. Les tatouages 
 $MTFUI_Status_PreviewOn	{} sur {}
 $MTFUI_Status_LoadingTextures	Chargement de {} texture(s)...
 $MTFUI_Status_Shortcuts	Raccourcis\nCtrl+S  enregistrer\nCtrl+Z / Ctrl+Y  annuler / rétablir\nCtrl+N  nouveau preset\nCtrl+D  dupliquer\nCtrl+F  rechercher un preset\nF5  appliquer à la cible\nAlt+Haut / Alt+Bas  déplacer le palier sélectionné
+$MTFUI_Font_Missing	La police du menu ne peut pas afficher les lettres de {}, ce menu est donc en anglais. Survolez pour la solution.
+$MTFUI_Font_FixSwitch	Dans Data/SKSE/Plugins/SKSEMenuFramework.ini, réglez {} = true sous [Fonts], puis relancez le jeu.
+$MTFUI_Font_FixFont	Dans Data/SKSE/Plugins/SKSEMenuFramework.ini, choisissez sous [Fonts] une PrimaryFont qui contient ces lettres, puis relancez le jeu.
 $MTFUI_Status_ShortcutHint	|  Ctrl+S enregistrer, Ctrl+Z annuler, F5 appliquer (survolez pour plus)
 $MTFUI_Tab_Presets	Presets
 $MTFUI_Tab_Tattoos	Tatouages
 $MTFUI_Tab_TattoosChoosing	Tatouages (choix)
 $MTFUI_Tab_General	Général
 $MTFUI_Tab_Plugins	Plugins
+$MTFUI_Tab_Spells	Sorts
 $MTFUI_Panels_PickHint	Choisissez le tatouage dans l'onglet Tatouages de Magic Tattoos > Editor dans le menu
 $MTFUI_Panels_Peek	Maintenir pour voir
 $MTFUI_Panels_PeekTip	Masque les autres panneaux tant que vous maintenez le bouton de la souris. Faites glisser les panneaux par leur barre de titre pour les déplacer ; la disposition est mémorisée.
@@ -392,6 +445,77 @@ $MTFUI_Tiers_Base	Base
 $MTFUI_Tiers_BaseHelp	Par défaut définit l'apparence de base. Les paliers qui laissent leur tatouage sur « Comme Par défaut » s'appuient dessus, et elle s'affiche quand aucun palier ne correspond.
 $MTFUI_Tiers_Header	Paliers (le plus haut gagne)
 $MTFUI_Tiers_HeaderHelp	Faites glisser les paliers pour changer leur priorité, ou sélectionnez-en un et appuyez sur Alt+Haut / Alt+Bas. Clic droit sur un palier pour le copier, le coller ou le vider. Le premier palier dont les conditions sont vraies est affiché ; Par défaut s'applique si aucun ne l'est.
+$MTFUI_Tiers_Extra	Paliers supplémentaires (absents du menu de MTF)
+$MTFUI_Tiers_ExtraHelp	MTF les vérifie comme n'importe quel autre palier, mais son propre menu ne montre que les {} premiers ; modifiez-les donc ici. Enregistrer depuis le menu de MTF les conserve.
+$MTFUI_Tiers_Add	Ajouter un palier
+$MTFUI_Gradient_TierName	{} {}
+$MTFUI_Gradient_Open	Paliers en dégradé...
+$MTFUI_Gradient_OpenHelp	Construit une échelle de paliers à partir d'une valeur, comme la santé, pour que la couleur du tatouage la suive comme une barre de vie.
+$MTFUI_Gradient_Title	Paliers en dégradé
+$MTFUI_Gradient_Intro	MTF ne peut pas associer directement une valeur à une couleur ; on crée donc un palier par étape de la valeur, chacun d'une nuance le long de vos couleurs. La transition du preset fond les paliers voisins l'un dans l'autre.
+$MTFUI_Gradient_FromSaved	Voici les réglages qui ont créé les paliers de ce preset.
+$MTFUI_Gradient_FromSavedEdited	Voici les réglages qui ont créé les paliers de ce preset, mais les paliers ont été modifiés depuis. Recréer les paliers remplace ces modifications.
+$MTFUI_Gradient_FromTiers	Réglages lus d'après les paliers de ce preset. Les couleurs sont prises aux extrémités et au milieu de la plage ; vérifiez-les avant de recréer les paliers.
+$MTFUI_Gradient_Condition	Valeur
+$MTFUI_Gradient_NoCondition	Aucune condition installée n'a de curseur de seuil.
+$MTFUI_Gradient_Below	En dessous (palier 1 = le plus bas)
+$MTFUI_Gradient_Above	À partir de (palier 1 = le plus haut)
+$MTFUI_Gradient_DirectionHelp	Dans quel sens la condition compare. « Below Health % » correspond à En dessous ; « Above Health % » correspond à À partir de. L'un comme l'autre donne les mêmes couleurs ; il faut seulement que cela corresponde à la condition.
+$MTFUI_Gradient_Range	Plage
+$MTFUI_Gradient_From_Fmt	de %d
+$MTFUI_Gradient_To_Fmt	à %d
+$MTFUI_Gradient_Steps	Paliers
+$MTFUI_Gradient_StepsInfo	{} paliers plus Par défaut, environ {} chacun
+$MTFUI_Gradient_PastMenu	Le menu de MTF ne montre que les {} premiers paliers. Les autres fonctionnent ; modifiez-les ici.
+$MTFUI_Gradient_TintSection	Teinte
+$MTFUI_Gradient_GlowSection	Lueur
+$MTFUI_Gradient_ColorsHelp	Du bas de la plage (en haut, à gauche dans la bande) vers le haut. De deux à quatre couleurs, régulièrement espacées. Désactivé, les paliers gardent la couleur de Par défaut.
+$MTFUI_Gradient_SameAsTint	Comme la teinte
+$MTFUI_Gradient_RemoveColor	Retirer
+$MTFUI_Gradient_AddColor	Ajouter une couleur
+$MTFUI_Gradient_Reverse	Inverser
+$MTFUI_Gradient_Swap	Échanger
+$MTFUI_Gradient_SwapTip	Échange les valeurs du bas et du haut de la plage
+$MTFUI_Gradient_HealthBar	Barre de vie
+$MTFUI_Gradient_Tint	Changer la teinte
+$MTFUI_Gradient_Emissive	Changer la couleur de lueur
+$MTFUI_Gradient_Glow	Progression de l'intensité de lueur
+$MTFUI_Gradient_GlowHelp	Intensité de lueur à chaque extrémité de la plage. Une couleur de lueur n'apparaît qu'avec une certaine intensité ; les autres réglages de calque viennent de Par défaut.
+$MTFUI_Gradient_LowEnd_Fmt	bas %.1f
+$MTFUI_Gradient_HighEnd_Fmt	haut %.1f
+$MTFUI_Gradient_Opacity	Progression de l'opacité
+$MTFUI_Gradient_LowEndPct_Fmt	bas %d%%
+$MTFUI_Gradient_HighEndPct_Fmt	haut %d%%
+$MTFUI_Gradient_PulseSection	Pulsation
+$MTFUI_Gradient_PulseHelp	Fait évoluer la pulsation le long de la plage, comme un battement de cœur qui accélère quand la santé baisse. Désactivé, les paliers gardent la pulsation de Par défaut. MTF peut relancer la pulsation au changement de palier ; moins de paliers, plus larges, peuvent donc paraître plus fluides.
+$MTFUI_Gradient_PulseSpeed	Progression de la vitesse
+$MTFUI_Gradient_PulseDepth	Progression de la profondeur
+$MTFUI_Gradient_PulsePause	Progression de la pause
+$MTFUI_Gradient_LowEndRate_Fmt	bas %.2f/s
+$MTFUI_Gradient_HighEndRate_Fmt	haut %.2f/s
+$MTFUI_Gradient_LowEndSec_Fmt	bas %.1f s
+$MTFUI_Gradient_HighEndSec_Fmt	haut %.1f s
+$MTFUI_Gradient_LowShape	Forme différente en bas de plage
+$MTFUI_Gradient_LowShapeHelp	Les paliers de la partie la plus basse de la plage utilisent cette forme de pulsation ; les autres gardent celle de Par défaut.
+$MTFUI_Gradient_LowShapeUpTo_Fmt	les %d%% du bas
+$MTFUI_Gradient_PulseNoGlow	La pulsation n'anime que la lueur, et Par défaut n'a aucune intensité de lueur. Activez la progression de l'intensité de lueur ou donnez un peu de lueur à Par défaut.
+$MTFUI_Gradient_EffectsSection	Effets
+$MTFUI_Gradient_EffectsHelp	Donne ces effets à chaque palier, chaque curseur et chaque couleur étant réglé le long de la plage, par exemple l'Actor scale de RaceMenu passant de 100 % à 150 % quand la santé baisse, ou sa Hair color passant du brun au blanc. Les couleurs se fondent de la couleur du bas vers celle du haut. Les menus et autres réglages sont identiques sur chaque palier. Les effets de chaque palier s'exécutent pendant qu'il est affiché, la valeur change donc de palier en palier ; les effets dotés de leur propre transition, comme ceux de RaceMenu, adoucissent le passage d'une étape à l'autre.
+$MTFUI_Gradient_AddEffect	Ajouter un effet
+$MTFUI_Gradient_LowEndParam	bas {}
+$MTFUI_Gradient_HighEndParam	haut {}
+$MTFUI_Gradient_LowEndColor	Bas
+$MTFUI_Gradient_HighEndColor	Haut
+$MTFUI_Gradient_EffectsOnDefault	Par défaut les reçoit aussi
+$MTFUI_Gradient_EffectsOnDefaultHelp	Par défaut s'affiche en dehors des paliers, à son extrémité de la plage. Activé, il reçoit chaque effet à cette extrémité, en remplaçant un effet du même type qu'il a déjà. Désactivé, les effets de Par défaut restent tels quels, et les effets s'arrêtent donc en dehors des paliers.
+$MTFUI_Gradient_TransitionHint	La transition est courte, la couleur saute donc d'un palier à l'autre. Environ une seconde la fait glisser.
+$MTFUI_Gradient_SetTransition	Régler la transition à 1 s
+$MTFUI_Gradient_Replaces	Remplace tous les paliers. Par défaut garde son tatouage et ses effets. Annuler les rétablit.
+$MTFUI_Gradient_ReplacesWithDefaultEffects	Remplace tous les paliers. Par défaut garde son tatouage et ses autres effets, et reçoit les effets ci-dessus. Annuler les rétablit.
+$MTFUI_Gradient_Create	Créer les paliers
+$MTFUI_Toast_GradientMade	{} paliers en dégradé créés. Enregistrez pour les conserver.
+$MTFUI_Tiers_AddHelp	Ajoute un palier en bas. Le menu de MTF montre {} paliers ; MTF lui-même en vérifie jusqu'à {} (iMaxConditions dans MagicTattoosFramework.ini).
+$MTFUI_Tiers_AddFull	MTF vérifie {} paliers au maximum. Augmentez iMaxConditions dans Data/SKSE/Plugins/MagicTattoosFramework.ini et relancez le jeu pour en avoir plus.
 $MTFUI_Header_Revert	Rétablir
 $MTFUI_Header_Undo	Annuler
 $MTFUI_Header_Redo	Refaire
@@ -439,10 +563,13 @@ $MTFUI_Lint_NotAnOption	{} : « {} » n'est pas une option pour {}
 $MTFUI_Lint_BadFileName	Le nom de fichier doit faire de 1 à 32 caractères : lettres, chiffres, '_' ou '-'
 $MTFUI_Lint_NoDisplayName	Le nom affiché est vide ; MTF affichera le nom du fichier
 $MTFUI_Lint_NoCondition	{} a une apparence ou des effets mais aucune condition, il ne s'active donc jamais
+$MTFUI_Lint_PastLimit	{} dépasse les {} paliers que MTF vérifie, il ne s'active donc jamais. Augmentez iMaxConditions dans MagicTattoosFramework.ini.
 $MTFUI_Lint_Shadowed	{} ne peut jamais s'activer : {} est plus haut dans la liste et correspond toujours en premier. Montez-le.
 $MTFUI_Lint_ConditionMissing	La condition « {} » n'est pas installée ; ce palier ne s'activera pas
 $MTFUI_Lint_ConditionDisabled	{} est désactivé dans MTF ; « {} » ne sera jamais vraie
 $MTFUI_Lint_EmptyText	{} : le texte est vide, ce qui correspond généralement à tout
+$MTFUI_Lint_LookupEmpty	{} : aucun {} choisi, il ne fait donc rien
+$MTFUI_Lint_LookupMissing	{} : « {} » n'existe pas dans ce jeu. Son plugin a peut-être été retiré
 $MTFUI_Lint_PackMissing	Le pack de tatouages « {} » n'est pas installé
 $MTFUI_Lint_NoEntry	Un pack est choisi mais aucun tatouage ; rien ne s'affichera
 $MTFUI_Lint_EntryMissing	Le tatouage « {} » est absent de {}
@@ -497,3 +624,60 @@ $MTFUI_Tattoos_TextureFiles	Fichiers de texture
 $MTFUI_Tattoos_NewPresetTitle	Nouveau preset à partir d'un tatouage
 $MTFUI_Tattoos_DefaultLook	Apparence par défaut : {} ({})
 $MTFUI_Tattoos_UnsavedWarning	On vous demandera quoi faire des modifications non enregistrées du preset ouvert.
+$MTFUI_Spells_Intro	Sorts de Magic Tattoos Spellbook. Chacun applique un preset à celui qu'il touche, comme une malédiction ou une bénédiction ; ce qu'il fait en jeu dépend des effets de palier du preset. Enregistrez, puis apprenez les sorts que ce personnage doit connaître.
+$MTFUI_Spells_Save	Enregistrer les sorts
+$MTFUI_Spells_Revert	Rétablir
+$MTFUI_Spells_Unsaved	Modifications non enregistrées
+$MTFUI_Spells_ColPreset	Preset
+$MTFUI_Spells_ColCasting	Incantation et école
+$MTFUI_Spells_ColCostOnly	Coût
+$MTFUI_Spells_DispelSection	Dissipation
+$MTFUI_Spells_SpellsSection	Sorts de tatouage
+$MTFUI_Spells_New	+ Nouveau sort
+$MTFUI_Spells_Count	{} sorts sur {}
+$MTFUI_Spells_Remove	Retirer
+$MTFUI_Spells_RemoveTip	Efface ce sort. Une fois enregistré, ce personnage l'oublie s'il le connaît.
+$MTFUI_Spells_DefaultName	Sort de tatouage {}
+$MTFUI_Spells_DispelDefaultName	Dissiper les tatouages
+$MTFUI_Spells_DispelAbout	Retire tous les tatouages que ces sorts ont posés sur la cible, y compris les permanents. Les presets qu'elle porte par ailleurs restent en place.
+$MTFUI_Spells_NoPreset	(aucun preset)
+$MTFUI_Spells_PresetMissing	Ce preset n'existe plus
+$MTFUI_Spells_CastSelf	Soi
+$MTFUI_Spells_CastSelfChannel	Soi, canalisé
+$MTFUI_Spells_CastTouch	Toucher, canalisé
+$MTFUI_Spells_CastRanged	À distance
+$MTFUI_Spells_Alteration	Altération
+$MTFUI_Spells_Conjuration	Conjuration
+$MTFUI_Spells_Destruction	Destruction
+$MTFUI_Spells_Illusion	Illusion
+$MTFUI_Spells_Restoration	Guérison
+$MTFUI_Spells_Hex	Malédiction
+$MTFUI_Spells_HexTip	Compte comme une attaque. Si vous êtes furtif et non détecté, la marque est posée discrètement et la cible ne sait pas qui en est l'auteur.
+$MTFUI_Spells_Blessing	Bénédiction
+$MTFUI_Spells_BlessingTip	Jamais considérée comme une attaque, et jamais un crime.
+$MTFUI_Spells_Cost_Fmt	%d magicka
+$MTFUI_Spells_CostPerSecond_Fmt	%d magicka par seconde
+$MTFUI_Spells_CostTip	Avant les bonus de coût de l'école. Ctrl+clic pour saisir une valeur.
+$MTFUI_Spells_Permanent	Permanent
+$MTFUI_Spells_PermanentTip	Le tatouage reste jusqu'à ce que Dissipation le retire ou que le porteur meure.
+$MTFUI_Spells_Decay_Fmt	Dure %.0f s
+$MTFUI_Spells_DecayTip	Durée pendant laquelle le tatouage reste après avoir été posé. Le lancer de nouveau relance le compte à rebours.
+$MTFUI_Spells_DecayChannelTip	Durée pendant laquelle le tatouage reste après la fin de la canalisation. Il reste tant que vous canalisez.
+$MTFUI_Spells_NoGame	Chargez une partie pour apprendre des sorts
+$MTFUI_Spells_Reading	Lecture...
+$MTFUI_Spells_Known	Connu
+$MTFUI_Spells_NotKnown	Inconnu
+$MTFUI_Spells_Learn	Apprendre
+$MTFUI_Spells_Forget	Oublier
+$MTFUI_Spells_LearnNeedsPreset	Choisissez d'abord un preset et enregistrez.
+$MTFUI_Spells_LearnNeedsSave	Enregistrez d'abord vos modifications.
+$MTFUI_Spells_DuplicatePreset	Même preset que le sort {}
+$MTFUI_Spells_DuplicatePresetTip	Deux sorts peuvent partager un preset, mais le dernier lancé possède le tatouage. C'est son minuteur ou Dissipation qui le retire.
+$MTFUI_Toast_SpellsSaved	Sorts enregistrés
+$MTFUI_Toast_SpellsSaveFailed	Impossible d'enregistrer les sorts : {}
+$MTFUI_Toast_SpellLearned	{} appris. Équipez-le depuis le menu Magie.
+$MTFUI_Toast_SpellForgotten	{} oublié
+$MTFUI_Toast_SpellForgottenOne	Un sort dont le preset a été effacé a été oublié. Équipez-le depuis le menu Magie si vous l'apprenez de nouveau.
+$MTFUI_Toast_SpellForgottenN	{} sorts dont les presets ont été effacés ont été oubliés.
+$MTFUI_Toast_SpellSwappedOne	Type d'incantation modifié : rééquipez le sort depuis le menu Magie (favoris et raccourcis effacés).
+$MTFUI_Toast_SpellSwappedN	Type d'incantation modifié sur {} sorts : rééquipez-les depuis le menu Magie (favoris et raccourcis effacés).

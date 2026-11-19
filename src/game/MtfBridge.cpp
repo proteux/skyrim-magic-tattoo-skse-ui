@@ -127,6 +127,8 @@ namespace mtfui::game {
         g_uiQueue.clear();
     }
 
+    int MtfBridge::Session() { return g_session.load(); }
+
     void MtfBridge::OnDataLoaded() {
         auto* data = RE::TESDataHandler::GetSingleton();
         if (!data || !data->LookupModByName(kMtfPlugin)) {

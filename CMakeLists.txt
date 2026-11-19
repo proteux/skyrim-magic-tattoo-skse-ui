@@ -38,6 +38,7 @@ add_library(mtfui_core STATIC
     src/model/Usage.cpp
     src/model/Text.cpp
     src/model/Slots.cpp
+    src/model/SpellbookConfig.cpp
 )
 target_include_directories(mtfui_core PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_link_libraries(mtfui_core PUBLIC nlohmann_json::nlohmann_json)
@@ -53,7 +54,10 @@ add_commonlibsse_plugin(${PROJECT_NAME}
     SOURCES
         src/main.cpp
         src/game/Papyrus.cpp
+        src/game/PapyrusNatives.cpp
         src/game/MtfBridge.cpp
+        src/game/SpellbookBridge.cpp
+        src/game/SpellLookup.cpp
         src/game/OverlayVisibility.cpp
         src/game/Targets.cpp
         src/game/LivePreview.cpp
@@ -69,6 +73,7 @@ add_commonlibsse_plugin(${PROJECT_NAME}
         src/ui/TattoosTab.cpp
         src/ui/GeneralTab.cpp
         src/ui/PluginsTab.cpp
+        src/ui/SpellsTab.cpp
         src/ui/TargetBar.cpp
         "${CMAKE_CURRENT_BINARY_DIR}/generated/Translations.rc"
 )

@@ -103,6 +103,13 @@ namespace mtfui::model {
                     if (!found) {
                         out.push_back({ Severity::Warning, slot, TF("$MTFUI_Lint_NotAnOption", what, v, spec.label) });
                     }
+                } else if (spec.kind == ParamKind::Lookup) {
+                    const auto v = ParamStr(values[i]);
+                    if (v.empty()) {
+                        out.push_back({ Severity::Warning, slot, TF("$MTFUI_Lint_LookupEmpty", what, spec.label) });
+                    } else if (ResolveLookup(spec.lookup, v).state == LookupState::Missing) {
+                        out.push_back({ Severity::Warning, slot, TF("$MTFUI_Lint_LookupMissing", what, v) });
+                    }
                 }
             }
         }
