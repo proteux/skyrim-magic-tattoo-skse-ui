@@ -317,6 +317,17 @@ namespace mtfui::ui {
             return clicked;
         }
 
+        // Opens the next unused slot and scrolls it into view. No-op when all slots are shown.
+        void AddNewSpell(model::SpellbookConfig& draft) {
+            for (int i = 0; i < model::kSpellbookSlots; ++i) {
+                if (!g_added[i] && draft.slots[i] == model::SpellbookSlot{}) {
+                    g_added[i] = true;
+                    g_scrollTo = i;
+                    break;
+                }
+            }
+        }
+
         void Gap() {
             Dummy(ImVec2{ 0.0f, 4.0f });
         }
@@ -381,13 +392,7 @@ namespace mtfui::ui {
             if (!full) {
                 TableNextColumn();
                 if (NewSpellCard()) {
-                    for (int i = 0; i < model::kSpellbookSlots; ++i) {
-                        if (!g_added[i] && draft.slots[i] == model::SpellbookSlot{}) {
-                            g_added[i] = true;
-                            g_scrollTo = i;
-                            break;
-                        }
-                    }
+                    AddNewSpell(draft);
                 }
             }
             EndTable();
@@ -407,11 +412,14 @@ namespace mtfui::ui {
         const std::string count = TF("$MTFUI_Spells_Count", shown, model::kSpellbookSlots);
         TextDisabled("%s", count.c_str());
 
+        const char* newLabel = T("$MTFUI_Spells_New");
         const char* saveLabel = T("$MTFUI_Spells_Save");
         const char* unsaved = T("$MTFUI_Spells_Unsaved");
         const float gap = GetStyle()->ItemSpacing.x;
-        const float saveW = CalcTextSize(saveLabel).x + GetStyle()->FramePadding.x * 2.0f;
-        float rightW = saveW;
+        const float padX = GetStyle()->FramePadding.x * 2.0f;
+        const float newW = CalcTextSize(newLabel).x + padX;
+        const float saveW = CalcTextSize(saveLabel).x + padX;
+        float rightW = newW + gap + saveW;
         if (dirty) {
             rightW += gap + CalcTextSize(unsaved).x;
         }
@@ -421,6 +429,12 @@ namespace mtfui::ui {
             TextColored(kWarn, "%s", unsaved);
             SameLine(0.0f, gap);
         }
+        BeginDisabled(full);
+        if (Button(newLabel)) {
+            AddNewSpell(draft);
+        }
+        EndDisabled();
+        SameLine(0.0f, gap);
         BeginDisabled(!dirty);
         if (Button(saveLabel)) {
             std::string error;
